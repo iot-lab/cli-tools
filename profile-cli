@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+
+import senslabcli.profile_parser
+
+senslabcli.profile_parser.main()

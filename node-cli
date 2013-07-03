@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+
+import senslabcli.node_parser
+
+senslabcli.node_parser.main()

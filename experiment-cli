@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+
+import senslabcli.experiment_parser
+
+senslabcli.experiment_parser.main()
