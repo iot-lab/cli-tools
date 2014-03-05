@@ -1,2 +1,0 @@
-include README.rst userdoc.pdf
-recursive-include senslabcli *

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
 
-import senslabcli.auth_parser
-
-senslabcli.auth_parser.main()
+from iotlabcli import auth_parser
+auth_parser.main()

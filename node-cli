@@ -1,5 +1,4 @@
 #!/usr/bin/env python
 
-import senslabcli.node_parser
-
-senslabcli.node_parser.main()
+from iotlabcli import node_parser
+node_parser.main()

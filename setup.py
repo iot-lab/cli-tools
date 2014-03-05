@@ -1,35 +1,23 @@
-#!/usr/bin/env python
-from distutils.core import setup
-from distutils.command.install import install
-import sys
+#! /usr/bin/env python
+# -*- coding:utf-8 -*-
 
-def check_dependencies():
-    try:
-       __import__('argparse')
-       __import__('requests')
-    except ImportError, e:
-       print 'Dependencies error : %s' % e
-       sys.exit()
+from setuptools import setup
 
-class Install(install):
-    def run(self):
-        check_dependencies()
-        install.run(self) # proceed with the installation
+SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
-setup(name='senslabcli',
-      version='1.1',
-      description='Senslab testbed command-line client',
-      author='Senslab Team',
-      author_email='admin@senslab.info',
-      url='http://www.senslab.info',
-      download_url='http://www.senslab.info',
-      packages = ['senslabcli'],
-      scripts = ["experiment-cli","profile-cli","node-cli","auth-cli"],
-      classifiers = [ 'Development Status :: 1 - Alpha',
-                    'Programming Language :: Python',
-                    'Intended Audience :: End Users/Desktop',
-                    'Environment :: Console',
-                    'Topic :: Utilities',
-                    ],
-      cmdclass={'install': Install}
+setup(name='iotlabcli',
+      version='1.3',
+      description='IoT-LAB testbed command-line client',
+      author='IoT-LAB Team',
+      author_email='admin@iot-lab.info',
+      url='http://www.iot-lab.info',
+      download_url='http://github.com/iot-lab/cli-tools/',
+      packages=['iotlabcli'],
+      scripts=SCRIPTS,
+      classifiers=['Development Status :: 1 - Beta',
+                   'Programming Language :: Python',
+                   'Intended Audience :: End Users/Desktop',
+                   'Environment :: Console',
+                   'Topic :: Utilities', ],
+      install_requires=['argparse', 'requests'],
       )
