@@ -243,18 +243,19 @@ def check_properties(properties_list, sites_json, parser):
     archi = [prop for prop in properties if prop.startswith('archi=')]
     site = [prop for prop in properties if prop.startswith('site=')]
     mobile = [prop for prop in properties if prop.startswith('mobile=')]
+
     if len(archi) == 0 or len(site) == 0:
         parser.error('Properties "archi" and "site" are mandatory.')
-    site_prop = (site[0].split('='))[1]
+
+    archi_prop = archi[0].split('=')[1]
+    site_prop = site[0].split('=')[1]
     check_site(site_prop, sites_json, parser)
-    properties_dict = {}
-    properties_dict['site'] = site_prop
-    archi_prop = (archi[0].split('='))[1]
-    properties_dict['archi'] = archi_prop
+
+    properties_dict = {'site': site_prop, 'archi': archi_prop}
     if len(mobile) == 0:
         properties_dict['mobile'] = False
     else:
-        mobile_prop = (mobile[0].split('='))[1]
+        mobile_prop = mobile[0].split('=')[1]
         properties_dict['mobile'] = mobile_prop
     return properties_dict
 
@@ -263,9 +264,10 @@ def open_file(file_path, parser):
     """ Open and read a file
     """
     try:
-        file_d = open(file_path, 'r')
-    except IOError:
-        parser.error("Unable to open file : %s." % file_path)
+        # exanduser replace '~' with the correct path
+        file_d = open(os.path.expanduser(file_path), 'r')
+    except IOError as err:
+        parser.error(err)
     else:
         file_name = os.path.basename(file_d.name)
         file_data = file_d.read()
@@ -285,19 +287,11 @@ def check_experiment_firmwares(firmware_path, firmwares, parser):
     :type firmwares: dictionnary
     :param parser: command-line parser
     """
-    try:
-        firmware_file = open(firmware_path, 'r')
-    except IOError:
-        parser.error("Unable to open experiment firmware file : "
-                     "%s." % firmware_path)
-    else:
-        firmware_name = os.path.basename(firmware_file.name)
-        firmware_body = firmware_file.read()
-        firmware_file.close()
-        if firmware_name in firmwares:
-            if firmwares[firmware_name] != firmware_path:
-                parser.error('A firmware with the same name %s and \
-                    different path is already present.' % firmware_path)
-        else:
-            firmwares[firmware_name] = firmware_path
-        return firmware_name, firmware_body, firmwares
+    name, body = open_file(firmware_path, parser)
+
+    if firmwares.get(name, firmware_path) != firmware_path:
+        parser.error('A firmware with same name %s and different path already '
+                     'present' % firmware_path)
+
+    firmwares[name] = firmware_path
+    return name, body, firmwares
