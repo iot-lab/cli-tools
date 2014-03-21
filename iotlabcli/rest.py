@@ -227,7 +227,7 @@ class Api(object):
         :type nodes: JSONArray
         :returns JSONObject
         """
-        print self.method('experiments/%s/nodes?reset' % expid,
+        return self.method('experiments/%s/nodes?reset' % expid,
                           method='POST', data=nodes)
 
     def update_command(self, expid, files):
@@ -240,5 +240,5 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
-        print self.method('experiments/%s/nodes?update' % expid,
+        return self.method('experiments/%s/nodes?update' % expid,
                           method='MULTIPART', data=files)

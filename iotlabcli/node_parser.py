@@ -95,13 +95,16 @@ def command_node(parser_options, request, parser):
         nodes_json = '[]'
     if parser_options.start:
         if parser_options.battery:
-            request.start_command(experiment_id, nodes_json, battery=True)
+            json_start = request.start_command(experiment_id, nodes_json, battery=True)
         else:
-            request.start_command(experiment_id, nodes_json)
+            json_start = request.start_command(experiment_id, nodes_json)
+        print json.dumps(json.loads(json_start), indent=4, sort_keys=True)
     elif parser_options.stop:
-        request.stop_command(experiment_id, nodes_json)
+        json_stop = request.stop_command(experiment_id, nodes_json)
+        print json.dumps(json.loads(json_stop), indent=4, sort_keys=True)
     elif parser_options.reset:
-        request.reset_command(experiment_id, nodes_json)
+        json_reset = request.reset_command(experiment_id, nodes_json)
+        print json.dumps(json.loads(json_reset), indent=4, sort_keys=True)
     elif parser_options.path_file is not None:
         command_files = {}
         firmware_name, firmware_data = helpers.open_file(
@@ -110,7 +113,8 @@ def command_node(parser_options, request, parser):
         command_filehandle = StringIO(nodes_json)
         command_files['nodes.json'] = command_filehandle.read()
         command_filehandle.close()
-        request.update_command(experiment_id, command_files)
+        json_update = request.update_command(experiment_id, command_files)
+        print json.dumps(json.loads(json_update), indent=4, sort_keys=True)
 
 
 def main():
