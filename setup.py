@@ -19,5 +19,5 @@ setup(name='iotlabcli',
                    'Intended Audience :: End Users/Desktop',
                    'Environment :: Console',
                    'Topic :: Utilities', ],
-      install_requires=['argparse', 'requests'],
+      install_requires=['argparse', 'requests<=1.2.3'],
       )
