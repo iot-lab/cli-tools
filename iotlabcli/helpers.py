@@ -147,18 +147,21 @@ def check_site(site_name, sites_json, parser):
     for site in sites_json["items"]:
         if site["site"] == site_name:
             site_exist = True
-    if not site_exist:
-        parser.error('The site name %s doesn\'t exist.' % site_name)
-    return site_name
+    if site_exist:
+        return site_name
+
+    parser.error("The site name %s doesn't exist" % site_name)
 
 
 def check_experiments_running(experiments_json, parser):
     items = experiments_json["items"]
     if len(items) == 0:
         parser.error("You don't have an experiment with state Running")
-    experiments_id = []
-    for exp in items:
-        experiments_id.append(exp["id"])
+
+    #experiments_id = []
+    #for exp in items:
+    #    experiments_id.append(exp["id"])
+    experiments_id = [exp["id"] for exp in items]
     if len(experiments_id) > 1:
         parser.error(
             "You have several experiments with state Running. "
@@ -169,12 +172,19 @@ def check_experiments_running(experiments_json, parser):
 
 
 def check_command_list(nodes_list, parser):
+    """
+    >>> check_command_list('grenoble,wsn430,0-5+6+8', None)
+    ['grenoble', 'wsn430', '0-5+6+8']
+
+    >>> check_command_list('grenoble;wsn430;0-6', None)
+    Traceback (most recent call last):
+    AttributeError: 'NoneType' object has no attribute 'error'
+
+    """
     param_list = nodes_list.split(',')
-    if len(param_list) != 3:
-        parser.error('The number of argument in nodes list %s is not valid.' %
-                     nodes_list)
-    else:
+    if len(param_list) == 3:
         return param_list
+    parser.error('Invalid number of argument in nodes list %s' % nodes_list)
 
 
 def check_experiment_list(exp_list, parser):
@@ -197,12 +207,23 @@ def check_experiment_list(exp_list, parser):
 
 
 def check_archi(archi, parser):
+    """
+    >>> check_archi('wsn430', None)
+    'wsn430'
+    >>> check_archi('m3', None)
+    'm3'
+    >>> check_archi('a8', None)
+    'a8'
+
+    >>> check_archi('msp430', None)
+    Traceback (most recent call last):
+    AttributeError: 'NoneType' object has no attribute 'error'
+
+    """
     archi_list = ['wsn430', 'm3', 'a8']
-    if archi not in archi_list:
-        parser.error(
-            'You must specify a valid archi in physical experiment list : %s'
-            % archi_list)
-    return archi
+    if archi in archi_list:
+        return archi
+    parser.error('Invalid archi in physical experiment list : %s' % archi_list)
 
 
 def check_nodes_list(site, archi, nodes_list, parser):

@@ -85,8 +85,8 @@ def command_node(parser_options, request, parser):
             site = helpers.check_site(param_list[0], sites_json, parser)
             archi = helpers.check_archi(param_list[1], parser)
             nodes += helpers.check_nodes_list(site,
-                                              param_list[0],
                                               archi,
+                                              param_list[2],
                                               parser)
         nodes_json = json.dumps(
             nodes, cls=rest.Encoder, sort_keys=True, indent=4)
