@@ -377,13 +377,13 @@ def info_experiment(parser_options, request, parser):
     print json.dumps(json.loads(info_json), indent=4, sort_keys=True)
 
 
-def main():
+def main(args=sys.argv[1:]):
     """
     Main command-line execution loop."
     """
     try:
         parser = parse_options()
-        parser_options = parser.parse_args()
+        parser_options = parser.parse_args(args)
         request = rest.Api(username=parser_options.username,
                            password=parser_options.password,
                            parser=parser)

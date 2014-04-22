@@ -6,7 +6,7 @@ from setuptools import setup
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
 setup(name='iotlabcli',
-      version='1.2',
+      version='1.3',
       description='IoT-LAB testbed command-line client',
       author='IoT-LAB Team',
       author_email='admin@iot-lab.info',
@@ -19,5 +19,5 @@ setup(name='iotlabcli',
                    'Intended Audience :: End Users/Desktop',
                    'Environment :: Console',
                    'Topic :: Utilities', ],
-      install_requires=['argparse', 'requests'],
+      install_requires=['argparse', 'requests<=1.2.3'],
       )

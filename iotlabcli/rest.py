@@ -9,7 +9,7 @@ from urlparse import urljoin
 
 from iotlabcli import helpers
 
-API_URL = 'https://devgrenoble.senslab.info/rest/'
+API_URL = 'https://www.iot-lab.info/rest/'
 
 
 class Encoder(json.JSONEncoder):

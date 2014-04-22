@@ -40,13 +40,13 @@ def store_credentials(parser_options, parser):
     helpers.create_password_file(username, password, parser)
 
 
-def main():
+def main(args=sys.argv[1:]):
     """
     Main command-line execution loop.
     """
     try:
         parser = parse_options()
-        parser_options = parser.parse_args()
+        parser_options = parser.parse_args(args)
         store_credentials(parser_options, parser)
     except KeyboardInterrupt:
         print >> sys.stderr, "\nStopped."

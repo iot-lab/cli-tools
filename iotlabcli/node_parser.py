@@ -79,8 +79,8 @@ def command_node(parser_options, request, parser):
             site = helpers.check_site(param_list[0], sites_json, parser)
             archi = helpers.check_archi(param_list[1], parser)
             nodes += helpers.check_nodes_list(site,
-                                              param_list[0],
                                               archi,
+                                              param_list[2],
                                               parser)
         nodes_json = json.dumps(
             nodes, cls=rest.Encoder, sort_keys=True, indent=4)
@@ -108,13 +108,13 @@ def command_node(parser_options, request, parser):
         print json.dumps(json.loads(json_update), indent=4, sort_keys=True)
 
 
-def main():
+def main(args=sys.argv[1:]):
     """
     Main command-line execution loop."
     """
     try:
         parser = parse_options()
-        parser_options = parser.parse_args()
+        parser_options = parser.parse_args(args)
         request = rest.Api(
             username=parser_options.username,
             password=parser_options.password,
