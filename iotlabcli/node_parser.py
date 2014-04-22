@@ -34,28 +34,22 @@ def parse_options():
         dest='command_list',
         help='nodes list')
 
-    parser.add_argument(
-        '-b',
-        '--battery',
-        action='store_true', dest='battery',
-        help='battery mode for start command (dc mode by default)')
-
     command_group = parser.add_mutually_exclusive_group(required=True)
 
     command_group.add_argument(
-        '--start', action='store_true',
+        '-sta', '--start', action='store_true',
         help='start command')
 
     command_group.add_argument(
-        '--stop', action='store_true',
+        '-sto', '--stop', action='store_true',
         help='stop command')
 
     command_group.add_argument(
-        '--reset', action='store_true',
+        '-r', '--reset', action='store_true',
         help='reset command')
 
     command_group.add_argument(
-        '--update', dest='path_file',
+        '-u','--update', dest='path_file',
         help='firmware path file')
 
     return parser
@@ -94,10 +88,7 @@ def command_node(parser_options, request, parser):
         # all the nodes
         nodes_json = '[]'
     if parser_options.start:
-        if parser_options.battery:
-            json_start = request.start_command(experiment_id, nodes_json, battery=True)
-        else:
-            json_start = request.start_command(experiment_id, nodes_json)
+        json_start = request.start_command(experiment_id, nodes_json)
         print json.dumps(json.loads(json_start), indent=4, sort_keys=True)
     elif parser_options.stop:
         json_stop = request.stop_command(experiment_id, nodes_json)

@@ -188,23 +188,17 @@ class Api(object):
         """
         self.method('experiments/%s' % expid, method='DELETE')
 
-    def start_command(self, expid, nodes, battery=False):
+    def start_command(self, expid, nodes):
         """ Launch start command on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :type id: string
         :param nodes: list of nodes
         :type nodes: JSONArray
-        :param battery: powered by dc or battery
-        :type battery: boolean
         :returns JSONObject
         """
-        if battery:
-            return self.method('experiments/%s/nodes?start&battery=true'
-                               % expid, method='POST', data=nodes)
-        else:
-            return self.method('experiments/%s/nodes?start' % expid,
-                               method='POST', data=nodes)
+        return self.method('experiments/%s/nodes?start' % expid,
+                           method='POST', data=nodes)
 
     def stop_command(self, expid, nodes):
         """ Launch stop command on user experiment list nodes
