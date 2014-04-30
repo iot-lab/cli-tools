@@ -8,6 +8,7 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli import helpers, help_parser
 
+from iotlabcli import version
 
 def parse_options():
     """
@@ -20,6 +21,7 @@ def parse_options():
         parents=[parent_parser],
         formatter_class=RawTextHelpFormatter)
 
+    parser.add_argument('-v', '--version', action='version', version=version)
     parser.add_argument('-u', '--user', required=True, dest='username')
     parser.add_argument('-p', '--password', dest='password')
 

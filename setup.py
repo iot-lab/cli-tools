@@ -2,11 +2,12 @@
 # -*- coding:utf-8 -*-
 
 from setuptools import setup
+from iotlabcli import version
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
 setup(name='iotlabcli',
-      version='1.3',
+      version = version,
       description='IoT-LAB testbed command-line client',
       author='IoT-LAB Team',
       author_email='admin@iot-lab.info',
