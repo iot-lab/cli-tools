@@ -74,6 +74,13 @@ def read_password_file(parser):
     else:
         return None, None
 
+def read_api_url_file():
+    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
+    api_url_filename = os.path.join(home_directory, ".iotlab.api-url")
+    try:
+        return open(api_url_filename).readline().strip()
+    except:
+        return None
 
 def read_json_file(json_file_name, json_file_data, parser):
     try:
