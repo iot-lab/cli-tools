@@ -49,7 +49,7 @@ def parse_options():
         help='reset command')
 
     command_group.add_argument(
-        '-u','--update', dest='path_file',
+        '-up','--update', dest='path_file',
         help='firmware path file')
 
     return parser
