@@ -7,7 +7,7 @@ import sys
 from cStringIO import StringIO
 from argparse import RawTextHelpFormatter
 from iotlabcli import rest, helpers, help_parser
-
+from iotlabcli import version
 
 def parse_options():
     """
@@ -24,6 +24,7 @@ def parse_options():
 
     parser.add_argument('-u', '--user', dest='username')
     parser.add_argument('-p', '--password', dest='password')
+    parser.add_argument('-v', '--version', action='version', version=version)
 
     parser.add_argument(
         '-i', '--id', dest='experiment_id', type=int,

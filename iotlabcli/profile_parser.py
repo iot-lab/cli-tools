@@ -8,6 +8,7 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli import helpers, rest, help_parser
 from iotlabcli.profile import Profile, Consumption, Radio, Sensor
+from iotlabcli import version
 
 
 def parse_options():
@@ -24,6 +25,7 @@ def parse_options():
 
     parser.add_argument('-u', '--user', dest='username')
     parser.add_argument('-p', '--password', dest='password')
+    parser.add_argument('-v', '--version', action='version', version=version)
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
