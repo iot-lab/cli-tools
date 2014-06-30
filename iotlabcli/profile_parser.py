@@ -307,7 +307,11 @@ def load_profile(path_file, request, parser):
     :param parser: command-line parser
     """
     file_data = helpers.open_file(path_file, parser)[1]
-    request.add_profile(file_data)
+    json_profile = json.loads(file_data)
+    if json_profile.has_key("profilename"):
+        request.add_profile(json_profile["profilename"], file_data)
+    else:
+        parser.error("You must have a profilename attribute in your JSON file")    
 
 
 def del_profile(name, request):
