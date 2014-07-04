@@ -119,6 +119,12 @@ def parse_options():
         help='get an experiment resources list')
 
     get_group.add_argument(
+        '-ri', '--resources-id',
+        action='store_true', dest='resources_exp_id',
+        help=('get an experiment resources id list '
+              '(EXP_LIST format : 1-34+72)'))
+
+    get_group.add_argument(
         '-l', '--list',
         action='store_true',
         dest='experiment_list',
@@ -146,7 +152,7 @@ def parse_options():
         'info',
         epilog=help_parser.INFO_EPILOG,
         formatter_class=RawTextHelpFormatter,
-        help='resource\'s description list')
+        help='resources description list')
 
     info_parser.add_argument(
         '--site',
@@ -166,7 +172,7 @@ def parse_options():
         dest='resources_id',
         action='store_true',
         help=('resources id list by archi and state '
-              '(EXP_LIST submission format : 1-34+72)'))
+              '(EXP_LIST format : 1-34+72)'))
 
     return parser
 
@@ -307,6 +313,8 @@ def get_experiment(parser_options, request, parser):
         else:
             if parser_options.json:
                 experiment_json = request.get_experiment(experiment_id)
+            elif parser_options.resources_exp_id:
+                experiment_json = request.get_experiment_resources_id(experiment_id)
             elif parser_options.exp_state:
                 experiment_json = request.get_experiment_state(experiment_id)
             elif parser_options.resources:

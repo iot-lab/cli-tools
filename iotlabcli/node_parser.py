@@ -30,9 +30,16 @@ def parse_options():
         '-i', '--id', dest='experiment_id', type=int,
         help='experiment id submission')
 
-    parser.add_argument(
+    list_group = parser.add_mutually_exclusive_group()
+
+    list_group.add_argument(
+        '-e', '--exclude', action='append', 
+        dest='exclude_nodes_list',
+        help='exclude nodes list')    
+
+    list_group.add_argument(
         '-l', '--list', action='append',
-        dest='command_list',
+        dest='nodes_list',
         help='nodes list')
 
     command_group = parser.add_mutually_exclusive_group(required=True)
@@ -51,7 +58,7 @@ def parse_options():
 
     command_group.add_argument(
         '-up','--update', dest='path_file',
-        help='firmware path file')
+        help='flash firmware command with path file')
 
     return parser
 
@@ -73,8 +80,8 @@ def command_node(parser_options, request, parser):
         experiment_id = helpers.check_experiments_running(
             experiments_json, parser)
     nodes = []
-    if parser_options.command_list is not None:
-        for nodes_list in parser_options.command_list:
+    if parser_options.nodes_list is not None:
+        for nodes_list in parser_options.nodes_list:
             param_list = helpers.check_command_list(nodes_list, parser)
             sites_json = json.loads(request.get_sites())
             site = helpers.check_site(param_list[0], sites_json, parser)
@@ -83,6 +90,25 @@ def command_node(parser_options, request, parser):
                                               archi,
                                               param_list[2],
                                               parser)
+        nodes_json = json.dumps(
+            nodes, cls=rest.Encoder, sort_keys=True, indent=4)
+    elif parser_options.exclude_nodes_list is not None:
+        exclude_nodes = []
+        for exclude_list in parser_options.exclude_nodes_list:
+            param_list = helpers.check_command_list(exclude_list, parser)
+            sites_json = json.loads(request.get_sites())
+            site = helpers.check_site(param_list[0], sites_json, parser)
+            archi = helpers.check_archi(param_list[1], parser)
+            exclude_nodes += helpers.check_nodes_list(site,
+                                              archi,
+                                              param_list[2],
+                                              parser)
+        experiment_resources_json = \
+            json.loads(request.get_experiment_resources(experiment_id))
+        experiment_nodes = []
+        for res in experiment_resources_json["items"]:
+            experiment_nodes.append(res["network_address"])
+        nodes = [node for node in experiment_nodes if node not in exclude_nodes]       
         nodes_json = json.dumps(
             nodes, cls=rest.Encoder, sort_keys=True, indent=4)
     else:

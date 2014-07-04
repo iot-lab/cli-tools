@@ -161,6 +161,15 @@ class Api(object):
         """
         return self.method('experiments/%s?resources' % expid)
 
+    def get_experiment_resources_id(self, expid):
+        """ Get user experiment resources list description.
+
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :type id: string
+        :returns JSONObject
+        """
+        return self.method('experiments/%s?id' % expid)
+
     def get_experiment_state(self, expid):
         """ Get user experiment state.
 

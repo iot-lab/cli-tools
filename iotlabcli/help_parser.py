@@ -50,14 +50,14 @@ SUBMIT_EPILOG = dedent("""
 
 Examples:
     * physical experiment list : site_name,archi,resourceid_list,firmware_path,profile_name
+        $ experiment-cli submit -d 20 -l grenoble,m3,1-20,/home/cc1101.hex -l rocquencourt,a8,1-5,,battery
         $ experiment-cli submit -d 20 -l grenoble,wsn430,1-5+8+9-11,cc1101.hex,battery
-        $ experiment-cli submit -d 20 -l grenoble,m3,1-20,/home/cc1101.hex -l rennes,a8,1-5,,battery
         $ experiment-cli submit -d 20 -l grenoble,m3,1-20
 
     * alias experiment list : resources_number,properties,firmware_path,profile_name
         $ experiment-cli submit -d 20 -l 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
-        $ experiment-cli submit -d 20 -l 9,archi=wsn430:cc1101+site=grenoble,cc1101.hex \\
-                                      -l 5,archi=wsn430:cc2420+site=rennes,cc2420.hex
+        $ experiment-cli submit -d 20 -l 9,archi=m3:m3:at86rf231+site=grenoble,gre.elf \\
+                                      -l 5,archi=m3:m3:at86rf231+site=strasbourg,stras.elf
 """)
 
 LOAD_EPILOG = dedent("""
@@ -83,7 +83,7 @@ Examples:
         Note : with one experiment in the state Running
     * Get an experiment archive with id 1637
         $ experiment-cli get -i 1637 -a
-    * Get exeriment's resources list with id 1637
+    * Get exeriment resources list with id 1637
         $ experiment-cli get -i 1637 -r
     * Get user's experiment list with filter by state and number
         $ experiment-cli get -l --state Running,Terminated --offset 10 --limit 20
@@ -93,9 +93,9 @@ Examples:
 INFO_EPILOG = dedent("""
 
 Examples:
-    * Get resource's description list with filter by site
+    * Get resources description list with filter by site
         $ expriment-cli info -l --site grenoble
-    * Get resource's id list (e.g. 1-34+72)
+    * Get resources id list (e.g. 1-34+72)
         $ experiment-cli info -li
 
 """)
@@ -116,9 +116,13 @@ Examples :
 COMMAND_EPILOG = dedent("""
 
 Examples:
-    * update firmware on all experiment's resources
+    * update firmware on all experiment resources
         $ node-cli --update /home/tp.hex
         Note : with one experiment in the state Running
+    * Launch command stop on experiment resources list
+        $ node-cli --sto -l grenoble,m3,1-5+10+12
+    * update firmware on all experiment resources except two
+        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2 
     * commmand list : site_name,archi,nodeid_list
         $ node-cli --reset -l grenoble,wsn430,1-34+72
     * command with several experiments with state Running

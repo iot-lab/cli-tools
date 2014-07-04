@@ -150,13 +150,9 @@ def check_experiment_state(state, parser):
 
 
 def check_site(site_name, sites_json, parser):
-    site_exist = False
     for site in sites_json["items"]:
         if site["site"] == site_name:
-            site_exist = True
-    if site_exist:
-        return site_name
-
+            return site_name
     parser.error("The site name %s doesn't exist" % site_name)
 
 
