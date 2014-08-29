@@ -8,24 +8,20 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli import helpers, rest, help_parser
 from iotlabcli.profile import Profile, Consumption, Radio, Sensor
-from iotlabcli import version
+from iotlabcli import parser_common
 
 
 def parse_options():
     """
     Handle profile-cli command-line options with argparse
     """
-    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser = parser_common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
         description=help_parser.PROFILE_PARSER,
         parents=[parent_parser], epilog=help_parser.PARSER_EPILOG
         % {'cli': 'profile', 'option': 'add'},
         formatter_class=RawTextHelpFormatter)
-
-    parser.add_argument('-u', '--user', dest='username')
-    parser.add_argument('-p', '--password', dest='password')
-    parser.add_argument('-v', '--version', action='version', version=version)
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
@@ -308,10 +304,10 @@ def load_profile(path_file, request, parser):
     """
     file_data = helpers.open_file(path_file, parser)[1]
     json_profile = json.loads(file_data)
-    if json_profile.has_key("profilename"):
+    if "profilename" in json_profile:
         request.add_profile(json_profile["profilename"], file_data)
     else:
-        parser.error("You must have a profilename attribute in your JSON file")    
+        parser.error("You must have a profilename attribute in your JSON file")
 
 
 def del_profile(name, request):

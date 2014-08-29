@@ -9,13 +9,15 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli import rest, helpers, help_parser
 from iotlabcli.experiment import Experiment
-from iotlabcli import version
+from iotlabcli import parser_common
+
 
 def parse_options():
     """
     Handle experiment-cli command-line options with argparse
     """
-    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser = parser_common.base_parser()
+
     # We create top level parser
     parser = argparse.ArgumentParser(
         description=help_parser.EXPERIMENT_PARSER,
@@ -23,10 +25,6 @@ def parse_options():
         epilog=help_parser.PARSER_EPILOG %
         {'cli': 'experiment', 'option': 'submit'},
         formatter_class=RawTextHelpFormatter)
-
-    parser.add_argument('-u', '--user', dest='username')
-    parser.add_argument('-p', '--password', dest='password')
-    parser.add_argument('-v', '--version', action='version', version=version)
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
@@ -61,7 +59,7 @@ def parse_options():
         dest='json', action='store_true',
         help='print experiment submission')
 
-    ######## STOP PARSER ###############
+    # ####### STOP PARSER ###############
     stop_parser = subparsers.add_parser(
         'stop',
         help='stop user experiment')
@@ -71,7 +69,7 @@ def parse_options():
         dest='experiment_id', type=int,
         help='experiment id submission')
 
-    ######## GET PARSER ###############
+    # ####### GET PARSER ###############
     get_parser = subparsers.add_parser(
         'get',
         epilog=help_parser.GET_EPILOG,
@@ -130,7 +128,7 @@ def parse_options():
         dest='experiment_list',
         help='get user\'s experiment list')
 
-    ######## LOAD PARSER ###############
+    # ####### LOAD PARSER ###############
     load_parser = subparsers.add_parser(
         'load',
         epilog=help_parser.LOAD_EPILOG,
@@ -147,7 +145,7 @@ def parse_options():
         dest='firmware_list',
         help='firmware(s) path list')
 
-    ######## INFO PARSER ###############
+    # ####### INFO PARSER ###############
     info_parser = subparsers.add_parser(
         'info',
         epilog=help_parser.INFO_EPILOG,
@@ -192,11 +190,11 @@ def submit_experiment(parser_options, request, parser):
     alias_number = 0
     physical_type = False
     alias_type = False
-    experiment = Experiment(
-        name=parser_options.name,
-        duration=parser_options.duration,
-        reservation=parser_options.reservation)
+    experiment = Experiment(name=parser_options.name,
+                            duration=parser_options.duration,
+                            reservation=parser_options.reservation)
     sites_json = json.loads(request.get_sites())
+
     for exp_list in parser_options.exp_list:
         experiment_type, param_list = \
             helpers.check_experiment_list(exp_list, parser)
@@ -245,6 +243,7 @@ def submit_experiment(parser_options, request, parser):
     experiment_json = json.dumps(experiment,
                                  cls=rest.Encoder,
                                  sort_keys=True, indent=4)
+
     if parser_options.json:
         print experiment_json
     else:
@@ -263,14 +262,8 @@ def stop_experiment(parser_options, request, parser):
     :type experiment_id: string
     :param request: API Rest request object
     """
-    if parser_options.experiment_id is not None:
-        experiment_id = parser_options.experiment_id
-    else:
-        queryset = "state=Running&limit=0&offset=0"
-        experiments_json = json.loads(request.get_experiments(queryset))
-        experiment_id = \
-            helpers.check_experiments_running(experiments_json, parser)
-    request.stop_experiment(experiment_id)
+    exp_id = request.get_current_experiment(parser_options.experiment_id)
+    request.stop_experiment(exp_id)
 
 
 def get_experiment(parser_options, request, parser):
@@ -314,7 +307,8 @@ def get_experiment(parser_options, request, parser):
             if parser_options.json:
                 experiment_json = request.get_experiment(experiment_id)
             elif parser_options.resources_exp_id:
-                experiment_json = request.get_experiment_resources_id(experiment_id)
+                experiment_json = request.get_experiment_resources_id(
+                    experiment_id)
             elif parser_options.exp_state:
                 experiment_json = request.get_experiment_state(experiment_id)
             elif parser_options.resources:
@@ -354,7 +348,7 @@ def load_experiment(parser_options, request, parser):
     if firmware_associations is not None:
         for firmware in firmware_associations:
             firmware_name = firmware['firmwarename']
-            if not firmware_name in experiment_files:
+            if firmware_name not in experiment_files:
                 firmware_name, firmware_body, firmwares = \
                     helpers.check_experiment_firmwares(firmware_name,
                                                        firmwares, parser)

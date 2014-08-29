@@ -7,13 +7,14 @@ import sys
 from cStringIO import StringIO
 from argparse import RawTextHelpFormatter
 from iotlabcli import rest, helpers, help_parser
-from iotlabcli import version
+from iotlabcli import parser_common
+
 
 def parse_options():
     """
     Handle node-cli command-line options with argparse
     """
-    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser = parser_common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser],
@@ -22,10 +23,6 @@ def parse_options():
         + help_parser.COMMAND_EPILOG,
         formatter_class=RawTextHelpFormatter)
 
-    parser.add_argument('-u', '--user', dest='username')
-    parser.add_argument('-p', '--password', dest='password')
-    parser.add_argument('-v', '--version', action='version', version=version)
-
     parser.add_argument(
         '-i', '--id', dest='experiment_id', type=int,
         help='experiment id submission')
@@ -33,9 +30,9 @@ def parse_options():
     list_group = parser.add_mutually_exclusive_group()
 
     list_group.add_argument(
-        '-e', '--exclude', action='append', 
+        '-e', '--exclude', action='append',
         dest='exclude_nodes_list',
-        help='exclude nodes list')    
+        help='exclude nodes list')
 
     list_group.add_argument(
         '-l', '--list', action='append',
@@ -44,21 +41,17 @@ def parse_options():
 
     command_group = parser.add_mutually_exclusive_group(required=True)
 
-    command_group.add_argument(
-        '-sta', '--start', action='store_true',
-        help='start command')
+    command_group.add_argument('-sta', '--start', action='store_true',
+                               help='start command')
 
-    command_group.add_argument(
-        '-sto', '--stop', action='store_true',
-        help='stop command')
+    command_group.add_argument('-sto', '--stop', action='store_true',
+                               help='stop command')
 
-    command_group.add_argument(
-        '-r', '--reset', action='store_true',
-        help='reset command')
+    command_group.add_argument('-r', '--reset', action='store_true',
+                               help='reset command')
 
-    command_group.add_argument(
-        '-up','--update', dest='path_file',
-        help='flash firmware command with path file')
+    command_group.add_argument('-up', '--update', dest='path_file',
+                               help='flash firmware command with path file')
 
     return parser
 
@@ -72,13 +65,8 @@ def command_node(parser_options, request, parser):
     :param request: API Rest request object
     :param parser: command-line parser
     """
-    if parser_options.experiment_id is not None:
-        experiment_id = parser_options.experiment_id
-    else:
-        queryset = "state=Running&limit=0&offset=0"
-        experiments_json = json.loads(request.get_experiments(queryset))
-        experiment_id = helpers.check_experiments_running(
-            experiments_json, parser)
+    exp_id = request.get_current_experiment(parser_options.experiment_id)
+
     nodes = []
     if parser_options.nodes_list is not None:
         for nodes_list in parser_options.nodes_list:
@@ -99,29 +87,27 @@ def command_node(parser_options, request, parser):
             sites_json = json.loads(request.get_sites())
             site = helpers.check_site(param_list[0], sites_json, parser)
             archi = helpers.check_archi(param_list[1], parser)
-            exclude_nodes += helpers.check_nodes_list(site,
-                                              archi,
-                                              param_list[2],
-                                              parser)
+            exclude_nodes += helpers.check_nodes_list(
+                site, archi, param_list[2], parser)
         experiment_resources_json = \
-            json.loads(request.get_experiment_resources(experiment_id))
-        experiment_nodes = []
+            json.loads(request.get_experiment_resources(exp_id))
+        exp_nodes = []
         for res in experiment_resources_json["items"]:
-            experiment_nodes.append(res["network_address"])
-        nodes = [node for node in experiment_nodes if node not in exclude_nodes]       
+            exp_nodes.append(res["network_address"])
+        nodes = [node for node in exp_nodes if node not in exclude_nodes]
         nodes_json = json.dumps(
             nodes, cls=rest.Encoder, sort_keys=True, indent=4)
     else:
         # all the nodes
         nodes_json = '[]'
     if parser_options.start:
-        json_start = request.start_command(experiment_id, nodes_json)
+        json_start = request.start_command(exp_id, nodes_json)
         print json.dumps(json.loads(json_start), indent=4, sort_keys=True)
     elif parser_options.stop:
-        json_stop = request.stop_command(experiment_id, nodes_json)
+        json_stop = request.stop_command(exp_id, nodes_json)
         print json.dumps(json.loads(json_stop), indent=4, sort_keys=True)
     elif parser_options.reset:
-        json_reset = request.reset_command(experiment_id, nodes_json)
+        json_reset = request.reset_command(exp_id, nodes_json)
         print json.dumps(json.loads(json_reset), indent=4, sort_keys=True)
     elif parser_options.path_file is not None:
         command_files = {}
@@ -131,7 +117,7 @@ def command_node(parser_options, request, parser):
         command_filehandle = StringIO(nodes_json)
         command_files['nodes.json'] = command_filehandle.read()
         command_filehandle.close()
-        json_update = request.update_command(experiment_id, command_files)
+        json_update = request.update_command(exp_id, command_files)
         print json.dumps(json.loads(json_update), indent=4, sort_keys=True)
 
 

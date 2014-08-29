@@ -6,24 +6,19 @@ import argparse
 import sys
 from argparse import RawTextHelpFormatter
 
-from iotlabcli import helpers, help_parser
+from iotlabcli import helpers, help_parser, parser_common
 
-from iotlabcli import version
 
 def parse_options():
     """
     Handle profile-cli command-line options with argparse
     """
-    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser = parser_common.base_parser(user_required=True)
     # We create top level parser
     parser = argparse.ArgumentParser(
         description=help_parser.AUTH_PARSER,
         parents=[parent_parser],
         formatter_class=RawTextHelpFormatter)
-
-    parser.add_argument('-v', '--version', action='version', version=version)
-    parser.add_argument('-u', '--user', required=True, dest='username')
-    parser.add_argument('-p', '--password', dest='password')
 
     return parser
 

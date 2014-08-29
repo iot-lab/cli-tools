@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Rest API class"""
+""" Rest API class """
 
 import requests
 import json
@@ -11,17 +11,17 @@ from iotlabcli import helpers
 
 API_URL = helpers.read_api_url_file() or 'https://www.iot-lab.info/rest/'
 
+# pylint: disable=maybe-no-member,no-member
+
 
 class Encoder(json.JSONEncoder):
     """ Encoder for serialization object python to JSON format """
-    def default(self, obj):
+    def default(self, obj):  # pylint: disable=method-hidden
         return obj.__dict__
 
 
 class Api(object):
-    """
-    REST API
-    """
+    """ REST API """
     def __init__(self, url=API_URL, username=None, password=None, parser=None):
         """
         :param url: url of API.
@@ -136,6 +136,18 @@ class Api(object):
         """
         return self.method('experiments?%s' % queryset)
 
+    def get_current_experiment(self, experiment_id=None):
+        """ Return the given experiment or get the currently running one """
+        if experiment_id is not None:
+            return experiment_id
+
+        # no experiment given, try to find the currently running one
+        queryset = "state=Running&limit=0&offset=0"
+        exps_dict = json.loads(request.get_experiments(queryset))
+        exp_id = helpers.check_experiments_running(exps_dict, parser)
+        return exp_id
+
+
     def get_experiments_total(self):
         """ Get the number of past, running and upcoming user's experiment.
 
@@ -231,7 +243,7 @@ class Api(object):
         :returns JSONObject
         """
         return self.method('experiments/%s/nodes?reset' % expid,
-                          method='POST', data=nodes)
+                           method='POST', data=nodes)
 
     def update_command(self, expid, files):
         """ Launch upadte command (flash firmware) on user
@@ -244,4 +256,4 @@ class Api(object):
         :returns JSONObject
         """
         return self.method('experiments/%s/nodes?update' % expid,
-                          method='MULTIPART', data=files)
+                           method='MULTIPART', data=files)

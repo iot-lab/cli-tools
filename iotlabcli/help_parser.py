@@ -2,6 +2,8 @@
 """Help parser messages"""
 
 
+# pep8: ignore=E225
+
 from textwrap import dedent
 
 AUTH_PARSER = dedent("""
@@ -122,7 +124,7 @@ Examples:
     * Launch command stop on experiment resources list
         $ node-cli --sto -l grenoble,m3,1-5+10+12
     * update firmware on all experiment resources except two
-        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2 
+        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2
     * commmand list : site_name,archi,nodeid_list
         $ node-cli --reset -l grenoble,wsn430,1-34+72
     * command with several experiments with state Running

@@ -74,13 +74,15 @@ def read_password_file(parser):
     else:
         return None, None
 
+
 def read_api_url_file():
     home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
     api_url_filename = os.path.join(home_directory, ".iotlab.api-url")
     try:
         return open(api_url_filename).readline().strip()
-    except:
+    except IOError:
         return None
+
 
 def read_json_file(json_file_name, json_file_data, parser):
     try:
@@ -114,7 +116,7 @@ def get_user_credentials(username, password, parser):
 
 def check_radio_period(period):
     value = int(period)
-    if not value in range(1, 65536):
+    if value not in range(1, 65536):
         raise argparse.ArgumentTypeError(
             "invalid period choice : %s (choose from 1 .. 65535)" % (value,))
     return value
@@ -122,7 +124,7 @@ def check_radio_period(period):
 
 def check_radio_num_per_channel(num):
     value = int(num)
-    if not value in range(1, 256):
+    if value not in range(1, 256):
         raise argparse.ArgumentTypeError(
             "invalid period choice : %s (choose from 1 .. 255)" % (value,))
     return value
@@ -161,9 +163,6 @@ def check_experiments_running(experiments_json, parser):
     if len(items) == 0:
         parser.error("You don't have an experiment with state Running")
 
-    #experiments_id = []
-    #for exp in items:
-    #    experiments_id.append(exp["id"])
     experiments_id = [exp["id"] for exp in items]
     if len(experiments_id) > 1:
         parser.error(
@@ -241,7 +240,7 @@ def check_nodes_list(site, archi, nodes_list, parser):
                                              DOMAIN_DNS)
             physical_nodes.append(physical_node)
         elif (len(node) == 2 and (node[0].isdigit() and node[1].isdigit())
-                and (int(node[0]) < int(node[1]))):
+              and (int(node[0]) < int(node[1]))):
             # 42-69
             first = int(node[0])
             last = int(node[1])
