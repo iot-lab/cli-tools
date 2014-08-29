@@ -6,3 +6,4 @@ MANIFEST
 iotlabcli.egg-info
 
 *.egg
+*.swp

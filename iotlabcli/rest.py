@@ -147,7 +147,6 @@ class Api(object):
         exp_id = helpers.check_experiments_running(exps_dict, parser)
         return exp_id
 
-
     def get_experiments_total(self):
         """ Get the number of past, running and upcoming user's experiment.
 
