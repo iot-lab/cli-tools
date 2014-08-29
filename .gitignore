@@ -7,3 +7,6 @@ iotlabcli.egg-info
 
 *.egg
 *.swp
+.coverage
+coverage.xml
+nosetests.xml
