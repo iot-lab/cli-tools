@@ -26,5 +26,6 @@ setup(name='iotlabcli',
       install_requires=['argparse', 'requests<=1.2.3'],
       test_suite='nose.collector',
       tests_require=['nose'],
-      setup_requires=['setuptools-pep8', 'setuptools-lint'],
+      setup_requires=['setuptools-pep8', 'setuptools-lint',
+                      'nose', 'nosexcover'],
       )
