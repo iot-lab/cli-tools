@@ -7,18 +7,20 @@ import sys
 from argparse import RawTextHelpFormatter
 
 from iotlabcli import Error
-from iotlabcli import helpers, help_parser, parser_common
+import iotlabcli.helpers
+import iotlabcli.parser_common
+import iotlabcli.help_parser
 
 
 def parse_options():
     """
     Handle profile-cli command-line options with argparse
     """
-    parent_parser = parser_common.base_parser(user_required=True)
+    parent_parser = iotlabcli.parser_common.base_parser(user_required=True)
     # We create top level parser
-    parser = argparse.ArgumentParser(description=help_parser.AUTH_PARSER,
-                                     parents=[parent_parser],
-                                     formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        parents=[parent_parser], formatter_class=RawTextHelpFormatter,
+        description=iotlabcli.help_parser.AUTH_PARSER)
 
     return parser
 
@@ -30,8 +32,8 @@ def store_credentials(username, password=None):
     :param password: password to store. If None, request it on command line.
     """
     if password is None:
-        password = helpers.password_prompt()
-    helpers.create_password_file(username, password)
+        password = iotlabcli.helpers.password_prompt()
+    iotlabcli.helpers.create_password_file(username, password)
 
 
 def main(args=sys.argv[1:]):
