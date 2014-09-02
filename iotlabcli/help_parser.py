@@ -2,42 +2,38 @@
 """Help parser messages"""
 
 
-# pep8: ignore=E225
-
-from textwrap import dedent
-
-AUTH_PARSER = dedent("""
+AUTH_PARSER = """
 
 auth-cli command-line store your credentials.
 It creates a file .iotlabrc in your home directory
 with username and password options.
 
-""")
+"""
 
-NODE_PARSER = dedent("""
+NODE_PARSER = """
 
 node-cli command-line manage interaction on resources.
 You can launch commands on your experiment's resources.
 
-""")
+"""
 
-EXPERIMENT_PARSER = dedent("""
+EXPERIMENT_PARSER = """
 
 experiment-cli command-line manage experiments on testbed.
 
-""")
+"""
 
-PROFILE_PARSER = dedent("""
+PROFILE_PARSER = """
 
 profile-cli command-line manage profiles experimentation :
 store you favourite resources configuration with combination
 of a power supply mode and an automatic measure configuration
 (e.g. consumption, radio, ...)
 
-""")
+"""
 
 
-PARSER_EPILOG = dedent("""
+PARSER_EPILOG = """
 
 Authentication :
     * username without any password option : use username option with password prompt
@@ -46,9 +42,9 @@ Authentication :
         $ %(cli)s-cli -u login -p password  %(option)s ...
     * without username nor password options : try to use credentials file (e.g. auth-cli command-line) or anonymous request
         $ %(cli)s-cli %(option)s ...
-""")
+"""
 
-SUBMIT_EPILOG = dedent("""
+SUBMIT_EPILOG = """
 
 Examples:
     * physical experiment list : site_name,archi,resourceid_list,firmware_path,profile_name
@@ -60,9 +56,9 @@ Examples:
         $ experiment-cli submit -d 20 -l 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
         $ experiment-cli submit -d 20 -l 9,archi=m3:m3:at86rf231+site=grenoble,gre.elf \\
                                       -l 5,archi=m3:m3:at86rf231+site=strasbourg,stras.elf
-""")
+"""
 
-LOAD_EPILOG = dedent("""
+LOAD_EPILOG = """
 
 Examples:
     * load experiment :
@@ -75,9 +71,9 @@ Examples:
         $ tar -xzvf 192.tar.gz
         $ cd 192
         $ experiment-cli load -f 192.json
-""")
+"""
 
-GET_EPILOG = dedent("""
+GET_EPILOG = """
 
 Examples:
     * Get an experiment submission
@@ -89,10 +85,10 @@ Examples:
         $ experiment-cli get -i 1637 -r
     * Get user's experiment list with filter by state and number
         $ experiment-cli get -l --state Running,Terminated --offset 10 --limit 20
-""")
+"""
 
 
-INFO_EPILOG = dedent("""
+INFO_EPILOG = """
 
 Examples:
     * Get resources description list with filter by site
@@ -100,10 +96,10 @@ Examples:
     * Get resources id list (e.g. 1-34+72)
         $ experiment-cli info -li
 
-""")
+"""
 
 
-ADD_EPILOG = dedent("""
+ADD_EPILOG = """
 
 Examples :
     * Add a profile for wsn430 archi and consumption measure configuration
@@ -112,10 +108,10 @@ Examples :
         measure configuration
         $ profile-cli addm3 -n profile -p battery -voltage -period 8244 -avg 1024
 
-""")
+"""
 
 
-COMMAND_EPILOG = dedent("""
+COMMAND_EPILOG = """
 
 Examples:
     * update firmware on all experiment resources
@@ -130,4 +126,4 @@ Examples:
     * command with several experiments with state Running
         $ node-cli -i <expid> --reset
 
-""")
+"""
