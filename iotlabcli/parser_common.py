@@ -4,6 +4,7 @@
 
 import argparse
 from iotlabcli import VERSION
+from iotlabcli import rest
 
 
 def base_parser(user_required=False):
@@ -26,3 +27,17 @@ def add_auth_arguments(parser, usr_required=False):
 def add_version(parser):
     """ Add 'version' argument """
     parser.add_argument('-v', '--version', action='version', version=VERSION)
+
+
+class Platform(object):
+    _sites = None
+
+    def __init__(self):
+        if Platform._sites is not None:
+            return
+        sites_dict = rest.Api.get_sites()
+        Platform._sites = [site["site"] for site in sites_dict["items"]]
+
+    def sites(self):
+        """ return platform sites dict """
+        return self._sites

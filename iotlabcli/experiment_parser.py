@@ -176,14 +176,14 @@ def parse_options():
     return parser
 
 
-def submit_experiment(parser_options, request):
+def submit_experiment(parser_options, api):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     experiment_files = {}
     firmwares = {}
@@ -193,7 +193,7 @@ def submit_experiment(parser_options, request):
     experiment = Experiment(name=parser_options.name,
                             duration=parser_options.duration,
                             reservation=parser_options.reservation)
-    sites_json = json.loads(request.get_sites())
+    sites_list = parser_options.Platform().sites()
 
     for exp_list in parser_options.exp_list:
         experiment_type, param_list = \
@@ -201,10 +201,12 @@ def submit_experiment(parser_options, request):
         experiment.type = experiment_type
         if experiment_type == 'physical' and not alias_type:
             physical_type = True
-            site = helpers.check_site(param_list[0], sites_json)
-            archi = helpers.check_archi(param_list[1])
+            site = param_list[0]
+            helpers.check_site(site, sites_list)
+            archi = param_list[1]
+            helpers.check_archi(archi)
             nodes_list = param_list[2]
-            nodes = helpers.check_nodes_list(site, archi, nodes_list)
+            nodes = helpers.get_nodes_list(site, archi, nodes_list)
             experiment.set_physical_nodes(nodes)
         # experiment alias type
         elif experiment_type == 'alias' and not physical_type:
@@ -213,7 +215,7 @@ def submit_experiment(parser_options, request):
             nb_nodes = param_list[0]
             properties_list = param_list[1]
             properties = helpers.check_properties(properties_list,
-                                                  sites_json)
+                                                  sites_list)
             experiment.set_alias_nodes(str(alias_number), int(nb_nodes),
                                        properties)
             nodes = ["%d" % alias_number]
@@ -249,22 +251,22 @@ def submit_experiment(parser_options, request):
         # static name for experiment file : rename by server-rest
         experiment_files['new_exp.json'] = experiment_filehandle.read()
         experiment_filehandle.close()
-        oar_json = request.submit_experiment(experiment_files)
+        oar_json = api.submit_experiment(experiment_files)
         print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
 
 
-def stop_experiment(parser_options, request):
+def stop_experiment(parser_options, api):
     """ Stop user experiment submission.
 
     :param experiment_id: scheduler OAR id submission
     :type experiment_id: string
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
-    exp_id = request.get_current_experiment(parser_options.experiment_id)
-    request.stop_experiment(exp_id)
+    exp_id = api.get_current_experiment(parser_options.experiment_id)
+    api.stop_experiment(exp_id)
 
 
-def get_experiment(parser_options, request):
+def get_experiment(parser_options, api):
     """ Get user experiment's description :
     _ download archive file (tar.gz) with JSONObject experiment
       description and firmware(s)
@@ -274,7 +276,7 @@ def get_experiment(parser_options, request):
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     if parser_options.experiment_list:
         state = helpers.check_experiment_state(parser_options.state)
@@ -287,40 +289,36 @@ def get_experiment(parser_options, request):
             queryset += '&offset=%s' % parser_options.offset
         else:
             queryset += '&offset=0'
-        experiment_json = request.get_experiments(queryset)
-        print json.dumps(json.loads(experiment_json), indent=4, sort_keys=True)
+        exps_dict = api.get_experiments(queryset)
+        print json.dumps(exps_dict, indent=4, sort_keys=True)
     else:
-        if parser_options.experiment_id is not None:
-            experiment_id = parser_options.experiment_id
-        else:
-            queryset = "state=Running&limit=0&offset=0"
-            experiments_json = json.loads(request.get_experiments(queryset))
-            experiment_id = \
-                helpers.check_experiments_running(experiments_json)
+        experiment_id = helpers.get_current_experiment(
+            parser_options.experiment_id)
         if parser_options.archive:
-            data = request.get_experiment_archive(experiment_id)
+            data = api.get_experiment_archive(experiment_id)
             helpers.write_experiment_archive(experiment_id, data)
         else:
             if parser_options.json:
-                experiment_json = request.get_experiment(experiment_id)
+                experiment_json = api.get_experiment(experiment_id)
             elif parser_options.resources_exp_id:
-                experiment_json = request.get_experiment_resources_id(
+                experiment_json = api.get_experiment_resources_id(
                     experiment_id)
             elif parser_options.exp_state:
-                experiment_json = request.get_experiment_state(experiment_id)
+                experiment_json = api.get_experiment_state(experiment_id)
             elif parser_options.resources:
-                experiment_json = \
-                    request.get_experiment_resources(experiment_id)
+                exp_result = api.get_experiment_resources(experiment_id)
+                print json.dumps(exp_result, indent=4, sort_keys=True)
+                return
             print json.dumps(json.loads(experiment_json), indent=4,
                              sort_keys=True)
 
 
-def load_experiment(parser_options, request):
+def load_experiment(parser_options, api):
     """ Load and submit user experiment description with firmware(s)
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     experiment_files = {}
     firmwares = {}
@@ -352,11 +350,11 @@ def load_experiment(parser_options, request):
         if not len(firmware_associations) == len(experiment_files)-1:
             raise Error("You have more firmware(s) in your firmware list " +
                         "than in experiment JSON description")
-    oar_json = request.submit_experiment(experiment_files)
+    oar_json = api.submit_experiment(experiment_files)
     print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
 
 
-def info_experiment(parser_options, request):
+def info_experiment(parser_options, api):
     """ Print testbed information for user experiment submission:
     _ print JSONObject sites descrition
     _ print JSONObject resources description
@@ -365,12 +363,12 @@ def info_experiment(parser_options, request):
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     if parser_options.resources_list:
-        info_json = request.get_resources(parser_options.site)
+        info_json = api.get_resources(parser_options.site)
     elif parser_options.resources_id:
-        info_json = request.get_resources_id(parser_options.site)
+        info_json = api.get_resources_id(parser_options.site)
     print json.dumps(json.loads(info_json), indent=4, sort_keys=True)
 
 
@@ -379,18 +377,21 @@ def main(args=sys.argv[1:]):
     parser = parse_options()
     try:
         parser_options = parser.parse_args(args)
-        request = rest.Api(parser_options.username, parser_options.password)
+        username, password = helpers.get_user_credentials(
+            parser_options.username, parser_options.password)
+
+        api = rest.Api(username, password)
         subparser_name = parser_options.subparser_name
         if subparser_name == 'submit':
-            submit_experiment(parser_options, request)
+            submit_experiment(parser_options, api)
         elif subparser_name == 'stop':
-            stop_experiment(parser_options, request)
+            stop_experiment(parser_options, api)
         elif subparser_name == 'get':
-            get_experiment(parser_options, request)
+            get_experiment(parser_options, api)
         elif subparser_name == 'load':
-            load_experiment(parser_options, request)
+            load_experiment(parser_options, api)
         elif subparser_name == 'info':
-            info_experiment(parser_options, request)
+            info_experiment(parser_options, api)
     except Error as err:
         parser.error(str(err))
     except KeyboardInterrupt:

@@ -1,15 +1,33 @@
 # -*- coding:utf-8 -*-
 """ Rest API class """
 
+import os
 import requests
 import json
 import sys
 from requests.auth import HTTPBasicAuth
 from urlparse import urljoin
 
-from iotlabcli import helpers
 
-API_URL = helpers.read_api_url_file() or 'https://www.iot-lab.info/rest/'
+def read_custom_api_url():
+    """ Return the customized api url from:
+     * environment variable IOTLAB_API_URL
+     * config file in <HOME_DIR>/.iotlab.api-url
+    """
+    # try getting url from environment variable
+    api_url = os.getenv('IOTLAB_API_URL')
+    if api_url is not None:
+        return api_url
+
+    # try getting url from config file
+    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
+    api_url_filename = os.path.join(home_directory, ".iotlab.api-url")
+    try:
+        return open(api_url_filename).readline().strip()
+    except IOError:
+        return None
+
+API_URL = read_custom_api_url() or 'https://www.iot-lab.info/rest/'
 
 # pylint: disable=maybe-no-member,no-member
 
@@ -22,7 +40,8 @@ class Encoder(json.JSONEncoder):
 
 class Api(object):
     """ REST API """
-    def __init__(self, username=None, password=None, url=API_URL):
+
+    def __init__(self, username, password, url=API_URL):
         """
         :param url: url of API.
         :param username: username for Basic password auth
@@ -30,8 +49,6 @@ class Api(object):
         """
 
         self.url = url
-        username, password = helpers.get_user_credentials(username,
-                                                          password)
         self.auth = HTTPBasicAuth(username, password)
 
     def method(self, url, method='GET', data=None):
@@ -41,30 +58,44 @@ class Api(object):
         :param data: request data
         """
         method_url = urljoin(self.url, url)
+
+        return self._method(method_url, method, self.auth, data)
+
+    @staticmethod
+    def _method(url, method='GET', auth=None, data=None):
+        """
+        :param url: url to request.
+        :param method: request method
+        :param auth: HTTPBasicAuth object
+        :param data: request data
+        """
         if method == 'POST':
             headers = {'content-type': 'application/json'}
-            req = requests.post(method_url, data=data, headers=headers,
-                                auth=self.auth)
+            req = requests.post(url, auth=auth, data=data, headers=headers)
         elif method == 'MULTIPART':
-            req = requests.post(method_url, files=data, auth=self.auth)
+            req = requests.post(url, auth=auth, files=data)
         elif method == 'DELETE':
-            req = requests.delete(method_url, auth=self.auth)
+            req = requests.delete(url, auth=auth)
         else:
-            req = requests.get(method_url, auth=self.auth)
+            req = requests.get(url, auth=auth)
 
-        if req.status_code == requests.codes.ok:
-            return req.text
-        # we have HTTP error (code != 200)
-        else:
+        if req.status_code != requests.codes.ok:
+            # we have HTTP error (code != 200)
             print "HTTP error code : %s \n%s" % (req.status_code, req.text)
             sys.exit()
+        # request OK, return result
+        # TODO json.loads
+        return req.text
 
-    def get_sites(self):
+    @staticmethod
+    def get_sites():
         """ Get testbed sites description
 
         :returns JSONObject
         """
-        return self.method('experiments?sites')
+        # unauthenticated request
+        url = urljoin(API_URL, 'experiments?sites')
+        return json.loads(Api._method(url))
 
     def get_resources(self, site=None):
         """ Get testbed resources description
@@ -72,8 +103,10 @@ class Api(object):
         :returns JSONObject
         """
         if site is not None:
+            # TODO json.loads
             return self.method('experiments?resources&site=%s' % site)
         else:
+            # TODO json.loads
             return self.method('experiments?resources')
 
     def get_resources_id(self, site=None):
@@ -82,8 +115,10 @@ class Api(object):
         :returns JSONObject
         """
         if site is not None:
+            # TODO json.loads
             return self.method('experiments?id&site=%s' % site)
         else:
+            # TODO json.loads
             return self.method('experiments?id')
 
     def get_profile(self, name):
@@ -93,6 +128,7 @@ class Api(object):
         :type name: string
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('profiles/%s' % name)
 
     def get_profiles(self):
@@ -100,6 +136,7 @@ class Api(object):
 
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('profiles')
 
     def add_profile(self, name, profile):
@@ -108,6 +145,7 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
+        # TODO json.loads
         self.method('profiles/%s' % name, method='POST', data=profile)
 
     def del_profile(self, name):
@@ -116,6 +154,7 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
+        # TODO json.loads
         self.method('profiles/%s' % name, method='DELETE')
 
     def submit_experiment(self, files):
@@ -125,6 +164,7 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('experiments', method='MULTIPART', data=files)
 
     def get_experiments(self, queryset):
@@ -133,24 +173,21 @@ class Api(object):
         :type queryset: string
         :returns JSONObject
         """
-        return self.method('experiments?%s' % queryset)
+        return json.loads(self.method('experiments?%s' % queryset))
 
-    def get_current_experiment(self, experiment_id=None):
-        """ Return the given experiment or get the currently running one """
-        if experiment_id is not None:
-            return experiment_id
-
-        # no experiment given, try to find the currently running one
+    def get_running_experiments(self):
+        """ Return the currently running experiments
+        :returns JSONObject
+        """
         queryset = "state=Running&limit=0&offset=0"
-        exps_dict = json.loads(self.get_experiments(queryset))
-        exp_id = helpers.check_experiments_running(exps_dict)
-        return exp_id
+        return self.get_experiments(queryset)
 
     def get_experiments_total(self):
         """ Get the number of past, running and upcoming user's experiment.
 
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('experiments?total')
 
     def get_experiment(self, expid):
@@ -160,6 +197,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('experiments/%s' % expid)
 
     def get_experiment_resources(self, expid):
@@ -169,7 +207,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
-        return self.method('experiments/%s?resources' % expid)
+        return json.loads(self.method('experiments/%s?resources' % expid))
 
     def get_experiment_resources_id(self, expid):
         """ Get user experiment resources list description.
@@ -178,6 +216,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('experiments/%s?id' % expid)
 
     def get_experiment_state(self, expid):
@@ -187,6 +226,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
+        # TODO json.loads
         return self.method('experiments/%s?state' % expid)
 
     def get_experiment_archive(self, expid):
@@ -197,6 +237,7 @@ class Api(object):
         :type id: string
         :returns File
         """
+        # TODO json.loads
         return self.method('experiments/%s?data' % expid)
 
     def stop_experiment(self, expid):
@@ -205,6 +246,7 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :type id: string
         """
+        # TODO json.loads
         self.method('experiments/%s' % expid, method='DELETE')
 
     def start_command(self, expid, nodes):
@@ -214,10 +256,10 @@ class Api(object):
         :type id: string
         :param nodes: list of nodes
         :type nodes: JSONArray
-        :returns JSONObject
+        :returns dict
         """
-        return self.method('experiments/%s/nodes?start' % expid,
-                           method='POST', data=nodes)
+        return json.loads(self.method('experiments/%s/nodes?start' % expid,
+                                      method='POST', data=nodes))
 
     def stop_command(self, expid, nodes):
         """ Launch stop command on user experiment list nodes
@@ -228,8 +270,8 @@ class Api(object):
         :type nodes: JSONArray
         :returns JSONObject
         """
-        return self.method('experiments/%s/nodes?stop' % expid,
-                           method='POST', data=nodes)
+        return json.loads(self.method('experiments/%s/nodes?stop' % expid,
+                                      method='POST', data=nodes))
 
     def reset_command(self, expid, nodes):
         """ Launch reset command on user experiment list nodes
@@ -240,8 +282,8 @@ class Api(object):
         :type nodes: JSONArray
         :returns JSONObject
         """
-        return self.method('experiments/%s/nodes?reset' % expid,
-                           method='POST', data=nodes)
+        return json.loads(self.method('experiments/%s/nodes?reset' % expid,
+                                      method='POST', data=nodes))
 
     def update_command(self, expid, files):
         """ Launch upadte command (flash firmware) on user
@@ -253,5 +295,5 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
-        return self.method('experiments/%s/nodes?update' % expid,
-                           method='MULTIPART', data=files)
+        return json.loads(self.method('experiments/%s/nodes?update' % expid,
+                                      method='MULTIPART', data=files))

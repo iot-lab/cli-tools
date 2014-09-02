@@ -192,12 +192,12 @@ def parse_options():
     return parser
 
 
-def add_wsn430_profile(options, request):
+def add_wsn430_profile(options, api):
     """ Add WSN430 user profile with JSON Encoder serialization object Profile.
 
     :param options: command-line parser options
     :type options:  Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     consumption = None
     radio = None
@@ -237,15 +237,15 @@ def add_wsn430_profile(options, request):
     if options.json:
         print profile_json
     else:
-        request.add_profile(options.name, profile_json)
+        api.add_profile(options.name, profile_json)
 
 
-def add_m3_profile(options, request):
+def add_m3_profile(options, api):
     """ Add M3 user profile with JSON Encoder serialization object Profile.
 
     :param options: command-line parser options
     :type options:  Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     consumption = None
     radio = None
@@ -289,46 +289,46 @@ def add_m3_profile(options, request):
     if options.json:
         print profile_json
     else:
-        request.add_profile(options.name, profile_json)
+        api.add_profile(options.name, profile_json)
 
 
-def load_profile(path_file, request):
+def load_profile(path_file, api):
     """  Load and add user profile description
 
     :param path_file: path file profile description
     :type path_file: string
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     file_data = helpers.open_file(path_file)[1]
     json_profile = json.loads(file_data)
     if "profilename" not in json_profile:
         raise Error("You must have a profilename attribute in your JSON file")
-    request.add_profile(json_profile["profilename"], file_data)
+    api.add_profile(json_profile["profilename"], file_data)
 
 
-def del_profile(name, request):
+def del_profile(name, api):
     """ Delete user profile description
 
     :param name: profile name
     :type name: string
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
-    request.del_profile(name)
+    api.del_profile(name)
 
 
-def get_profile(parser_options, request):
+def get_profile(parser_options, api):
     """ Get user profile description
     _ print JSONObject profile description
     _ print JSONObject profile's list description
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
-    :param request: API Rest request object
+    :param api: API Rest api object
     """
     if parser_options.list:
-        profile_json = request.get_profiles()
+        profile_json = api.get_profiles()
     elif parser_options.name is not None:
-        profile_json = request.get_profile(parser_options.name)
+        profile_json = api.get_profile(parser_options.name)
     print json.dumps(json.loads(profile_json), indent=4, sort_keys=True)
 
 
@@ -339,18 +339,21 @@ def main(args=sys.argv[1:]):
     parser = parse_options()
     try:
         parser_options = parser.parse_args(args)
-        request = rest.Api(parser_options.username, parser_options.password)
+        username, password = helpers.get_user_credentials(
+            parser_options.username, parser_options.password)
+
+        api = rest.Api(username, password)
         subparser_name = parser_options.subparser_name
         if subparser_name == 'addwsn430':
-            add_wsn430_profile(parser_options, request)
+            add_wsn430_profile(parser_options, api)
         elif subparser_name == 'addm3':
-            add_m3_profile(parser_options, request)
+            add_m3_profile(parser_options, api)
         elif subparser_name == 'load':
-            load_profile(parser_options.path_file, request)
+            load_profile(parser_options.path_file, api)
         elif subparser_name == 'get':
-            get_profile(parser_options, request)
+            get_profile(parser_options, api)
         elif subparser_name == 'del':
-            del_profile(parser_options.name, request)
+            del_profile(parser_options.name, api)
     except Error as err:
         parser.error(str(err))
     except KeyboardInterrupt:

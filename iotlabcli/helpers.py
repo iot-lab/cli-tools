@@ -5,9 +5,10 @@ import getpass
 import os
 import base64
 import json
-import argparse
+from argparse import ArgumentTypeError
 
 from iotlabcli import Error
+from iotlabcli import parser_common
 
 DOMAIN_DNS = 'iot-lab.info'
 
@@ -37,6 +38,9 @@ def create_password_file(username, password):
     :param password: basic http auth password
     :type password: string
     """
+    if username is None or password is None:
+        raise Error("No username or password provided: %s:%s",
+                    username, password)
     home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
     try:
         password_file = open('%s/%s' % (home_directory, '.iotlabrc'), 'wb')
@@ -75,15 +79,6 @@ def read_password_file():
         return None, None
 
 
-def read_api_url_file():
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    api_url_filename = os.path.join(home_directory, ".iotlab.api-url")
-    try:
-        return open(api_url_filename).readline().strip()
-    except IOError:
-        return None
-
-
 def read_json_file(json_file_name, json_file_data):
     try:
         json_data = json.loads(json_file_data)
@@ -117,7 +112,7 @@ def get_user_credentials(username, password):
 def check_radio_period(period):
     value = int(period)
     if value not in range(1, 65536):
-        raise argparse.ArgumentTypeError(
+        raise ArgumentTypeError(
             "invalid period choice : %s (choose from 1 .. 65535)" % (value,))
     return value
 
@@ -125,7 +120,7 @@ def check_radio_period(period):
 def check_radio_num_per_channel(num):
     value = int(num)
     if value not in range(1, 256):
-        raise argparse.ArgumentTypeError(
+        raise ArgumentTypeError(
             "invalid period choice : %s (choose from 1 .. 255)" % (value,))
     return value
 
@@ -133,7 +128,7 @@ def check_radio_num_per_channel(num):
 def check_radio_channels(channel):
     value = int(channel)
     if value not in range(11, 27):
-        raise argparse.ArgumentTypeError(
+        raise ArgumentTypeError(
             "invalid channel choice : %s (choose from 11 .. 26)" % (value,))
     return value
 
@@ -151,11 +146,18 @@ def check_experiment_state(state):
     return state
 
 
-def check_site(site_name, sites_json):
-    for site in sites_json["items"]:
-        if site["site"] == site_name:
-            return site_name
-    raise Error("The site name %s doesn't exist" % site_name)
+def check_site(site_name, sites_list):
+    """ Check if the given site exists
+
+    >>> sites = ["strasbourg", "grenoble"]
+    >>> check_site("grenoble", sites)
+    >>> check_site("unknown", sites)
+    Traceback (most recent call last):
+    ArgumentTypeError: The site name 'unknown' doesn't exist
+    """
+    if site_name in sites_list:
+        return  # site_name is valid
+    raise ArgumentTypeError("The site name %r doesn't exist" % site_name)
 
 
 def check_experiments_running(experiments_json):
@@ -173,20 +175,21 @@ def check_experiments_running(experiments_json):
         return experiments_id[0]
 
 
-def check_command_list(nodes_list):
+def get_command_list(nodes_list):
     """
-    >>> check_command_list('grenoble,m3,0-5+6+8')
+    >>> get_command_list('grenoble,m3,0-5+6+8')
     ['grenoble', 'm3', '0-5+6+8']
 
-    >>> check_command_list('grenoble,m3')
+    >>> get_command_list('grenoble,m3')
     Traceback (most recent call last):
-    Error: "Invalid number of argument in nodes list: 'grenoble,m3'"
+    ArgumentTypeError: Invalid number of argument in nodes list: 'grenoble,m3'
 
     """
     param_list = nodes_list.split(',')
     if len(param_list) == 3:
         return param_list
-    raise Error('Invalid number of argument in nodes list: %r' % nodes_list)
+    raise ArgumentTypeError(
+        'Invalid number of argument in nodes list: %r' % nodes_list)
 
 
 def check_experiment_list(exp_list):
@@ -208,51 +211,100 @@ def check_experiment_list(exp_list):
     return experiment_type, param_list
 
 
-def check_archi(archi):
+def nodes_list_from_str(nodes_list_str):
     """
+    nodes_list_str format: site_name,archi,nodeid_list
+
+    ex: nodes_list_str == 'grenoble,m3,1-34+72'
+    """
+    sites_list = parser_common.Platform().sites()
+
+    # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
+    site, archi, nodes_str = get_command_list(nodes_list_str)
+    check_site(site, sites_list)
+    check_archi(archi)
+
+    nodes_list = get_nodes_list(site, archi, nodes_str)
+    return nodes_list
+
+
+def check_archi(archi):
+    """ Check that archi is valid
     >>> [check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
-    ['wsn430', 'm3', 'a8']
+    [None, None, None]
 
     >>> check_archi('msp430')
     Traceback (most recent call last):
     Error: "Invalid not architecture: 'msp430' not in ['wsn430', 'm3', 'a8']"
-
     """
+
     archi_list = ['wsn430', 'm3', 'a8']
     if archi in archi_list:
-        return archi
+        return  # valid archi
     raise Error("Invalid not architecture: %r not in %s" % (archi, archi_list))
 
 
-def check_nodes_list(site, archi, nodes_list):
-    physical_nodes = []
-    for nodes in nodes_list.split('+'):
-        node = nodes.split('-')
-        if len(node) == 1 and node[0].isdigit():
-            # 42
-            physical_node = "%s-%s.%s.%s" % (archi,
-                                             node[0],
-                                             site,
-                                             DOMAIN_DNS)
-            physical_nodes.append(physical_node)
-        elif (len(node) == 2 and (node[0].isdigit() and node[1].isdigit())
-              and (int(node[0]) < int(node[1]))):
-            # 42-69
-            first = int(node[0])
-            last = int(node[1])
-            for node_id in range(first, last + 1):
-                physical_node = "%s-%s.%s.%s" % (archi,
-                                                 node_id,
-                                                 site,
-                                                 DOMAIN_DNS)
-                physical_nodes.append(physical_node)
-        else:
-            # invalid: 6-3 or 6-7-8
-            raise Error('Invalid nodes list: %s ([0-9+-])' % nodes_list)
-    return physical_nodes
+def get_nodes_list(site, archi, nodes_list):
+    """
+
+    >>> get_nodes_list('grenoble', 'm3', '1-4+6+7-8')
+    ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
+'m3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
+'m3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
+'m3-8.grenoble.iot-lab.info']
+
+    >>> get_nodes_list('grenoble', 'm3', '1-4-5')
+    Traceback (most recent call last):
+    ArgumentTypeError: Invalid nodes list: 1-4-5 ([0-9+-])
+
+    >>> get_nodes_list('grenoble', 'm3', '3-3')
+    Traceback (most recent call last):
+    ArgumentTypeError: Invalid nodes list: 3-3 ([0-9+-])
+
+    >>> get_nodes_list('grenoble', 'm3', '3-2')
+    Traceback (most recent call last):
+    ArgumentTypeError: Invalid nodes list: 3-2 ([0-9+-])
+
+    >>> get_nodes_list('grenoble', 'm3', 'a-b')
+    Traceback (most recent call last):
+    ArgumentTypeError: Invalid nodes list: a-b ([0-9+-])
+
+    """
+
+    node_fmt = '{archi}-%u.{site}.{domain}'.format(
+        archi=archi, site=site, domain=DOMAIN_DNS)
+
+    nodes = []
+    try:
+        # '1-4+6+8-8'
+        for plus_nodes in nodes_list.split('+'):
+            # ['1-4', '6', '7-8']
+
+            minus_node = plus_nodes.split('-')
+            if len(minus_node) == 1:
+                # ['6']
+                nodes.append(node_fmt % int(minus_node[0]))
+            else:
+                # ['1', '4'] or ['7', '8']
+                first, last = minus_node
+                nodes_range = range(int(first), int(last) + 1)
+
+                # first >= last
+                if len(nodes_range) <= 1:
+                    raise ValueError
+
+                # Add nodes range
+                nodes.extend([node_fmt % num for num in nodes_range])
+
+    except ValueError:
+        # invalid: 6-3 or 6-7-8 or non int values
+        raise ArgumentTypeError('Invalid nodes list: %s ([0-9+-])' %
+                                nodes_list)
+    else:
+        return nodes
 
 
-def check_properties(properties_list, sites_json):
+def check_properties(properties_list, sites_list):
     properties = properties_list.split('+')
     if len(properties) > 3:
         raise Error('You must specify a valid list with "archi", '
@@ -267,7 +319,7 @@ def check_properties(properties_list, sites_json):
 
     archi_prop = archi[0].split('=')[1]
     site_prop = site[0].split('=')[1]
-    check_site(site_prop, sites_json)
+    check_site(site_prop, sites_list)
 
     properties_dict = {'site': site_prop, 'archi': archi_prop}
     if len(mobile) == 0:
@@ -291,6 +343,17 @@ def open_file(file_path):
         file_data = file_d.read()
         file_d.close()
     return file_name, file_data
+
+
+def get_current_experiment(api, experiment_id=None):
+    """ Return the given experiment or get the currently running one """
+    if experiment_id is not None:
+        return experiment_id
+
+    # no experiment given, try to find the currently running one
+    exps_dict = api.get_running_experiments()
+    exp_id = check_experiments_running(exps_dict)
+    return exp_id
 
 
 def check_experiment_firmwares(firmware_path, firmwares):
