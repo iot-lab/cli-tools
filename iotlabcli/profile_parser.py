@@ -6,6 +6,7 @@ import sys
 import argparse
 from argparse import RawTextHelpFormatter
 
+from iotlabcli import Error
 from iotlabcli import helpers, rest, help_parser
 from iotlabcli.profile import Profile, Consumption, Radio, Sensor
 from iotlabcli import parser_common
@@ -191,7 +192,7 @@ def parse_options():
     return parser
 
 
-def add_wsn430_profile(options, request, parser):
+def add_wsn430_profile(options, request):
     """ Add WSN430 user profile with JSON Encoder serialization object Profile.
 
     :param options: command-line parser options
@@ -203,28 +204,25 @@ def add_wsn430_profile(options, request, parser):
     sensor = None
 
     if options.current or options.voltage or options.power:
-        if options.cfreq is not None:
-            consumption = Consumption(current=options.current,
-                                      voltage=options.voltage,
-                                      power=options.power,
-                                      frequency=options.cfreq)
-        else:
-            parser.error(
+        if options.cfreq is None:
+            raise Error(
                 "You must specify a frequency for consumption measure.")
+        consumption = Consumption(current=options.current,
+                                  voltage=options.voltage,
+                                  power=options.power,
+                                  frequency=options.cfreq)
 
     if options.rssi:
-        if options.rfreq is not None:
-            radio = Radio(rssi=options.rssi, frequency=options.rfreq)
-        else:
-            parser.error("You must specify a frequency for radio measure.")
+        if options.rfreq is None:
+            raise Error("You must specify a frequency for radio measure.")
+        radio = Radio(rssi=options.rssi, frequency=options.rfreq)
 
     if options.luminosity or options.temperature:
-        if options.sfreq is not None:
-            sensor = Sensor(temperature=options.temperature,
-                            luminosity=options.luminosity,
-                            frequency=options.sfreq)
-        else:
-            parser.error("You must specify a frequency for sensor measure.")
+        if options.sfreq is None:
+            raise Error("You must specify a frequency for sensor measure.")
+        sensor = Sensor(temperature=options.temperature,
+                        luminosity=options.luminosity,
+                        frequency=options.sfreq)
 
     profile = Profile(nodearch='wsn430',
                       profilename=options.name,
@@ -242,7 +240,7 @@ def add_wsn430_profile(options, request, parser):
         request.add_profile(options.name, profile_json)
 
 
-def add_m3_profile(options, request, parser):
+def add_m3_profile(options, request):
     """ Add M3 user profile with JSON Encoder serialization object Profile.
 
     :param options: command-line parser options
@@ -260,24 +258,24 @@ def add_m3_profile(options, request, parser):
                                       period=options.period,
                                       average=options.average)
         else:
-            parser.error("You must specify values for period/average"
-                         " consumption measure.")
+            raise Error("You must specify values for period/average"
+                        " consumption measure.")
 
     if options.rssi:
-        if options.rperiod is not None and options.channels is not None:
-            if options.num_per_channel is None and len(options.channels) > 1:
-                parser.error("You must specify value for "
-                             "number of measure by channel.")
-            elif len(options.channels) == 1:
-                options.num_per_channel = 0
-            radio = Radio(mode="rssi",
-                          period=options.rperiod,
-                          num_per_channel=options.num_per_channel,
-                          channels=options.channels)
-        else:
-            parser.error(
-                ("You must specify values for "
-                 "channels/period radio measure."))
+        if options.rperiod is None or options.channels is None:
+            raise Error("You must specify values for "
+                        "channels/period radio measure.")
+
+        if options.num_per_channel is None and len(options.channels) > 1:
+            raise Error("You must specify value for "
+                        "number of measure by channel.")
+        elif len(options.channels) == 1:
+            options.num_per_channel = 0
+
+        radio = Radio(mode="rssi",
+                      period=options.rperiod,
+                      num_per_channel=options.num_per_channel,
+                      channels=options.channels)
 
     profile = Profile(nodearch='m3',
                       profilename=options.name,
@@ -294,20 +292,18 @@ def add_m3_profile(options, request, parser):
         request.add_profile(options.name, profile_json)
 
 
-def load_profile(path_file, request, parser):
+def load_profile(path_file, request):
     """  Load and add user profile description
 
     :param path_file: path file profile description
     :type path_file: string
     :param request: API Rest request object
-    :param parser: command-line parser
     """
-    file_data = helpers.open_file(path_file, parser)[1]
+    file_data = helpers.open_file(path_file)[1]
     json_profile = json.loads(file_data)
-    if "profilename" in json_profile:
-        request.add_profile(json_profile["profilename"], file_data)
-    else:
-        parser.error("You must have a profilename attribute in your JSON file")
+    if "profilename" not in json_profile:
+        raise Error("You must have a profilename attribute in your JSON file")
+    request.add_profile(json_profile["profilename"], file_data)
 
 
 def del_profile(name, request):
@@ -340,24 +336,23 @@ def main(args=sys.argv[1:]):
     """
     Main command-line execution loop.
     """
+    parser = parse_options()
     try:
-        parser = parse_options()
         parser_options = parser.parse_args(args)
-        request = rest.Api(
-            username=parser_options.username,
-            password=parser_options.password,
-            parser=parser)
+        request = rest.Api(parser_options.username, parser_options.password)
         subparser_name = parser_options.subparser_name
         if subparser_name == 'addwsn430':
-            add_wsn430_profile(parser_options, request, parser)
+            add_wsn430_profile(parser_options, request)
         elif subparser_name == 'addm3':
-            add_m3_profile(parser_options, request, parser)
+            add_m3_profile(parser_options, request)
         elif subparser_name == 'load':
-            load_profile(parser_options.path_file, request, parser)
+            load_profile(parser_options.path_file, request)
         elif subparser_name == 'get':
             get_profile(parser_options, request)
         elif subparser_name == 'del':
             del_profile(parser_options.name, request)
+    except Error as err:
+        parser.error(str(err))
     except KeyboardInterrupt:
         print >> sys.stderr, "\nStopped."
         sys.exit()

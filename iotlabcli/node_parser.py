@@ -6,6 +6,7 @@ import json
 import sys
 from cStringIO import StringIO
 from argparse import RawTextHelpFormatter
+from iotlabcli import Error
 from iotlabcli import rest, helpers, help_parser
 from iotlabcli import parser_common
 
@@ -56,39 +57,38 @@ def parse_options():
     return parser
 
 
-def command_node(parser_options, request, parser):
+def command_node(parser_options, request):
     """ Launch commands (start, stop, reset, update)
     on resources (JSONArray) user experiment
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
     :param request: API Rest request object
-    :param parser: command-line parser
     """
     exp_id = request.get_current_experiment(parser_options.experiment_id)
 
     nodes = []
     if parser_options.nodes_list is not None:
+        sites_json = json.loads(request.get_sites())
         for nodes_list in parser_options.nodes_list:
-            param_list = helpers.check_command_list(nodes_list, parser)
-            sites_json = json.loads(request.get_sites())
-            site = helpers.check_site(param_list[0], sites_json, parser)
-            archi = helpers.check_archi(param_list[1], parser)
+            param_list = helpers.check_command_list(nodes_list)
+            site = helpers.check_site(param_list[0], sites_json)
+            archi = helpers.check_archi(param_list[1])
             nodes += helpers.check_nodes_list(site,
                                               archi,
-                                              param_list[2],
-                                              parser)
+                                              param_list[2])
         nodes_json = json.dumps(
             nodes, cls=rest.Encoder, sort_keys=True, indent=4)
     elif parser_options.exclude_nodes_list is not None:
         exclude_nodes = []
+        sites_json = json.loads(request.get_sites())
         for exclude_list in parser_options.exclude_nodes_list:
-            param_list = helpers.check_command_list(exclude_list, parser)
+            param_list = helpers.check_command_list(exclude_list)
             sites_json = json.loads(request.get_sites())
-            site = helpers.check_site(param_list[0], sites_json, parser)
-            archi = helpers.check_archi(param_list[1], parser)
+            site = helpers.check_site(param_list[0], sites_json)
+            archi = helpers.check_archi(param_list[1])
             exclude_nodes += helpers.check_nodes_list(
-                site, archi, param_list[2], parser)
+                site, archi, param_list[2])
         experiment_resources_json = \
             json.loads(request.get_experiment_resources(exp_id))
         exp_nodes = []
@@ -112,7 +112,7 @@ def command_node(parser_options, request, parser):
     elif parser_options.path_file is not None:
         command_files = {}
         firmware_name, firmware_data = helpers.open_file(
-            parser_options.path_file, parser)
+            parser_options.path_file)
         command_files[firmware_name] = firmware_data
         command_filehandle = StringIO(nodes_json)
         command_files['nodes.json'] = command_filehandle.read()
@@ -125,14 +125,13 @@ def main(args=sys.argv[1:]):
     """
     Main command-line execution loop."
     """
+    parser = parse_options()
     try:
-        parser = parse_options()
         parser_options = parser.parse_args(args)
-        request = rest.Api(
-            username=parser_options.username,
-            password=parser_options.password,
-            parser=parser)
-        command_node(parser_options, request, parser)
+        request = rest.Api(parser_options.username, parser_options.password)
+        command_node(parser_options, request)
+    except Error as err:
+        parser.error(str(err))
     except KeyboardInterrupt:
         print >> sys.stderr, "\nStopped."
         sys.exit()

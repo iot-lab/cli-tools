@@ -22,17 +22,16 @@ class Encoder(json.JSONEncoder):
 
 class Api(object):
     """ REST API """
-    def __init__(self, url=API_URL, username=None, password=None, parser=None):
+    def __init__(self, username=None, password=None, url=API_URL):
         """
         :param url: url of API.
         :param username: username for Basic password auth
         :param password: password for Basic auth
-        :param parser: command-line parser
         """
 
         self.url = url
         username, password = helpers.get_user_credentials(username,
-                                                          password, parser)
+                                                          password)
         self.auth = HTTPBasicAuth(username, password)
 
     def method(self, url, method='GET', data=None):
@@ -143,8 +142,8 @@ class Api(object):
 
         # no experiment given, try to find the currently running one
         queryset = "state=Running&limit=0&offset=0"
-        exps_dict = json.loads(request.get_experiments(queryset))
-        exp_id = helpers.check_experiments_running(exps_dict, parser)
+        exps_dict = json.loads(self.get_experiments(queryset))
+        exp_id = helpers.check_experiments_running(exps_dict)
         return exp_id
 
     def get_experiments_total(self):

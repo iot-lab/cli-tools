@@ -7,6 +7,7 @@ import sys
 from cStringIO import StringIO
 from argparse import RawTextHelpFormatter
 
+from iotlabcli import Error
 from iotlabcli import rest, helpers, help_parser
 from iotlabcli.experiment import Experiment
 from iotlabcli import parser_common
@@ -175,7 +176,7 @@ def parse_options():
     return parser
 
 
-def submit_experiment(parser_options, request, parser):
+def submit_experiment(parser_options, request):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
@@ -183,7 +184,6 @@ def submit_experiment(parser_options, request, parser):
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
     :param request: API Rest request object
-    :param parser: command-line parser
     """
     experiment_files = {}
     firmwares = {}
@@ -197,14 +197,14 @@ def submit_experiment(parser_options, request, parser):
 
     for exp_list in parser_options.exp_list:
         experiment_type, param_list = \
-            helpers.check_experiment_list(exp_list, parser)
+            helpers.check_experiment_list(exp_list)
         experiment.type = experiment_type
         if experiment_type == 'physical' and not alias_type:
             physical_type = True
-            site = helpers.check_site(param_list[0], sites_json, parser)
-            archi = helpers.check_archi(param_list[1], parser)
+            site = helpers.check_site(param_list[0], sites_json)
+            archi = helpers.check_archi(param_list[1])
             nodes_list = param_list[2]
-            nodes = helpers.check_nodes_list(site, archi, nodes_list, parser)
+            nodes = helpers.check_nodes_list(site, archi, nodes_list)
             experiment.set_physical_nodes(nodes)
         # experiment alias type
         elif experiment_type == 'alias' and not physical_type:
@@ -213,13 +213,12 @@ def submit_experiment(parser_options, request, parser):
             nb_nodes = param_list[0]
             properties_list = param_list[1]
             properties = helpers.check_properties(properties_list,
-                                                  sites_json,
-                                                  parser)
+                                                  sites_json)
             experiment.set_alias_nodes(str(alias_number), int(nb_nodes),
                                        properties)
             nodes = ["%d" % alias_number]
         else:
-            parser.error("Experiment list is not valid with \
+            raise Error("Experiment list is not valid with \
                 two different types : alias and physical")
         if experiment_type == "physical":
             index_list = 3
@@ -231,8 +230,7 @@ def submit_experiment(parser_options, request, parser):
             firmware_path = param_list[index_list]
             firmware_name, firmware_body, firmwares = \
                 helpers.check_experiment_firmwares(firmware_path,
-                                                   firmwares,
-                                                   parser)
+                                                   firmwares)
             experiment_files[firmware_name] = firmware_body
             experiment.set_firmware_associations(firmware_name, nodes)
         # profile associations
@@ -255,7 +253,7 @@ def submit_experiment(parser_options, request, parser):
         print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
 
 
-def stop_experiment(parser_options, request, parser):
+def stop_experiment(parser_options, request):
     """ Stop user experiment submission.
 
     :param experiment_id: scheduler OAR id submission
@@ -266,7 +264,7 @@ def stop_experiment(parser_options, request, parser):
     request.stop_experiment(exp_id)
 
 
-def get_experiment(parser_options, request, parser):
+def get_experiment(parser_options, request):
     """ Get user experiment's description :
     _ download archive file (tar.gz) with JSONObject experiment
       description and firmware(s)
@@ -277,10 +275,9 @@ def get_experiment(parser_options, request, parser):
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
     :param request: API Rest request object
-    :param parser: command-line parser
     """
     if parser_options.experiment_list:
-        state = helpers.check_experiment_state(parser_options.state, parser)
+        state = helpers.check_experiment_state(parser_options.state)
         queryset = 'state='+state
         if parser_options.limit is not None:
             queryset += '&limit=%s' % parser_options.limit
@@ -299,10 +296,10 @@ def get_experiment(parser_options, request, parser):
             queryset = "state=Running&limit=0&offset=0"
             experiments_json = json.loads(request.get_experiments(queryset))
             experiment_id = \
-                helpers.check_experiments_running(experiments_json, parser)
+                helpers.check_experiments_running(experiments_json)
         if parser_options.archive:
             data = request.get_experiment_archive(experiment_id)
-            helpers.write_experiment_archive(experiment_id, data, parser)
+            helpers.write_experiment_archive(experiment_id, data)
         else:
             if parser_options.json:
                 experiment_json = request.get_experiment(experiment_id)
@@ -318,32 +315,31 @@ def get_experiment(parser_options, request, parser):
                              sort_keys=True)
 
 
-def load_experiment(parser_options, request, parser):
+def load_experiment(parser_options, request):
     """ Load and submit user experiment description with firmware(s)
 
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
     :param request: API Rest request object
-    :param parser: command-line parser
     """
     experiment_files = {}
     firmwares = {}
     firmware_list = parser_options.firmware_list
     experiment_file_name, experiment_file_data = \
-        helpers.open_file(parser_options.path_file, parser)
+        helpers.open_file(parser_options.path_file)
     experiment_json = helpers.read_json_file(
-        experiment_file_name, experiment_file_data, parser)
+        experiment_file_name, experiment_file_data)
     firmware_associations = experiment_json['firmwareassociations']
     # static name for experiment file : rename by server-rest with id_oar.json
     experiment_files['new_exp.json'] = experiment_file_data
     if firmware_list is not None and firmware_associations is None:
-        parser.error("You don't have firmware(s) in your "
-                     "experiment JSON description")
+        raise Error("You don't have firmware(s) in your " +
+                    "experiment JSON description")
     elif firmware_list is not None:
         firmware = firmware_list.split(',')
         for firmware_path in firmware:
             firmware_name, firmware_body, firmwares = helpers. \
-                check_experiment_firmwares(firmware_path, firmwares, parser)
+                check_experiment_firmwares(firmware_path, firmwares)
             experiment_files[firmware_name] = firmware_body
     if firmware_associations is not None:
         for firmware in firmware_associations:
@@ -351,16 +347,16 @@ def load_experiment(parser_options, request, parser):
             if firmware_name not in experiment_files:
                 firmware_name, firmware_body, firmwares = \
                     helpers.check_experiment_firmwares(firmware_name,
-                                                       firmwares, parser)
+                                                       firmwares)
                 experiment_files[firmware_name] = firmware_body
         if not len(firmware_associations) == len(experiment_files)-1:
-            parser.error("You have more firmware(s) in your firmware list \
-                than in experiment JSON description")
+            raise Error("You have more firmware(s) in your firmware list " +
+                        "than in experiment JSON description")
     oar_json = request.submit_experiment(experiment_files)
     print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
 
 
-def info_experiment(parser_options, request, parser):
+def info_experiment(parser_options, request):
     """ Print testbed information for user experiment submission:
     _ print JSONObject sites descrition
     _ print JSONObject resources description
@@ -370,9 +366,7 @@ def info_experiment(parser_options, request, parser):
     :param parser_options: command-line parser options
     :type parser_options: Namespace object with options attribute
     :param request: API Rest request object
-    :param parser: command-line parser
     """
-    _ = parser
     if parser_options.resources_list:
         info_json = request.get_resources(parser_options.site)
     elif parser_options.resources_id:
@@ -381,26 +375,24 @@ def info_experiment(parser_options, request, parser):
 
 
 def main(args=sys.argv[1:]):
-    """
-    Main command-line execution loop."
-    """
+    """ Main command-line execution loop." """
+    parser = parse_options()
     try:
-        parser = parse_options()
         parser_options = parser.parse_args(args)
-        request = rest.Api(username=parser_options.username,
-                           password=parser_options.password,
-                           parser=parser)
+        request = rest.Api(parser_options.username, parser_options.password)
         subparser_name = parser_options.subparser_name
         if subparser_name == 'submit':
-            submit_experiment(parser_options, request, parser)
+            submit_experiment(parser_options, request)
         elif subparser_name == 'stop':
-            stop_experiment(parser_options, request, parser)
+            stop_experiment(parser_options, request)
         elif subparser_name == 'get':
-            get_experiment(parser_options, request, parser)
+            get_experiment(parser_options, request)
         elif subparser_name == 'load':
-            load_experiment(parser_options, request, parser)
+            load_experiment(parser_options, request)
         elif subparser_name == 'info':
-            info_experiment(parser_options, request, parser)
+            info_experiment(parser_options, request)
+    except Error as err:
+        parser.error(str(err))
     except KeyboardInterrupt:
         print >> sys.stderr, "\nStopped."
         sys.exit()
