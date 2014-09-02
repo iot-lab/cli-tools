@@ -6,6 +6,14 @@ from setuptools import setup
 from setuptools.command.test import test as TestCommand
 from iotlabcli import VERSION
 
+
+# unload 'iotlabcli' module
+# either it's not included in the coverage report...
+try:
+    del sys.modules['iotlabcli']
+except KeyError:
+    pass
+
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
 
