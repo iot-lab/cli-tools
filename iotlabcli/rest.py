@@ -146,6 +146,7 @@ class Api(object):
         :type profile: JSONObject.
         """
         # TODO json.loads
+        # TODO json.dumps on data, handle it on it's cli file
         self.method('profiles/%s' % name, method='POST', data=profile)
 
     def del_profile(self, name):
@@ -259,7 +260,7 @@ class Api(object):
         :returns dict
         """
         return json.loads(self.method('experiments/%s/nodes?start' % expid,
-                                      method='POST', data=nodes))
+                                      method='POST', data=json.dumps(nodes)))
 
     def stop_command(self, expid, nodes):
         """ Launch stop command on user experiment list nodes
@@ -271,7 +272,7 @@ class Api(object):
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s/nodes?stop' % expid,
-                                      method='POST', data=nodes))
+                                      method='POST', data=json.dumps(nodes)))
 
     def reset_command(self, expid, nodes):
         """ Launch reset command on user experiment list nodes
@@ -283,7 +284,7 @@ class Api(object):
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s/nodes?reset' % expid,
-                                      method='POST', data=nodes))
+                                      method='POST', data=json.dumps(nodes)))
 
     def update_command(self, expid, files):
         """ Launch upadte command (flash firmware) on user

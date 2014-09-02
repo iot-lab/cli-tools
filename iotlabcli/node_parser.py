@@ -93,16 +93,13 @@ def node_command(api, command, exp_id, nodes_list, firmware_path=None):
     :param firmware_path: Firmware path for update command
     """
 
-    # TODO remove JSON here, I think
-    nodes_json = json.dumps(nodes_list, cls=rest.Encoder, sort_keys=True)
-
     result = None
     if 'start' == command:
-        result = api.start_command(exp_id, nodes_json)
+        result = api.start_command(exp_id, nodes_list)
     elif 'stop' == command:
-        result = api.stop_command(exp_id, nodes_json)
+        result = api.stop_command(exp_id, nodes_list)
     elif 'reset' == command:
-        result = api.reset_command(exp_id, nodes_json)
+        result = api.reset_command(exp_id, nodes_list)
     elif 'update' == command:
         if firmware_path is None:
             raise Error("Update command requires a firmware: %s" %
@@ -110,7 +107,7 @@ def node_command(api, command, exp_id, nodes_list, firmware_path=None):
         f_name, f_data = helpers.open_file(firmware_path)
         command_files = {
             f_name: f_data,
-            'nodes.json': nodes_json
+            'nodes.json': json.dumps(nodes_list)
         }
         result = api.update_command(exp_id, command_files)
 
