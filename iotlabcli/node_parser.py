@@ -133,6 +133,8 @@ def node_parse_and_run(opts):
     elif opts.path_file is not None:
         command = 'update'
         firmware = opts.path_file
+    else:  # pragma: no cover
+        return
 
     nodes = list_nodes(api, exp_id, opts.nodes_list, opts.exclude_nodes_list)
 
@@ -142,12 +144,4 @@ def node_parse_and_run(opts):
 def main(args=sys.argv[1:]):
     """ Main command-line execution loop." """
     parser = parse_options()
-    try:
-        parser_opts = parser.parse_args(args)
-        result = node_parse_and_run(parser_opts)
-        print json.dumps(result, indent=4, sort_keys=True)
-    except Error as err:
-        parser.error(str(err))
-    except KeyboardInterrupt:
-        print >> sys.stderr, "\nStopped."
-        sys.exit()
+    parser_common.main_cli(node_parse_and_run, parser, args)

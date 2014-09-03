@@ -9,6 +9,59 @@ from iotlabcli import node_parser
 from iotlabcli import Error
 
 
+@mock.patch('sys.stderr', sys.stdout)
+@mock.patch('iotlabcli.helpers.get_user_credentials')
+@mock.patch('iotlabcli.helpers.get_current_experiment')
+@mock.patch('iotlabcli.rest.Api')
+@mock.patch('iotlabcli.parser_common.Platform')
+@mock.patch('iotlabcli.node_parser.node_command')
+@mock.patch('iotlabcli.node_parser.list_nodes')
+class TestMainNodeParser(unittest.TestCase):
+    def test_main(self, list_nodes, node_command, platform_class,
+                  api_class, cur_exp, get_credentials):
+        """ Run the main function """
+        api = api_class.return_value
+        platform_class.return_value.sites.return_value = [
+            'grenoble', 'strasbourg', 'euratech']
+        # simplify return value, use same cli parameters for correctness
+        get_credentials.return_value = 'username', 'password'
+        cur_exp.return_value = 123
+        node_command.return_value = {'result': 'test'}
+
+        list_nodes.return_value = []
+        # start
+        args = ['--start']
+        node_parser.main(args)
+        list_nodes.assert_called_with(api, 123, None, None)
+        node_command.assert_called_with(api, 'start', 123, [], None)
+        # stop
+        args = ['--stop']
+        node_parser.main(args)
+        list_nodes.assert_called_with(api, 123, None, None)
+        node_command.assert_called_with(api, 'stop', 123, [], None)
+
+        # Reset command with many arguments
+        args = ['--reset', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
+        list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify
+        node_parser.main(args)
+        list_nodes.assert_called_with(
+            api, 123,
+            [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info'],
+             ['m3-3.grenoble.iot-lab.info']], None)
+        node_command.assert_called_with(
+            api, 'reset', 123, ['m3-1', 'm3-2', 'm3-3'], None)
+
+        # update with exclude list
+        args = ['--update', 'tp.elf', '-e', 'grenoble,m3,1-2']
+        list_nodes.return_value = ['m3-3']  # simplify
+        node_parser.main(args)
+        list_nodes.assert_called_with(
+            api, 123, None,
+            [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info']])
+        node_command.assert_called_with(
+            api, 'update', 123, ['m3-3'], 'tp.elf')
+
+
 class TestNodeParser(unittest.TestCase):
     def test_list_nodes(self):
         """ Run the different list_nodes cases """

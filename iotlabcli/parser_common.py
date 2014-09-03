@@ -2,9 +2,12 @@
 
 """ Common parsing methods """
 
+import sys
 import argparse
+import json
 from iotlabcli import VERSION
 from iotlabcli import rest
+from iotlabcli import Error
 
 
 def base_parser(user_required=False):
@@ -27,6 +30,19 @@ def add_auth_arguments(parser, usr_required=False):
 def add_version(parser):
     """ Add 'version' argument """
     parser.add_argument('-v', '--version', action='version', version=VERSION)
+
+
+def main_cli(function, parser, args=sys.argv[1:]):
+    """ Main command-line execution." """
+    try:
+        parser_opts = parser.parse_args(args)
+        result = function(parser_opts)
+        print json.dumps(result, indent=4, sort_keys=True)
+    except Error as err:
+        parser.error(str(err))
+    except KeyboardInterrupt:
+        print >> sys.stderr, "\nStopped."
+        sys.exit()
 
 
 class Platform(object):
