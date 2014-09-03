@@ -4,10 +4,12 @@
 import argparse
 import json
 import sys
+import itertools
 from argparse import RawTextHelpFormatter
 from iotlabcli import Error
 from iotlabcli import rest, help_parser
 from iotlabcli import parser_common
+
 
 import iotlabcli.helpers as helpers  # for mocking
 
@@ -62,16 +64,12 @@ def list_nodes(api, exp_id, nodes_list=None, excl_nodes_list=None):
     """ Return the list of nodes where the command will apply """
 
     if nodes_list is not None:
-        nodes = []
-        for nodes_sublist in nodes_list:
-            nodes.extend(nodes_sublist)
-        return nodes
+        # flatten lists into one
+        nodes = list(itertools.chain.from_iterable(nodes_list))
 
     elif excl_nodes_list is not None:
-        # get nodes to exclude
-        excl_nodes = []
-        for nodes_sublist in excl_nodes_list:
-            excl_nodes.extend(nodes_sublist)
+        # flatten lists into one
+        excl_nodes = list(itertools.chain.from_iterable(excl_nodes_list))
 
         # get experiment nodes
         exp_resources = api.get_experiment_resources(exp_id)
@@ -79,10 +77,11 @@ def list_nodes(api, exp_id, nodes_list=None, excl_nodes_list=None):
 
         # remove exclude nodes from experiment nodes
         nodes = [node for node in exp_nodes if node not in excl_nodes]
-        return nodes
+
     else:
-        # all the nodes
-        return []
+        nodes = []  # all the nodes
+
+    return nodes
 
 
 def node_command(api, command, exp_id, nodes_list, firmware_path=None):
