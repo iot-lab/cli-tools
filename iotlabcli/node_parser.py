@@ -6,8 +6,10 @@ import json
 import sys
 from argparse import RawTextHelpFormatter
 from iotlabcli import Error
-from iotlabcli import rest, helpers, help_parser
+from iotlabcli import rest, help_parser
 from iotlabcli import parser_common
+
+import iotlabcli.helpers as helpers  # for mocking
 
 
 def parse_options():
@@ -57,6 +59,7 @@ def parse_options():
 
 
 def list_nodes(api, exp_id, nodes_list=None, excl_nodes_list=None):
+    """ Return the list of nodes where the command will apply """
 
     if nodes_list is not None:
         nodes = []
@@ -102,8 +105,7 @@ def node_command(api, command, exp_id, nodes_list, firmware_path=None):
         result = api.reset_command(exp_id, nodes_list)
     elif 'update' == command:
         if firmware_path is None:
-            raise Error("Update command requires a firmware: %s" %
-                        firmware_path)
+            raise Error("Update cmd requires a firmware: %s" % firmware_path)
         f_name, f_data = helpers.open_file(firmware_path)
         command_files = {
             f_name: f_data,
