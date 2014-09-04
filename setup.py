@@ -35,5 +35,5 @@ setup(name='iotlabcli',
       test_suite='nose.collector',
       tests_require=['nose'],
       setup_requires=['setuptools-pep8', 'setuptools-lint',
-                      'nose', 'nosexcover'],
+                      'nose', 'nosexcover', 'mock'],
       )
