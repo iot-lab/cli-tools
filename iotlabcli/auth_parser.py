@@ -6,9 +6,8 @@ import argparse
 import sys
 from argparse import RawTextHelpFormatter
 
-from iotlabcli import Error
+from iotlabcli import parser_common
 import iotlabcli.helpers
-import iotlabcli.parser_common
 import iotlabcli.help_parser
 
 
@@ -16,7 +15,7 @@ def parse_options():
     """
     Handle profile-cli command-line options with argparse
     """
-    parent_parser = iotlabcli.parser_common.base_parser(user_required=True)
+    parent_parser = parser_common.base_parser(user_required=True)
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
@@ -34,18 +33,17 @@ def store_credentials(username, password=None):
     if password is None:
         password = iotlabcli.helpers.password_prompt()
     iotlabcli.helpers.create_password_file(username, password)
+    return 'Written'
+
+
+def auth_parse_and_run(opts):
+    """ Parse namespace 'opts' object and execute requested command
+    :returns: result object
+    """
+    return store_credentials(opts.username, opts.password)
 
 
 def main(args=sys.argv[1:]):
-    """
-    Main command-line execution loop.
-    """
+    """ Main command-line execution loop." """
     parser = parse_options()
-    try:
-        parser_options = parser.parse_args(args)
-        store_credentials(parser_options.username, parser_options.password)
-    except Error as err:
-        parser.error(str(err))
-    except KeyboardInterrupt:
-        print >> sys.stderr, "\nStopped."
-        sys.exit()
+    parser_common.main_cli(auth_parse_and_run, parser, args)

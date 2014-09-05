@@ -164,7 +164,7 @@ def submit_experiment(api, experiment, nodes_list, print_json=False):
     exp_files = {}
 
     for exp_dict in nodes_list:
-        experiment.add_exp_dict(exp_dict)
+        experiment.add_experiment_dict(exp_dict)
 
         # Add firmware to experiment files too
         firmware = exp_dict.get('firmware', {'name': None, 'body': None})

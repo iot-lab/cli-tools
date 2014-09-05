@@ -332,30 +332,28 @@ def get_profile(parser_options, api):
     print json.dumps(json.loads(profile_json), indent=4, sort_keys=True)
 
 
-def main(args=sys.argv[1:]):
-    """
-    Main command-line execution loop.
-    """
-    parser = parse_options()
-    try:
-        parser_options = parser.parse_args(args)
-        username, password = helpers.get_user_credentials(
-            parser_options.username, parser_options.password)
+def profile_parse_and_run(opts):
+    """ Parse namespace 'opts' object and execute requested command """
+    username, password = helpers.get_user_credentials(
+        opts.username, opts.password)
 
-        api = rest.Api(username, password)
-        subparser_name = parser_options.subparser_name
-        if subparser_name == 'addwsn430':
-            add_wsn430_profile(parser_options, api)
-        elif subparser_name == 'addm3':
-            add_m3_profile(parser_options, api)
-        elif subparser_name == 'load':
-            load_profile(parser_options.path_file, api)
-        elif subparser_name == 'get':
-            get_profile(parser_options, api)
-        elif subparser_name == 'del':
-            del_profile(parser_options.name, api)
-    except Error as err:
-        parser.error(str(err))
-    except KeyboardInterrupt:
-        print >> sys.stderr, "\nStopped."
-        sys.exit()
+    api = rest.Api(username, password)
+    subparser_name = opts.subparser_name
+    if subparser_name == 'addwsn430':
+        add_wsn430_profile(opts, api)
+    elif subparser_name == 'addm3':
+        add_m3_profile(opts, api)
+    elif subparser_name == 'load':
+        load_profile(opts.path_file, api)
+    elif subparser_name == 'get':
+        get_profile(opts, api)
+    elif subparser_name == 'del':
+        del_profile(opts.name, api)
+
+    return None  # TODO change command
+
+
+def main(args=sys.argv[1:]):
+    """ Main command-line execution loop.  """
+    parser = parse_options()
+    parser_common.main_cli(profile_parse_and_run, parser, args)

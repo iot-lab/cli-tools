@@ -32,6 +32,7 @@ class TestStoreCredentials(unittest.TestCase):
 class TestMainAuthParser(unittest.TestCase):
     def test_main(self, store_m):
         """ Test main function """
+        store_m.return_value = 'Written'
 
         auth_parser.main(['-u', 'super_user'])
         store_m.assert_called_with('super_user', None)

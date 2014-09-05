@@ -2,12 +2,6 @@
 """Class python for Experiment serialization JSON"""
 
 
-class Properties(object):
-    """A properties (e.g : archi, site) class"""
-    def __init__(self, prop_dict):
-        self.__dict__.update(prop_dict)
-
-
 class AliasNodes(object):
     """An AliasNodes class"""
     def __init__(self, alias, nbnodes, properties):
@@ -29,7 +23,7 @@ class AliasNodes(object):
 
 class FirmwareAssociations(object):
     """A FirmwareAssociations class"""
-    def __init__(self, firmwarename=None, nodes=None):
+    def __init__(self, firmwarename, nodes):
         self.firmwarename = firmwarename
         self.nodes = nodes
 
@@ -42,7 +36,7 @@ class FirmwareAssociations(object):
 
 class ProfileAssociations(object):
     """A ProfileAssociations class"""
-    def __init__(self, profilename=None, nodes=None):
+    def __init__(self, profilename, nodes):
         self.profilename = profilename
         self.nodes = nodes
 
@@ -71,8 +65,8 @@ class Experiment(object):
         """
 
         if self.type is not None and self.type != exp_type:
-            raise ValueError("Invalid experiment, "
-                             "should be only physical or only alias")
+            raise ValueError(
+                "Invalid experiment, should be only physical or only alias")
         self.type = exp_type
 
     def _safe_list_list_append(self, attribute, objs_list):
@@ -88,16 +82,14 @@ class Experiment(object):
 
         setattr(self, attribute, l_l)
 
-    def add_exp_dict(self, exp_dict):
+    def add_experiment_dict(self, exp_dict):
 
         # register nodes in experiment
         nodes = exp_dict['nodes']
-        if exp_dict['type'] == 'physical':
-            self.set_physical_nodes(nodes)
-        elif exp_dict['type'] == 'alias':
-            self.set_alias_nodes(nodes)
-        else:  # pragma: no cover
-            pass
+        {
+            'physical': self.set_physical_nodes,
+            'alias': self.set_alias_nodes,
+        }[exp_dict['type']](nodes)
 
         # register profile, may be None
         self.set_profile_associations(exp_dict['profile'], nodes)
