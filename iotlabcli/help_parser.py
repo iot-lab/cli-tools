@@ -63,9 +63,9 @@ LOAD_EPILOG = """
 Examples:
     * load experiment :
         $ experiment-cli load -f 192.json
-        Note : by default if you have firmware assocations we search firmware file(s) with relative path
-    * load experiment with firmware list and absolute path :
-        $ experiment-cli load -f 192.json -l /home/cc2420.hex,/home/cc1101.hex
+        Note : by default firmwares are searched in the current directory
+    * load experiment with firmware list and explicit path:
+        $ experiment-cli load -f 192.json -l /home/cc2420.hex,../cc1101.hex
     * reload an experiment :
         $ experiment-cli get -i 192 -a
         $ tar -xzvf 192.tar.gz

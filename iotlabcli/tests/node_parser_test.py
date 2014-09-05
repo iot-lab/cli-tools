@@ -13,7 +13,7 @@ from iotlabcli import Error
 @mock.patch('iotlabcli.helpers.get_user_credentials')
 @mock.patch('iotlabcli.helpers.get_current_experiment')
 @mock.patch('iotlabcli.rest.Api')
-@mock.patch('iotlabcli.parser_common.Platform')
+@mock.patch('iotlabcli.parser_common.Singleton')
 @mock.patch('iotlabcli.node_parser.node_command')
 @mock.patch('iotlabcli.node_parser.list_nodes')
 class TestMainNodeParser(unittest.TestCase):
@@ -102,39 +102,37 @@ class TestNodeParser(unittest.TestCase):
 
     @mock.patch('iotlabcli.helpers.open_file')
     def test_node_command(self, open_file_mock):
-        """ Run the different list_nodes cases """
+        """ Test 'node_command' """
 
         nodes_list = ["m3-1", "m3-2", "m3-3"]
         open_file_mock.return_value = ("filename", "file_data")
 
         _api_result = {'result': 'test'}
         api = mock.Mock()
-        api.start_command.return_value = _api_result
-        api.stop_command.return_value = _api_result
-        api.reset_command.return_value = _api_result
-        api.update_command.return_value = _api_result
+        api.node_command.return_value = _api_result
+        api.node_update.return_value = _api_result
 
         api.reset_mock()
         res = node_parser.node_command(api, 'start', 123, nodes_list)
         self.assertEquals(_api_result, res)
-        self.assertEquals(1, api.start_command.call_count)
+        api.node_command.assert_called_with('start', 123, nodes_list)
 
         api.reset_mock()
         res = node_parser.node_command(api, 'stop', 123, nodes_list)
         self.assertEquals(_api_result, res)
-        self.assertEquals(1, api.stop_command.call_count)
+        api.node_command.assert_called_with('stop', 123, nodes_list)
 
         api.reset_mock()
         res = node_parser.node_command(api, 'reset', 123, nodes_list)
         self.assertEquals(_api_result, res)
-        self.assertEquals(1, api.reset_command.call_count)
+        api.node_command.assert_called_with('reset', 123, nodes_list)
 
         api.reset_mock()
         res = node_parser.node_command(api, 'update', 123, nodes_list,
                                        'firmware_path')
         self.assertEquals(_api_result, res)
-        self.assertEquals(1, api.update_command.call_count)
-        api.update_command.assert_called_with(123, {
+        self.assertEquals(1, api.node_update.call_count)
+        api.node_update.assert_called_with(123, {
             "filename": "file_data",
             'nodes.json': '["m3-1", "m3-2", "m3-3"]',
         })
@@ -142,7 +140,3 @@ class TestNodeParser(unittest.TestCase):
         # no firmware for update command
         self.assertRaises(Error, node_parser.node_command,
                           api, 'update', 123, nodes_list)
-
-        # branch coverage, invalid command, empty result
-        res = node_parser.node_command(api, 'invalid_cmd', 123, nodes_list)
-        self.assertIsNone(res)

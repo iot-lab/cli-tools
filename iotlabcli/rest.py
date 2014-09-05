@@ -35,7 +35,10 @@ API_URL = read_custom_api_url() or 'https://www.iot-lab.info/rest/'
 class Encoder(json.JSONEncoder):
     """ Encoder for serialization object python to JSON format """
     def default(self, obj):  # pylint: disable=method-hidden
-        return obj.__dict__
+        try:
+            return obj.serialize()
+        except AttributeError:
+            return obj.__dict__
 
 
 class Api(object):
@@ -102,24 +105,20 @@ class Api(object):
 
         :returns JSONObject
         """
+        query = 'experiments?resources'
         if site is not None:
-            # TODO json.loads
-            return self.method('experiments?resources&site=%s' % site)
-        else:
-            # TODO json.loads
-            return self.method('experiments?resources')
+            query += '&site=%s' % site
+        return json.loads(self.method(query))
 
     def get_resources_id(self, site=None):
         """ Get testbed resources state description
 
         :returns JSONObject
         """
+        query = 'experiments?id'
         if site is not None:
-            # TODO json.loads
-            return self.method('experiments?id&site=%s' % site)
-        else:
-            # TODO json.loads
-            return self.method('experiments?id')
+            query += '&site=%s' % site
+        return json.loads(self.method(query))
 
     def get_profile(self, name):
         """ Get user profile description.
@@ -165,31 +164,17 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
-        # TODO json.loads
-        return self.method('experiments', method='MULTIPART', data=files)
+        return json.loads(self.method('experiments', method='MULTIPART',
+                                      data=files))
 
-    def get_experiments(self, queryset):
+    def get_experiments(self, state='Running', limit=0, offset=0):
         """ Get user's experiment
         :param queryset: queryset with state, limit and offset attribute
         :type queryset: string
         :returns JSONObject
         """
+        queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
         return json.loads(self.method('experiments?%s' % queryset))
-
-    def get_running_experiments(self):
-        """ Return the currently running experiments
-        :returns JSONObject
-        """
-        queryset = "state=Running&limit=0&offset=0"
-        return self.get_experiments(queryset)
-
-    def get_experiments_total(self):
-        """ Get the number of past, running and upcoming user's experiment.
-
-        :returns JSONObject
-        """
-        # TODO json.loads
-        return self.method('experiments?total')
 
     def get_experiment(self, expid):
         """ Get user experiment description.
@@ -198,8 +183,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
-        # TODO json.loads
-        return self.method('experiments/%s' % expid)
+        return json.loads(self.method('experiments/%s' % expid))
 
     def get_experiment_resources(self, expid):
         """ Get user experiment resources list description.
@@ -217,8 +201,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
-        # TODO json.loads
-        return self.method('experiments/%s?id' % expid)
+        return json.loads(self.method('experiments/%s?id' % expid))
 
     def get_experiment_state(self, expid):
         """ Get user experiment state.
@@ -227,8 +210,7 @@ class Api(object):
         :type id: string
         :returns JSONObject
         """
-        # TODO json.loads
-        return self.method('experiments/%s?state' % expid)
+        return json.loads(self.method('experiments/%s?state' % expid))
 
     def get_experiment_archive(self, expid):
         """ Get user experiment archive (tar.gz) with description
@@ -238,8 +220,7 @@ class Api(object):
         :type id: string
         :returns File
         """
-        # TODO json.loads
-        return self.method('experiments/%s?data' % expid)
+        return json.loads(self.method('experiments/%s?data' % expid))
 
     def stop_experiment(self, expid):
         """ Stop user experiment.
@@ -247,54 +228,30 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :type id: string
         """
-        # TODO json.loads
-        self.method('experiments/%s' % expid, method='DELETE')
+        return json.loads(self.method('experiments/%s' % expid,
+                                      method='DELETE'))
 
-    def start_command(self, expid, nodes):
-        """ Launch start command on user experiment list nodes
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
-        :param nodes: list of nodes
-        :type nodes: JSONArray
-        :returns dict
-        """
-        return json.loads(self.method('experiments/%s/nodes?start' % expid,
-                                      method='POST', data=json.dumps(nodes)))
-
-    def stop_command(self, expid, nodes):
-        """ Launch stop command on user experiment list nodes
+    def node_command(self, command, expid, nodes=()):
+        """ Lanch 'command' on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :type id: string
-        :param nodes: list of nodes
-        :type nodes: JSONArray
-        :returns JSONObject
+        :param nodes: list of nodes, if empty apply on all nodes
+        :returns: dict
         """
-        return json.loads(self.method('experiments/%s/nodes?stop' % expid,
-                                      method='POST', data=json.dumps(nodes)))
+        return json.loads(self.method(
+            'experiments/%s/nodes?%s' % (expid, command),
+            method='POST', data=json.dumps(nodes)))
 
-    def reset_command(self, expid, nodes):
-        """ Launch reset command on user experiment list nodes
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
-        :param nodes: list of nodes
-        :type nodes: JSONArray
-        :returns JSONObject
-        """
-        return json.loads(self.method('experiments/%s/nodes?reset' % expid,
-                                      method='POST', data=json.dumps(nodes)))
-
-    def update_command(self, expid, files):
+    def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user
         experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :type id: string
         :param files: nodes list description and firmware
-        :type files: dictionnary
-        :returns JSONObject
+        :type files: dict
+        :returns: dict
         """
         return json.loads(self.method('experiments/%s/nodes?update' % expid,
                                       method='MULTIPART', data=files))

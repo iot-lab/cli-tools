@@ -4,7 +4,6 @@
 import argparse
 import json
 import sys
-from cStringIO import StringIO
 from argparse import RawTextHelpFormatter
 
 from iotlabcli import Error
@@ -12,11 +11,12 @@ from iotlabcli import rest, helpers, help_parser
 from iotlabcli.experiment import Experiment
 from iotlabcli import parser_common
 
+# static name for experiment file : rename by server-rest
+EXP_FILENAME = 'new_exp.json'
+
 
 def parse_options():
-    """
-    Handle experiment-cli command-line options with argparse
-    """
+    """ Handle experiment-cli command-line options with argparse """
     parent_parser = parser_common.base_parser()
 
     # We create top level parser
@@ -27,48 +27,34 @@ def parse_options():
         {'cli': 'experiment', 'option': 'submit'},
         formatter_class=RawTextHelpFormatter)
 
-    subparsers = parser.add_subparsers(dest='subparser_name')
+    subparsers = parser.add_subparsers(dest='command')
 
     submit_parser = subparsers.add_parser(
-        'submit',
-        help='submit user experiment',
-        epilog=help_parser.SUBMIT_EPILOG,
-        formatter_class=RawTextHelpFormatter)
+        'submit', help='submit user experiment',
+        epilog=help_parser.SUBMIT_EPILOG, formatter_class=RawTextHelpFormatter)
 
-    submit_parser.add_argument(
-        '-l', '--list',
-        action='append', dest='exp_list', required=True,
-        help="experiment list")
+    submit_parser.add_argument('-l', '--list', action='append',
+                               dest='nodes_list', required=True,
+                               type=helpers.experiment_dict,
+                               help="experiment list")
 
-    submit_parser.add_argument(
-        '-n', '--name', dest='name',
-        help='experiment name')
+    submit_parser.add_argument('-n', '--name', help='experiment name')
 
-    submit_parser.add_argument(
-        '-d', '--duration',
-        dest='duration', required=True, type=int,
-        help='experiment duration in minutes')
+    submit_parser.add_argument('-d', '--duration', required=True, type=int,
+                               help='experiment duration in minutes')
 
-    submit_parser.add_argument(
-        '-r', '--reservation',
-        dest='reservation', type=int,
-        help='experiment schedule starting : seconds \
-        since 1970-01-01 00:00:00 UTC')
+    submit_parser.add_argument('-r', '--reservation', type=int,
+                               help=('experiment schedule starting : seconds '
+                                     'since 1970-01-01 00:00:00 UTC'))
 
-    submit_parser.add_argument(
-        '-p', '--print',
-        dest='json', action='store_true',
-        help='print experiment submission')
+    submit_parser.add_argument('-p', '--print',
+                               dest='print_json', action='store_true',
+                               help='print experiment submission')
 
     # ####### STOP PARSER ###############
-    stop_parser = subparsers.add_parser(
-        'stop',
-        help='stop user experiment')
-
-    stop_parser.add_argument(
-        '-i', '--id',
-        dest='experiment_id', type=int,
-        help='experiment id submission')
+    stop_parser = subparsers.add_parser('stop', help='stop user experiment')
+    stop_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                             help='experiment id submission')
 
     # ####### GET PARSER ###############
     get_parser = subparsers.add_parser(
@@ -83,12 +69,12 @@ def parse_options():
         help='experiment id')
 
     get_parser.add_argument(
-        '--offset',
+        '--offset', default=0,
         dest='offset', type=int,
         help='experiment list start index')
 
     get_parser.add_argument(
-        '--limit',
+        '--limit', default=0,
         dest='limit', type=int,
         help='experiment list lenght')
 
@@ -99,174 +85,141 @@ def parse_options():
     get_group = get_parser.add_mutually_exclusive_group(required=True)
 
     get_group.add_argument(
-        '-a', '--archive',
-        action='store_true', dest='archive',
-        help='get an experiment archive (tar.gz)')
+        '-a', '--archive', dest='get_cmd', action='store_const',
+        const='archive', help='get an experiment archive (tar.gz)')
 
     get_group.add_argument(
-        '-p', '--print', action='store_true', dest='json',
-        help='get an experiment submission')
+        '-p', '--print', dest='get_cmd', action='store_const',
+        const='print', help='get an experiment submission')
 
     get_group.add_argument(
-        '-s', '--exp-state',
-        action='store_true', dest='exp_state',
-        help='get an experiment state')
+        '-s', '--exp-state', dest='get_cmd', action='store_const',
+        const='exp_state', help='get an experiment state')
 
     get_group.add_argument(
-        '-r', '--resources',
-        action='store_true', dest='resources',
-        help='get an experiment resources list')
+        '-r', '--resources', dest='get_cmd', action='store_const',
+        const='resources', help='get an experiment resources list')
 
     get_group.add_argument(
-        '-ri', '--resources-id',
-        action='store_true', dest='resources_exp_id',
-        help=('get an experiment resources id list '
-              '(EXP_LIST format : 1-34+72)'))
-
+        '-ri', '--resources-id', dest='get_cmd', action='store_const',
+        const='resources_exp_id', help=('get an experiment resources id list '
+                                        '(EXP_LIST format : 1-34+72)'))
     get_group.add_argument(
-        '-l', '--list',
-        action='store_true',
-        dest='experiment_list',
-        help='get user\'s experiment list')
+        '-l', '--list', dest='get_cmd', action='store_const',
+        const='experiment_list', help='get user\'s experiment list')
 
     # ####### LOAD PARSER ###############
-    load_parser = subparsers.add_parser(
-        'load',
-        epilog=help_parser.LOAD_EPILOG,
-        formatter_class=RawTextHelpFormatter,
-        help='load and submit user experiment')
+    load_parser = subparsers.add_parser('load', epilog=help_parser.LOAD_EPILOG,
+                                        help='load and submit user experiment',
+                                        formatter_class=RawTextHelpFormatter)
 
-    load_parser.add_argument(
-        '-f', '--file',
-        dest='path_file', required=True,
-        help='experiment path file')
+    load_parser.add_argument('-f', '--file', dest='path_file',
+                             required=True, help='experiment path file')
 
-    load_parser.add_argument(
-        '-l', '--list',
-        dest='firmware_list',
-        help='firmware(s) path list')
+    load_parser.add_argument('-l', '--list', dest='firmware_list', default=[],
+                             type=helpers.firmwares_from_string,
+                             help='firmware(s) path list')
 
     # ####### INFO PARSER ###############
-    info_parser = subparsers.add_parser(
-        'info',
-        epilog=help_parser.INFO_EPILOG,
-        formatter_class=RawTextHelpFormatter,
-        help='resources description list')
+    info_parser = subparsers.add_parser('info', epilog=help_parser.INFO_EPILOG,
+                                        help='resources description list',
+                                        formatter_class=RawTextHelpFormatter)
 
-    info_parser.add_argument(
-        '--site',
-        dest='site',
-        help='resources list filter by site')
-
+    info_parser.add_argument('--site', help='resources list filter by site')
+    # subcommand
     info_group = info_parser.add_mutually_exclusive_group(required=True)
-
-    info_group.add_argument(
-        '-l', '--list',
-        dest='resources_list',
-        action='store_true',
-        help='resources list')
-
-    info_group.add_argument(
-        '-li', '--list-id',
-        dest='resources_id',
-        action='store_true',
-        help=('resources id list by archi and state '
-              '(EXP_LIST format : 1-34+72)'))
-
+    info_group.add_argument('-l', '--list', const='resources',
+                            help='list resources',
+                            dest='info_cmd', action='store_const')
+    info_group.add_argument('-li', '--list-id', const='resources_id',
+                            help=('resources id list by archi and state '
+                                  '(EXP_LIST format : 1-34+72)'),
+                            dest='info_cmd', action='store_const')
     return parser
 
 
-def submit_experiment(parser_options, api):
+def submit_experiment_parser(opts):
+    """ Parse namespace 'opts' and execute requested 'submit' command """
+    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    experiment = Experiment(opts.name, opts.duration, opts.reservation)
+    return submit_experiment(api, experiment, opts.nodes_list, opts.print_json)
+
+
+# R0913:too-many-arguments
+def submit_experiment(api, experiment, nodes_list, print_json=False):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
 
-    :param parser_options: command-line parser options
-    :type parser_options: Namespace object with options attribute
     :param api: API Rest api object
+    :param experiment: experiment.Experiment object
+    :param nodes_list: list of 'nodes' where 'nodes' is either
+        experiment.AliasNodes or a list of nodes network addresses like:
+        ['m3-1.grenoble.iot-lab.info', 'wsn430-1.strasbourg.iot-lab.info']
+    :param print_json: select if experiment should be printed as json instead
+        of submitted
     """
-    experiment_files = {}
-    firmwares = {}
-    alias_number = 0
-    physical_type = False
-    alias_type = False
-    experiment = Experiment(name=parser_options.name,
-                            duration=parser_options.duration,
-                            reservation=parser_options.reservation)
-    sites_list = parser_options.Platform().sites()
+    assert nodes_list, 'nodes_list should not be empty'
+    exp_files = {}
 
-    for exp_list in parser_options.exp_list:
-        experiment_type, param_list = \
-            helpers.check_experiment_list(exp_list)
-        experiment.type = experiment_type
-        if experiment_type == 'physical' and not alias_type:
-            physical_type = True
-            site = param_list[0]
-            helpers.check_site(site, sites_list)
-            archi = param_list[1]
-            helpers.check_archi(archi)
-            nodes_list = param_list[2]
-            nodes = helpers.get_nodes_list(site, archi, nodes_list)
-            experiment.set_physical_nodes(nodes)
-        # experiment alias type
-        elif experiment_type == 'alias' and not physical_type:
-            alias_type = True
-            alias_number += 1
-            nb_nodes = param_list[0]
-            properties_list = param_list[1]
-            properties = helpers.check_properties(properties_list,
-                                                  sites_list)
-            experiment.set_alias_nodes(str(alias_number), int(nb_nodes),
-                                       properties)
-            nodes = ["%d" % alias_number]
-        else:
-            raise Error("Experiment list is not valid with \
-                two different types : alias and physical")
-        if experiment_type == "physical":
-            index_list = 3
-        else:
-            # alias experiment type
-            index_list = 2
-        # firmware associations
-        if len(param_list) > index_list and param_list[index_list] != "":
-            firmware_path = param_list[index_list]
-            firmware_name, firmware_body, firmwares = \
-                helpers.check_experiment_firmwares(firmware_path,
-                                                   firmwares)
-            experiment_files[firmware_name] = firmware_body
-            experiment.set_firmware_associations(firmware_name, nodes)
-        # profile associations
-        index_list += 2
-        if len(param_list) == index_list and param_list[index_list-1] != "":
-            profile_name = param_list[index_list-1]
-            experiment.set_profile_associations(profile_name, nodes)
-    experiment_json = json.dumps(experiment,
-                                 cls=rest.Encoder,
-                                 sort_keys=True, indent=4)
+    for exp_dict in nodes_list:
+        experiment.add_exp_dict(exp_dict)
 
-    if parser_options.json:
-        print experiment_json
-    else:
-        experiment_filehandle = StringIO(experiment_json)
-        # static name for experiment file : rename by server-rest
-        experiment_files['new_exp.json'] = experiment_filehandle.read()
-        experiment_filehandle.close()
-        oar_json = api.submit_experiment(experiment_files)
-        print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
+        # Add firmware to experiment files too
+        firmware = exp_dict.get('firmware', {'name': None, 'body': None})
+        helpers.add_to_dict_uniq(exp_files, **firmware)
+
+    if print_json:  # output experiment description
+        return experiment
+    else:  # submit experiment
+        # Add experiment description to files
+        helpers.add_to_dict_uniq(exp_files, EXP_FILENAME, json.dumps(
+            experiment, cls=rest.Encoder, sort_keys=True, indent=4))
+
+        # Actually submit experiment
+        return api.submit_experiment(exp_files)
 
 
-def stop_experiment(parser_options, api):
+def stop_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'stop' command """
+    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return stop_experiment(api, opts.experiment_id)
+
+
+def stop_experiment(api, experiment_id=None):
     """ Stop user experiment submission.
 
-    :param experiment_id: scheduler OAR id submission
-    :type experiment_id: string
     :param api: API Rest api object
+    :param experiment_id: scheduler OAR id submission
     """
-    exp_id = api.get_current_experiment(parser_options.experiment_id)
-    api.stop_experiment(exp_id)
+    exp_id = api.get_current_experiment(experiment_id)
+    return api.stop_experiment(exp_id)
 
 
-def get_experiment(parser_options, api):
+def get_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'get' command """
+
+    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    if opts.get_cmd == 'experiment_list':
+        return get_experiments_list(api, opts.state, opts.limit, opts.offset)
+    else:
+        return get_experiment(api, opts.get_cmd, opts.experiment_id)
+
+
+def get_experiments_list(api, state, limit, offset):
+    """ Get the experiment list with the specific restriction:
+    :param state: State of the experiment
+    :param limit: maximum number of outputs
+    :param offset: offset of experiments to start at
+    """
+    state = helpers.check_experiment_state(state)
+    return api.get_experiments(state, limit, offset)
+
+
+def get_experiment(api, command, experiment_id=None):
     """ Get user experiment's description :
     _ download archive file (tar.gz) with JSONObject experiment
       description and firmware(s)
@@ -274,126 +227,119 @@ def get_experiment(parser_options, api):
     _ print JSONObject with experiment owner
     _ print JSONObject with experiment description
 
-    :param parser_options: command-line parser options
-    :type parser_options: Namespace object with options attribute
     :param api: API Rest api object
+    :param command: experiment request
+    :param experiment_id: experiment id
     """
-    if parser_options.experiment_list:
-        state = helpers.check_experiment_state(parser_options.state)
-        queryset = 'state='+state
-        if parser_options.limit is not None:
-            queryset += '&limit=%s' % parser_options.limit
-        else:
-            queryset += '&limit=0'
-        if parser_options.offset is not None:
-            queryset += '&offset=%s' % parser_options.offset
-        else:
-            queryset += '&offset=0'
-        exps_dict = api.get_experiments(queryset)
-        print json.dumps(exps_dict, indent=4, sort_keys=True)
+    exp_id = helpers.get_current_experiment(experiment_id)
+    command = {
+        'archive': api.get_experiment_archive,
+        'print': api.get_experiment,
+        'resources_exp_id': api.get_experiment_resources_id,
+        'exp_state': api.get_experiment_state,
+        'resources': api.get_experiment_resources,
+    }[command]
+    result = command(exp_id)
+
+    if command == 'archive':
+        helpers.write_experiment_archive(exp_id, result)
+        return 'Written'
     else:
-        experiment_id = helpers.get_current_experiment(
-            parser_options.experiment_id)
-        if parser_options.archive:
-            data = api.get_experiment_archive(experiment_id)
-            helpers.write_experiment_archive(experiment_id, data)
-        else:
-            if parser_options.json:
-                experiment_json = api.get_experiment(experiment_id)
-            elif parser_options.resources_exp_id:
-                experiment_json = api.get_experiment_resources_id(
-                    experiment_id)
-            elif parser_options.exp_state:
-                experiment_json = api.get_experiment_state(experiment_id)
-            elif parser_options.resources:
-                exp_result = api.get_experiment_resources(experiment_id)
-                print json.dumps(exp_result, indent=4, sort_keys=True)
-                return
-            print json.dumps(json.loads(experiment_json), indent=4,
-                             sort_keys=True)
+        return result
 
 
-def load_experiment(parser_options, api):
+def load_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'load' command """
+
+    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return load_experiment(api, opts.path_file, opts.firmware_list)
+
+
+def load_experiment(api, exp_description_path, firmware_list=()):
     """ Load and submit user experiment description with firmware(s)
 
-    :param parser_options: command-line parser options
-    :type parser_options: Namespace object with options attribute
     :param api: API Rest api object
+    :param exp_description_path: path to experiment json description file
+    :param firmware_list: list of firmware dict {'name': name, 'body': body}
     """
-    experiment_files = {}
-    firmwares = {}
-    firmware_list = parser_options.firmware_list
-    experiment_file_name, experiment_file_data = \
-        helpers.open_file(parser_options.path_file)
-    experiment_json = helpers.read_json_file(
-        experiment_file_name, experiment_file_data)
-    firmware_associations = experiment_json['firmwareassociations']
-    # static name for experiment file : rename by server-rest with id_oar.json
-    experiment_files['new_exp.json'] = experiment_file_data
-    if firmware_list is not None and firmware_associations is None:
-        raise Error("You don't have firmware(s) in your " +
-                    "experiment JSON description")
-    elif firmware_list is not None:
-        firmware = firmware_list.split(',')
-        for firmware_path in firmware:
-            firmware_name, firmware_body, firmwares = helpers. \
-                check_experiment_firmwares(firmware_path, firmwares)
-            experiment_files[firmware_name] = firmware_body
-    if firmware_associations is not None:
-        for firmware in firmware_associations:
-            firmware_name = firmware['firmwarename']
-            if firmware_name not in experiment_files:
-                firmware_name, firmware_body, firmwares = \
-                    helpers.check_experiment_firmwares(firmware_name,
-                                                       firmwares)
-                experiment_files[firmware_name] = firmware_body
-        if not len(firmware_associations) == len(experiment_files)-1:
-            raise Error("You have more firmware(s) in your firmware list " +
-                        "than in experiment JSON description")
-    oar_json = api.submit_experiment(experiment_files)
-    print json.dumps(json.loads(oar_json), indent=4, sort_keys=True)
+    exp_files = {}
+
+    try:
+        # Open json file
+        _, exp_description_str = helpers.open_file(exp_description_path)
+        exp_dict = json.loads(exp_description_str)
+    except ValueError as err:
+        raise Error('%r: %s' % (exp_description_path, err))
+
+    firmware_associations = exp_dict['firmwareassociations'] or []
+
+    #
+    # Add firmwares to experiment_files dictionary
+    #
+
+    # Add firmwares from manual list, may be empty
+    for firmware in firmware_list:
+        helpers.add_to_dict_uniq(exp_files, *firmware)
+
+    # Add remaining firmware from current directory
+    for fw_name in [fw['firmwarename'] for fw in firmware_associations]:
+        if fw_name not in exp_files:
+            # was not already provided by manual list
+            fw_dict = helpers.open_firmware(fw_name)
+            helpers.add_to_dict_uniq(exp_files, *fw_dict)
+
+    #
+    # Sanity Check, no more firmware than required
+    #
+    if len(firmware_associations) != len(exp_files):
+        raise Error("Too many firmwares provided")
+
+    # Add experiment description
+    helpers.add_to_dict_uniq(exp_files, EXP_FILENAME, exp_description_str)
+    return api.submit_experiment(exp_files)
 
 
-def info_experiment(parser_options, api):
+def info_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'info' command """
+
+    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return info_experiment(api, opts.info_cmd, opts.site)
+
+
+def info_experiment(api, info, site=None):
     """ Print testbed information for user experiment submission:
-    _ print JSONObject sites descrition
-    _ print JSONObject resources description
-    _ print JSONObject number of past, running, upcoming user's experiment
-    _ print JSONObject user's experiment
+    * resources description
+    * resources description in short mode
 
-    :param parser_options: command-line parser options
-    :type parser_options: Namespace object with options attribute
     :param api: API Rest api object
+    :param info: Command to run
+    :param site: Restrict informations collection on site
     """
-    if parser_options.resources_list:
-        info_json = api.get_resources(parser_options.site)
-    elif parser_options.resources_id:
-        info_json = api.get_resources_id(parser_options.site)
-    print json.dumps(json.loads(info_json), indent=4, sort_keys=True)
+    info_dict = {
+        'resources': api.get_resources,
+        'resources_id': api.get_resources_id,
+    }[info](site)
+    return info_dict
+
+
+def experiment_parse_and_run(opts):
+    """ Parse namespace 'opts' object and execute requested command
+    Return result object
+    """
+    command = {
+        'submit': submit_experiment_parser,
+        'stop': stop_experiment_parser,
+        'get': get_experiment_parser,
+        'load': load_experiment_parser,
+        'info': info_experiment_parser,
+    }[opts.command]
+
+    return command(opts)
 
 
 def main(args=sys.argv[1:]):
     """ Main command-line execution loop." """
     parser = parse_options()
-    try:
-        parser_options = parser.parse_args(args)
-        username, password = helpers.get_user_credentials(
-            parser_options.username, parser_options.password)
-
-        api = rest.Api(username, password)
-        subparser_name = parser_options.subparser_name
-        if subparser_name == 'submit':
-            submit_experiment(parser_options, api)
-        elif subparser_name == 'stop':
-            stop_experiment(parser_options, api)
-        elif subparser_name == 'get':
-            get_experiment(parser_options, api)
-        elif subparser_name == 'load':
-            load_experiment(parser_options, api)
-        elif subparser_name == 'info':
-            info_experiment(parser_options, api)
-    except Error as err:
-        parser.error(str(err))
-    except KeyboardInterrupt:
-        print >> sys.stderr, "\nStopped."
-        sys.exit()
+    parser_common.main_cli(experiment_parse_and_run, parser, args)

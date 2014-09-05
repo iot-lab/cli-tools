@@ -31,18 +31,24 @@ def parse_options():
         help='experiment id submission')
 
     # command
+    # 'update' sets firmware name to firmware_path, so cannot set command
+    parser.set_defaults(command='update')
     cmd_group = parser.add_mutually_exclusive_group(required=True)
 
     cmd_group.add_argument(
-        '-sta', '--start', action='store_true', help='start command')
+        '-sta', '--start', help='start command', const='start',
+        dest='command', action='store_const')
 
     cmd_group.add_argument(
-        '-sto', '--stop', action='store_true', help='stop command')
+        '-sto', '--stop', help='stop command', const='stop',
+        dest='command', action='store_const')
 
     cmd_group.add_argument(
-        '-r', '--reset', action='store_true', help='reset command')
+        '-r', '--reset', help='reset command', const='reset',
+        dest='command', action='store_const')
 
-    cmd_group.add_argument('-up', '--update', dest='path_file',
+    cmd_group.add_argument('-up', '--update',
+                           dest='firmware_path', default=None,
                            help='flash firmware command with path file')
 
     # nodes list or exclude list
@@ -94,23 +100,18 @@ def node_command(api, command, exp_id, nodes_list, firmware_path=None):
     :param nodes_list: List of nodes where to run command
     :param firmware_path: Firmware path for update command
     """
+    assert command in ('update', 'start', 'stop', 'reset')
 
     result = None
-    if 'start' == command:
-        result = api.start_command(exp_id, nodes_list)
-    elif 'stop' == command:
-        result = api.stop_command(exp_id, nodes_list)
-    elif 'reset' == command:
-        result = api.reset_command(exp_id, nodes_list)
-    elif 'update' == command:
+    if 'update' == command:
         if firmware_path is None:
             raise Error("Update cmd requires a firmware: %s" % firmware_path)
-        f_name, f_data = helpers.open_file(firmware_path)
-        command_files = {
-            f_name: f_data,
-            'nodes.json': json.dumps(nodes_list)
-        }
-        result = api.update_command(exp_id, command_files)
+        files = {}
+        helpers.add_to_dict_uniq(files, *helpers.open_file(firmware_path))
+        helpers.add_to_dict_uniq(files, 'nodes.json', json.dumps(nodes_list))
+        result = api.node_update(exp_id, files)
+    else:
+        result = api.node_command(command, exp_id, nodes_list)
 
     return result
 
@@ -121,19 +122,8 @@ def node_parse_and_run(opts):
     api = rest.Api(user, passwd)
     exp_id = helpers.get_current_experiment(opts.experiment_id)
 
-    # TODO see if it can be included in argparse job
-    firmware = None
-    if opts.start:
-        command = 'start'
-    elif opts.stop:
-        command = 'stop'
-    elif opts.reset:
-        command = 'reset'
-    elif opts.path_file is not None:
-        command = 'update'
-        firmware = opts.path_file
-    else:  # pragma: no cover
-        return
+    command = opts.command
+    firmware = opts.firmware_path  # None if command != 'update'
 
     nodes = list_nodes(api, exp_id, opts.nodes_list, opts.exclude_nodes_list)
 

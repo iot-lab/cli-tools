@@ -45,15 +45,21 @@ def main_cli(function, parser, args=sys.argv[1:]):
         sys.exit()
 
 
-class Platform(object):
+class Singleton(object):
     _sites = None
+    _current_alias = 0
 
     def __init__(self):
-        if Platform._sites is not None:
+        if Singleton._sites is not None:
             return
         sites_dict = rest.Api.get_sites()
-        Platform._sites = [site["site"] for site in sites_dict["items"]]
+        Singleton._sites = [site["site"] for site in sites_dict["items"]]
 
     def sites(self):
         """ return platform sites dict """
         return self._sites
+
+    @staticmethod
+    def new_alias():
+        Singleton._current_alias += 1
+        return Singleton._current_alias
