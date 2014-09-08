@@ -87,8 +87,7 @@ class Api(object):
             print "HTTP error code : %s \n%s" % (req.status_code, req.text)
             sys.exit()
         # request OK, return result
-        # TODO json.loads
-        return req.text
+        return json.loads(req.text)
 
     @staticmethod
     def get_sites():
@@ -98,7 +97,7 @@ class Api(object):
         """
         # unauthenticated request
         url = urljoin(API_URL, 'experiments?sites')
-        return json.loads(Api._method(url))
+        return Api._method(url)
 
     def get_resources(self, site=None):
         """ Get testbed resources description
@@ -108,7 +107,7 @@ class Api(object):
         query = 'experiments?resources'
         if site is not None:
             query += '&site=%s' % site
-        return json.loads(self.method(query))
+        return self.method(query)
 
     def get_resources_id(self, site=None):
         """ Get testbed resources state description
@@ -118,7 +117,7 @@ class Api(object):
         query = 'experiments?id'
         if site is not None:
             query += '&site=%s' % site
-        return json.loads(self.method(query))
+        return self.method(query)
 
     def get_profile(self, name):
         """ Get user profile description.
@@ -127,7 +126,6 @@ class Api(object):
         :type name: string
         :returns JSONObject
         """
-        # TODO json.loads
         return self.method('profiles/%s' % name)
 
     def get_profiles(self):
@@ -135,7 +133,6 @@ class Api(object):
 
         :returns JSONObject
         """
-        # TODO json.loads
         return self.method('profiles')
 
     def add_profile(self, name, profile):
@@ -144,9 +141,8 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        # TODO json.loads
-        # TODO json.dumps on data, handle it on it's cli file
-        self.method('profiles/%s' % name, method='POST', data=profile)
+        prof_json = json.dumps(profile, cls=Encoder, sort_keys=True, indent=4)
+        return self.method('profiles/%s' % name, method='POST', data=prof_json)
 
     def del_profile(self, name):
         """ Delete user profile
@@ -154,8 +150,7 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
-        # TODO json.loads
-        self.method('profiles/%s' % name, method='DELETE')
+        return self.method('profiles/%s' % name, method='DELETE')
 
     def submit_experiment(self, files):
         """ Submit user experiment
@@ -164,15 +159,14 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
-        return json.loads(self.method('experiments', method='MULTIPART',
-                                      data=files))
+        return self.method('experiments', method='MULTIPART', data=files)
 
     def get_experiments(self, state='Running', limit=0, offset=0):
         """ Get user's experiment
         :returns JSONObject
         """
         queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
-        return json.loads(self.method('experiments?%s' % queryset))
+        return self.method('experiments?%s' % queryset)
 
     def get_experiment(self, expid):
         """ Get user experiment description.
@@ -180,7 +174,7 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :returns JSONObject
         """
-        return json.loads(self.method('experiments/%s' % expid))
+        return self.method('experiments/%s' % expid)
 
     def get_experiment_resources(self, expid):
         """ Get user experiment resources list description.
@@ -188,7 +182,7 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :returns JSONObject
         """
-        return json.loads(self.method('experiments/%s?resources' % expid))
+        return self.method('experiments/%s?resources' % expid)
 
     def get_experiment_resources_id(self, expid):
         """ Get user experiment resources list description.
@@ -196,7 +190,7 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :returns JSONObject
         """
-        return json.loads(self.method('experiments/%s?id' % expid))
+        return self.method('experiments/%s?id' % expid)
 
     def get_experiment_state(self, expid):
         """ Get user experiment state.
@@ -204,7 +198,7 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :returns JSONObject
         """
-        return json.loads(self.method('experiments/%s?state' % expid))
+        return self.method('experiments/%s?state' % expid)
 
     def get_experiment_archive(self, expid):
         """ Get user experiment archive (tar.gz) with description
@@ -213,15 +207,14 @@ class Api(object):
         :param id: experiment id submission (e.g. OAR scheduler)
         :returns File
         """
-        return json.loads(self.method('experiments/%s?data' % expid))
+        return self.method('experiments/%s?data' % expid)
 
     def stop_experiment(self, expid):
         """ Stop user experiment.
 
         :param id: experiment id submission (e.g. OAR scheduler)
         """
-        return json.loads(self.method('experiments/%s' % expid),
-                          method='DELETE')
+        return self.method('experiments/%s' % expid, method='DELETE')
 
     def node_command(self, command, expid, nodes=()):
         """ Lanch 'command' on user experiment list nodes
@@ -230,9 +223,8 @@ class Api(object):
         :param nodes: list of nodes, if empty apply on all nodes
         :returns: dict
         """
-        return json.loads(self.method(
-            'experiments/%s/nodes?%s' % (expid, command),
-            method='POST', data=json.dumps(nodes)))
+        return self.method('experiments/%s/nodes?%s' % (expid, command),
+                           method='POST', data=json.dumps(nodes))
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user
@@ -243,5 +235,5 @@ class Api(object):
         :type files: dict
         :returns: dict
         """
-        return json.loads(self.method('experiments/%s/nodes?update' % expid,
-                                      method='MULTIPART', data=files))
+        return self.method('experiments/%s/nodes?update' % expid,
+                           method='MULTIPART', data=files)

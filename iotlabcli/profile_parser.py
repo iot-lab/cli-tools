@@ -14,7 +14,7 @@ from iotlabcli import parser_common
 
 def parse_options():
     """
-    Handle profile-cli command-line options with argparse
+    Handle profile-cli command-line opts with argparse
     """
     parent_parser = parser_common.base_parser()
     # We create top level parser
@@ -192,107 +192,101 @@ def parse_options():
     return parser
 
 
-def add_wsn430_profile(options, api):
+def add_wsn430_profile(api, opts):
     """ Add WSN430 user profile with JSON Encoder serialization object Profile.
 
-    :param options: command-line parser options
-    :type options:  Namespace object with options attribute
+    :param opts: command-line parser opts
+    :type opts:  Namespace object with opts attribute
     :param api: API Rest api object
     """
     consumption = None
     radio = None
     sensor = None
 
-    if options.current or options.voltage or options.power:
-        if options.cfreq is None:
+    if opts.current or opts.voltage or opts.power:
+        if opts.cfreq is None:
             raise Error(
                 "You must specify a frequency for consumption measure.")
-        consumption = Consumption(current=options.current,
-                                  voltage=options.voltage,
-                                  power=options.power,
-                                  frequency=options.cfreq)
+        consumption = Consumption(current=opts.current,
+                                  voltage=opts.voltage,
+                                  power=opts.power,
+                                  frequency=opts.cfreq)
 
-    if options.rssi:
-        if options.rfreq is None:
+    if opts.rssi:
+        if opts.rfreq is None:
             raise Error("You must specify a frequency for radio measure.")
-        radio = Radio(rssi=options.rssi, frequency=options.rfreq)
+        radio = Radio(rssi=opts.rssi, frequency=opts.rfreq)
 
-    if options.luminosity or options.temperature:
-        if options.sfreq is None:
+    if opts.luminosity or opts.temperature:
+        if opts.sfreq is None:
             raise Error("You must specify a frequency for sensor measure.")
-        sensor = Sensor(temperature=options.temperature,
-                        luminosity=options.luminosity,
-                        frequency=options.sfreq)
+        sensor = Sensor(temperature=opts.temperature,
+                        luminosity=opts.luminosity,
+                        frequency=opts.sfreq)
 
     profile = Profile(nodearch='wsn430',
-                      profilename=options.name,
-                      power=options.power_mode,
+                      profilename=opts.name,
+                      power=opts.power_mode,
                       consumption=consumption,
                       radio=radio,
                       sensor=sensor)
 
-    profile_json = json.dumps(profile, cls=rest.Encoder, sort_keys=True,
-                              indent=4)
-
-    if options.json:
-        print profile_json
+    if opts.json:
+        return profile
     else:
-        api.add_profile(options.name, profile_json)
+        return api.add_profile(opts.name, profile)
 
 
-def add_m3_profile(options, api):
+def add_m3_profile(api, opts):
     """ Add M3 user profile with JSON Encoder serialization object Profile.
 
-    :param options: command-line parser options
-    :type options:  Namespace object with options attribute
+    :param opts: command-line parser opts
+    :type opts:  Namespace object with opts attribute
     :param api: API Rest api object
     """
     consumption = None
     radio = None
 
-    if options.current or options.voltage or options.cpower:
-        if options.period is not None and options.average is not None:
-            consumption = Consumption(current=options.current,
-                                      voltage=options.voltage,
-                                      power=options.cpower,
-                                      period=options.period,
-                                      average=options.average)
+    if opts.current or opts.voltage or opts.cpower:
+        if opts.period is not None and opts.average is not None:
+            consumption = Consumption(current=opts.current,
+                                      voltage=opts.voltage,
+                                      power=opts.cpower,
+                                      period=opts.period,
+                                      average=opts.average)
         else:
             raise Error("You must specify values for period/average"
                         " consumption measure.")
 
-    if options.rssi:
-        if options.rperiod is None or options.channels is None:
+    if opts.rssi:
+        if opts.rperiod is None or opts.channels is None:
             raise Error("You must specify values for "
                         "channels/period radio measure.")
 
-        if options.num_per_channel is None and len(options.channels) > 1:
+        if opts.num_per_channel is None and len(opts.channels) > 1:
             raise Error("You must specify value for "
                         "number of measure by channel.")
-        elif len(options.channels) == 1:
-            options.num_per_channel = 0
+        elif len(opts.channels) == 1:
+            opts.num_per_channel = 0
 
         radio = Radio(mode="rssi",
-                      period=options.rperiod,
-                      num_per_channel=options.num_per_channel,
-                      channels=options.channels)
+                      period=opts.rperiod,
+                      num_per_channel=opts.num_per_channel,
+                      channels=opts.channels)
 
     profile = Profile(nodearch='m3',
-                      profilename=options.name,
-                      power=options.power_mode,
+                      profilename=opts.name,
+                      power=opts.power_mode,
                       consumption=consumption,
                       radio=radio)
 
-    profile_json = json.dumps(profile, cls=rest.Encoder, sort_keys=True,
-                              indent=4)
-
-    if options.json:
-        print profile_json
+    if opts.json:
+        return profile
     else:
-        api.add_profile(options.name, profile_json)
+        return api.add_profile(opts.name, profile)
 
 
-def load_profile(path_file, api):
+def load_profile(api, path_file):
     """  Load and add user profile description
 
     :param path_file: path file profile description
@@ -300,36 +294,36 @@ def load_profile(path_file, api):
     :param api: API Rest api object
     """
     file_data = helpers.open_file(path_file)[1]
-    json_profile = json.loads(file_data)
-    if "profilename" not in json_profile:
+    profile = json.loads(file_data)
+    if "profilename" not in profile:
         raise Error("You must have a profilename attribute in your JSON file")
-    api.add_profile(json_profile["profilename"], file_data)
+    return api.add_profile(profile["profilename"], profile)
 
 
-def del_profile(name, api):
+def del_profile(api, name):
     """ Delete user profile description
 
     :param name: profile name
     :type name: string
     :param api: API Rest api object
     """
-    api.del_profile(name)
+    return api.del_profile(name)
 
 
-def get_profile(parser_options, api):
+def get_profile(api, opts):
     """ Get user profile description
     _ print JSONObject profile description
     _ print JSONObject profile's list description
 
-    :param parser_options: command-line parser options
-    :type parser_options: Namespace object with options attribute
+    :param opts: command-line parser opts
+    :type opts: Namespace object with opts attribute
     :param api: API Rest api object
     """
-    if parser_options.list:
-        profile_json = api.get_profiles()
-    elif parser_options.name is not None:
-        profile_json = api.get_profile(parser_options.name)
-    print json.dumps(json.loads(profile_json), indent=4, sort_keys=True)
+    if opts.list:
+        profile_dict = api.get_profiles()
+    elif opts.name is not None:
+        profile_dict = api.get_profile(opts.name)
+    return profile_dict
 
 
 def profile_parse_and_run(opts):
@@ -340,17 +334,17 @@ def profile_parse_and_run(opts):
     api = rest.Api(username, password)
     subparser_name = opts.subparser_name
     if subparser_name == 'addwsn430':
-        add_wsn430_profile(opts, api)
+        result = add_wsn430_profile(api, opts)
     elif subparser_name == 'addm3':
-        add_m3_profile(opts, api)
+        result = add_m3_profile(api, opts)
     elif subparser_name == 'load':
-        load_profile(opts.path_file, api)
+        result = load_profile(api, opts.path_file)
     elif subparser_name == 'get':
-        get_profile(opts, api)
+        result = get_profile(api, opts)
     elif subparser_name == 'del':
-        del_profile(opts.name, api)
+        result = del_profile(api, opts.name)
 
-    return None  # TODO change command
+    return result
 
 
 def main(args=sys.argv[1:]):
