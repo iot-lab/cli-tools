@@ -86,8 +86,8 @@ class Api(object):
             # we have HTTP error (code != 200)
             print "HTTP error code : %s \n%s" % (req.status_code, req.text)
             sys.exit()
-        # request OK, return result
-        return json.loads(req.text)
+        # request OK, return result, or '"OK"' String if empty
+        return json.loads(req.text) if req.text != '' else "OK"
 
     @staticmethod
     def get_sites():
