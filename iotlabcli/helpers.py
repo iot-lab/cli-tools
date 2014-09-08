@@ -201,7 +201,6 @@ def extract_firmware_nodes_list(param_list):
         # parse parameters
         properties = get_properties(properties_str)
         nodes = experiment.AliasNodes(int(nb_nodes), properties)
-        return nodes
     else:  # physical selection
         # extract parameters
         site, archi, nodes_str = param_list[0:3]
@@ -209,7 +208,7 @@ def extract_firmware_nodes_list(param_list):
 
         # parse parameters
         nodes = nodes_list_from_info(site, archi, nodes_str)
-        return nodes
+    return nodes
 
 
 def extract_non_empty_val(param_list):

@@ -25,7 +25,14 @@ class AliasNodes(object):
 
 
 class FirmwareAssociations(object):
-    """A FirmwareAssociations class"""
+    """A FirmwareAssociations class
+
+    >>> fw = FirmwareAssociations('name', ['3'])
+    >>> fw == FirmwareAssociations('name', ['bla bla bla', 'test test'])
+    True
+    >>> fw == {'firmwarename': 'name', 'nodes':['3']}
+    False
+    """
     def __init__(self, firmwarename, nodes):
         self.firmwarename = firmwarename
         self.nodes = nodes
@@ -38,7 +45,16 @@ class FirmwareAssociations(object):
 
 
 class ProfileAssociations(object):
-    """A ProfileAssociations class"""
+    """A ProfileAssociations class
+
+    # coverage
+    >>> pr = ProfileAssociations('name', ['3'])
+    >>> pr == ProfileAssociations('name', ['bla bla bla', 'test test'])
+    True
+    >>> pr == {'profilename': 'name', 'nodes':['3']}
+    False
+
+    """
     def __init__(self, profilename, nodes):
         self.profilename = profilename
         self.nodes = nodes
@@ -72,18 +88,21 @@ class Experiment(object):
                 "Invalid experiment, should be only physical or only alias")
         self.type = exp_type
 
-    def _safe_list_list_append(self, attribute, objs_list):
-        l_l = getattr(self, attribute)
-        l_l = l_l if l_l is not None else []
+    @staticmethod
+    def _assocs_append(assoc_list, assoc):
+        l_l = assoc_list or []
 
-        if objs_list in l_l:
-            old_values = set(l_l.pop(l_l.index(objs_list)))
-            # list with all elements appearing only once
-            objs_list = list(old_values.union(objs_list))
+        if assoc in l_l:
+            # update assoc with nodes already in list
 
-        l_l.append(objs_list)
+            cur_assoc = l_l.pop(l_l.index(assoc))
+            # Add nodes to the list, uniq
+            nodes = list(set(cur_assoc.nodes + assoc.nodes))
+            # keep sorted to ease tests and readability
+            assoc.nodes = sorted(nodes, key=Experiment._node_url_key)
 
-        setattr(self, attribute, l_l)
+        l_l.append(assoc)
+        return l_l
 
     def add_experiment_dict(self, exp_dict):
 
@@ -106,20 +125,24 @@ class Experiment(object):
     def set_firmware_associations(self, firmware_name, nodes):
         """Set firmware associations list"""
         # use alias number for AliasNodes
-        _nodes = nodes.alias if self.type == 'alias' else nodes
+        _nodes = [nodes.alias] if self.type == 'alias' else nodes
 
         assoc = FirmwareAssociations(firmware_name, _nodes)
-        self._safe_list_list_append('firmwareassociations', assoc)
+        assocs = self._assocs_append(self.firmwareassociations, assoc)
+        self.firmwareassociations = sorted(
+            assocs, key=lambda x: x.firmwarename)
 
     def set_profile_associations(self, profile_name, nodes):
         """Set profile associations list"""
         if profile_name is None:
             return
-
         # use alias number for AliasNodes
-        _nodes = nodes.alias if self.type == 'alias' else nodes
+        _nodes = [nodes.alias] if self.type == 'alias' else nodes
+
         assoc = ProfileAssociations(profile_name, _nodes)
-        self._safe_list_list_append('profileassociations', assoc)
+        assocs = self._assocs_append(self.profileassociations, assoc)
+        self.profileassociations = sorted(
+            assocs, key=lambda x: x.profilename)
 
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
@@ -134,7 +157,12 @@ class Experiment(object):
         """
         >>> Experiment._node_url_key("m3-2.grenoble.iot-lab.info")
         ('grenoble', 'm3', 2)
+
+        >>> Experiment._node_url_key("3")  # for alias nodes
+        3
         """
+        if node_url.isdigit():
+            return int(node_url)
         _node, site = node_url.split('.')[0:2]
         node_type, num_str = _node.split('-')[0:2]
         return site, node_type, int(num_str)

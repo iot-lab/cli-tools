@@ -114,8 +114,12 @@ class TestMainInfoParser(unittest.TestCase):
         api.reset_mock()
         experiment_parser.main([
             'submit', '-d', '20', '-l',
-            '9,archi=m3:at86rf231+site=grenoble,%s/firmware.elf,profile1' %
-            CURRENT_DIR
+            '1,archi=m3:at86rf231+site=grenoble,%s/firmware.elf,profile1' %
+            CURRENT_DIR, '-l',
+            '1,archi=m3:at86rf231+site=grenoble,%s/firmware.elf,profile1' %
+            CURRENT_DIR, '-l',
+            '1,archi=m3:at86rf231+site=grenoble,%s/firmware_2.elf,profile2' %
+            CURRENT_DIR,
         ])
 
         files_dict = api.submit_experiment.call_args[0][0]
@@ -125,26 +129,34 @@ class TestMainInfoParser(unittest.TestCase):
             'duration': 20,
             'type': 'alias',
             'nodes': [
-                {
-                    "alias": '1', "nbnodes": 9, "properties": {
-                        "archi": "m3:at86rf231", "site": "grenoble",
-                        "mobile": False
-                    }
-                }
+                {"alias": '1', "nbnodes": 1, "properties": {
+                    "archi": "m3:at86rf231", "site": "grenoble",
+                    "mobile": False
+                }},
+                {"alias": '2', "nbnodes": 1, "properties": {
+                    "archi": "m3:at86rf231", "site": "grenoble",
+                    "mobile": False
+                }},
+                {"alias": '3', "nbnodes": 1, "properties": {
+                    "archi": "m3:at86rf231", "site": "grenoble",
+                    "mobile": False
+                }},
             ],
             'reservation': None,
-            'profileassociations': [{'profilename': 'profile1', 'nodes': '1'}],
+            'profileassociations': [
+                {'profilename': 'profile1', 'nodes': ['1', '2']},
+                {'profilename': 'profile2', 'nodes': ['3']},
+            ],
             'firmwareassociations': [
-                {'firmwarename': 'firmware.elf', 'nodes': '1'}
+                {'firmwarename': 'firmware.elf', 'nodes': ['1', '2']},
+                {'firmwarename': 'firmware_2.elf', 'nodes': ['3']}
             ]
         }
-        print expected
-        print exp_desc
         self.assertEquals(expected, exp_desc)
         self.assertIn('firmware.elf', files_dict)
 
         # print with simple options
         api.reset_mock()
-        experiment_parser.main(['submit', '-p', '-d', '20', '-l',
-                                '9,archi=m3:at86rf231+site=grenoble'])
+        experiment_parser.main(['submit', '-p', '-d', '20',
+                                '-l', '9,archi=m3:at86rf231+site=grenoble'])
         self.assertFalse(api.submit_experiment.called)
