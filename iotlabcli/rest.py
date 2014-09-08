@@ -92,6 +92,7 @@ class Api(object):
     @staticmethod
     def get_sites():
         """ Get testbed sites description
+        May be run unauthicated
 
         :returns JSONObject
         """
@@ -99,22 +100,13 @@ class Api(object):
         url = urljoin(API_URL, 'experiments?sites')
         return Api._method(url)
 
-    def get_resources(self, site=None):
+    def get_resources(self, list_id=False, site=None):
         """ Get testbed resources description
 
-        :returns JSONObject
+        :param list_id: return result in 'exp_list' format '3-12+35'
+        :param site: restrict to site
         """
-        query = 'experiments?resources'
-        if site is not None:
-            query += '&site=%s' % site
-        return self.method(query)
-
-    def get_resources_id(self, site=None):
-        """ Get testbed resources state description
-
-        :returns JSONObject
-        """
-        query = 'experiments?id'
+        query = 'experiments?%s' % ('id' if list_id else 'resources')
         if site is not None:
             query += '&site=%s' % site
         return self.method(query)
@@ -168,46 +160,23 @@ class Api(object):
         queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
         return self.method('experiments?%s' % queryset)
 
-    def get_experiment(self, expid):
+    def get_experiment_info(self, expid, option=''):
         """ Get user experiment description.
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :returns JSONObject
+        :param expid: experiment id submission (e.g. OAR scheduler)
+        :param option: Restrict to some values:
+            * '':          experiment submission
+            * 'resources': resources list
+            * 'id':        resources id list: (1-34+72 format)
+            * 'state':     experiment state
+            * 'data':      experiment tar.gz with description and firmwares
         """
-        return self.method('experiments/%s' % expid)
+        assert option in ('', 'resources', 'id', 'state', 'data')
 
-    def get_experiment_resources(self, expid):
-        """ Get user experiment resources list description.
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :returns JSONObject
-        """
-        return self.method('experiments/%s?resources' % expid)
-
-    def get_experiment_resources_id(self, expid):
-        """ Get user experiment resources list description.
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :returns JSONObject
-        """
-        return self.method('experiments/%s?id' % expid)
-
-    def get_experiment_state(self, expid):
-        """ Get user experiment state.
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :returns JSONObject
-        """
-        return self.method('experiments/%s?state' % expid)
-
-    def get_experiment_archive(self, expid):
-        """ Get user experiment archive (tar.gz) with description
-        and firmware(s).
-
-        :param id: experiment id submission (e.g. OAR scheduler)
-        :returns File
-        """
-        return self.method('experiments/%s?data' % expid)
+        query = 'experiment/%s' % expid
+        if option:
+            query += '?%s' % option
+        print '%r' % query
+        return self.method(query)
 
     def stop_experiment(self, expid):
         """ Stop user experiment.

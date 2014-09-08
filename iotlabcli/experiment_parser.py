@@ -63,50 +63,40 @@ def parse_options():
         help='get user\'s experiment',
         formatter_class=RawTextHelpFormatter)
 
-    get_parser.add_argument(
-        '-i', '--id',
-        dest='experiment_id', type=int,
-        help='experiment id')
-
-    get_parser.add_argument(
-        '--offset', default=0,
-        dest='offset', type=int,
-        help='experiment list start index')
-
-    get_parser.add_argument(
-        '--limit', default=0,
-        dest='limit', type=int,
-        help='experiment list lenght')
-
-    get_parser.add_argument(
-        '--state', dest='state',
-        help='experiment list state filter')
+    get_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                            help='experiment id')
 
     get_group = get_parser.add_mutually_exclusive_group(required=True)
-
-    get_group.add_argument(
-        '-a', '--archive', dest='get_cmd', action='store_const',
-        const='archive', help='get an experiment archive (tar.gz)')
-
-    get_group.add_argument(
-        '-p', '--print', dest='get_cmd', action='store_const',
-        const='print', help='get an experiment submission')
-
-    get_group.add_argument(
-        '-s', '--exp-state', dest='get_cmd', action='store_const',
-        const='exp_state', help='get an experiment state')
-
     get_group.add_argument(
         '-r', '--resources', dest='get_cmd', action='store_const',
         const='resources', help='get an experiment resources list')
-
     get_group.add_argument(
         '-ri', '--resources-id', dest='get_cmd', action='store_const',
-        const='resources_exp_id', help=('get an experiment resources id list '
-                                        '(EXP_LIST format : 1-34+72)'))
+        const='id', help=('get an experiment resources id list '
+                          '(EXP_LIST format : 1-34+72)'))
+
+    get_group.add_argument(
+        '-s', '--exp-state', dest='get_cmd', action='store_const',
+        const='state', help='get an experiment state')
+    get_group.add_argument(
+        '-p', '--print', dest='get_cmd', action='store_const',
+        const='', help='get an experiment submission')
+    get_group.add_argument(
+        '-a', '--archive', dest='get_cmd', action='store_const',
+        const='data', help='get an experiment archive (tar.gz)')
+
+    # --list with its options
     get_group.add_argument(
         '-l', '--list', dest='get_cmd', action='store_const',
         const='experiment_list', help='get user\'s experiment list')
+
+    get_parser.add_argument('--offset', default=0, type=int,
+                            help='experiment list start index')
+
+    get_parser.add_argument('--limit', default=0, type=int,
+                            help='experiment list lenght')
+
+    get_parser.add_argument('--state', help='experiment list state filter')
 
     # ####### LOAD PARSER ###############
     load_parser = subparsers.add_parser('load', epilog=help_parser.LOAD_EPILOG,
@@ -128,13 +118,12 @@ def parse_options():
     info_parser.add_argument('--site', help='resources list filter by site')
     # subcommand
     info_group = info_parser.add_mutually_exclusive_group(required=True)
-    info_group.add_argument('-l', '--list', const='resources',
-                            help='list resources',
-                            dest='info_cmd', action='store_const')
-    info_group.add_argument('-li', '--list-id', const='resources_id',
+    info_group.add_argument('-l', '--list', dest='list_id',
+                            action='store_false', help='list resources')
+    info_group.add_argument('-li', '--list-id', dest='list_id',
+                            action='store_true',
                             help=('resources id list by archi and state '
-                                  '(EXP_LIST format : 1-34+72)'),
-                            dest='info_cmd', action='store_const')
+                                  '(EXP_LIST format : 1-34+72)'))
     return parser
 
 
@@ -142,6 +131,7 @@ def submit_experiment_parser(opts):
     """ Parse namespace 'opts' and execute requested 'submit' command """
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
+
     experiment = Experiment(opts.name, opts.duration, opts.reservation)
     return submit_experiment(api, experiment, opts.nodes_list, opts.print_json)
 
@@ -185,16 +175,17 @@ def stop_experiment_parser(opts):
     """ Parse namespace 'opts' object and execute requested 'stop' command """
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    return stop_experiment(api, opts.experiment_id)
+    exp_id = helpers.get_current_experiment(opts.experiment_id)
+
+    return stop_experiment(api, exp_id)
 
 
-def stop_experiment(api, experiment_id=None):
+def stop_experiment(api, exp_id):
     """ Stop user experiment submission.
 
     :param api: API Rest api object
-    :param experiment_id: scheduler OAR id submission
+    :param exp_id: scheduler OAR id submission
     """
-    exp_id = api.get_current_experiment(experiment_id)
     return api.stop_experiment(exp_id)
 
 
@@ -203,10 +194,12 @@ def get_experiment_parser(opts):
 
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
+    exp_id = helpers.get_current_experiment(opts.experiment_id)
+
     if opts.get_cmd == 'experiment_list':
         return get_experiments_list(api, opts.state, opts.limit, opts.offset)
     else:
-        return get_experiment(api, opts.get_cmd, opts.experiment_id)
+        return get_experiment(api, exp_id, opts.get_cmd)
 
 
 def get_experiments_list(api, state, limit, offset):
@@ -219,33 +212,25 @@ def get_experiments_list(api, state, limit, offset):
     return api.get_experiments(state, limit, offset)
 
 
-def get_experiment(api, command, experiment_id=None):
+def get_experiment(api, exp_id=None, command=''):
     """ Get user experiment's description :
-    _ download archive file (tar.gz) with JSONObject experiment
-      description and firmware(s)
-    _ print JSONObject with experiment state
-    _ print JSONObject with experiment owner
-    _ print JSONObject with experiment description
 
     :param api: API Rest api object
-    :param command: experiment request
-    :param experiment_id: experiment id
+    :param exp_id: experiment id
+    :param option: Restrict to some values
+            * '':          experiment submission
+            * 'resources': resources list
+            * 'id':        resources id list: (1-34+72 format)
+            * 'state':     experiment state
+            * 'data':      experiment tar.gz with description and firmwares
     """
-    exp_id = helpers.get_current_experiment(experiment_id)
-    command = {
-        'archive': api.get_experiment_archive,
-        'print': api.get_experiment,
-        'resources_exp_id': api.get_experiment_resources_id,
-        'exp_state': api.get_experiment_state,
-        'resources': api.get_experiment_resources,
-    }[command]
-    result = command(exp_id)
-
-    if command == 'archive':
+    exp_id = helpers.get_current_experiment(exp_id)
+    result = api.get_experiment_info(exp_id, command)
+    if command == 'data':
         helpers.write_experiment_archive(exp_id, result)
-        return 'Written'
-    else:
-        return result
+        result = 'Written'
+
+    return result
 
 
 def load_experiment_parser(opts):
@@ -305,23 +290,20 @@ def info_experiment_parser(opts):
 
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    return info_experiment(api, opts.info_cmd, opts.site)
+    return info_experiment(api, opts.list_id, opts.site)
 
 
-def info_experiment(api, info, site=None):
+def info_experiment(api, list_id=False, site=None):
     """ Print testbed information for user experiment submission:
     * resources description
     * resources description in short mode
 
     :param api: API Rest api object
-    :param info: Command to run
+    :param list_id: By default, return full nodes list, if list_id
+        return output in exp_list format '3-12+42'
     :param site: Restrict informations collection on site
     """
-    info_dict = {
-        'resources': api.get_resources,
-        'resources_id': api.get_resources_id,
-    }[info](site)
-    return info_dict
+    return api.get_resources(list_id, site)
 
 
 def experiment_parse_and_run(opts):

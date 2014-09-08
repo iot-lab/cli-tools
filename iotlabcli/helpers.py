@@ -117,17 +117,30 @@ def check_radio_channels(channel):
     return value
 
 
-def check_experiment_state(state):
+def check_experiment_state(state_str=None):
+    """ Check that given states are valid if None given, return all states
+
+    >>> check_experiment_state('Running')
+    'Running'
+    >>> check_experiment_state('Terminated,Running')
+    'Terminated,Running'
+    >>> check_experiment_state(None)
+    'Terminated,Waiting,Launching,Finishing,Running,Error'
+
+    >>> check_experiment_state('Invalid')
+    Traceback (most recent call last):
+    Error: "The experiment filter state 'Invalid' is invalid."
+    """
     oar_state = ["Terminated", "Waiting", "Launching", "Finishing",
                  "Running", "Error"]
 
-    if state is None:
+    if state_str is None:
         return ','.join(oar_state)
 
-    for state in state.split(','):
+    for state in state_str.split(','):
         if state not in oar_state:
-            raise Error('The experiment filter state %s is invalid.' % state)
-    return state
+            raise Error('The experiment filter state %r is invalid.' % state)
+    return state_str
 
 
 def check_site(site_name, sites_list):
