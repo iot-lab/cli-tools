@@ -196,17 +196,16 @@ def extract_firmware_nodes_list(param_list):
     if param_list[0].isdigit():  # alias selection
         # extract parameters
         nb_nodes, properties_str = param_list[0:2]
-        param_list = param_list[2:]
+        del param_list[0:2]
 
         # parse parameters
         properties = get_properties(properties_str)
-        alias = parser_common.Singleton().new_alias()
-        nodes = experiment.AliasNodes(str(alias), int(nb_nodes), properties)
+        nodes = experiment.AliasNodes(int(nb_nodes), properties)
         return nodes
     else:  # physical selection
         # extract parameters
         site, archi, nodes_str = param_list[0:3]
-        param_list = param_list[3:]
+        del param_list[0:3]
 
         # parse parameters
         nodes = nodes_list_from_info(site, archi, nodes_str)
@@ -252,9 +251,6 @@ def add_to_dict_uniq(val_dict, key, value):
     :param key: key to use
     :param value: value to use
     """
-    if key is None:
-        return
-
     if key not in val_dict:
         val_dict[key] = value
 

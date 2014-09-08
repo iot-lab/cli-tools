@@ -35,7 +35,7 @@ def parse_options():
 
     submit_parser.add_argument('-l', '--list', action='append',
                                dest='nodes_list', required=True,
-                               type=helpers.experiment_dict,
+                               type=helpers.experiment_dict_from_str,
                                help="experiment list")
 
     submit_parser.add_argument('-n', '--name', help='experiment name')
@@ -136,7 +136,6 @@ def submit_experiment_parser(opts):
     return submit_experiment(api, experiment, opts.nodes_list, opts.print_json)
 
 
-# R0913:too-many-arguments
 def submit_experiment(api, experiment, nodes_list, print_json=False):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
@@ -157,8 +156,10 @@ def submit_experiment(api, experiment, nodes_list, print_json=False):
         experiment.add_experiment_dict(exp_dict)
 
         # Add firmware to experiment files too
-        firmware = exp_dict.get('firmware', {'name': None, 'body': None})
-        helpers.add_to_dict_uniq(exp_files, **firmware)
+        firmware = exp_dict.get('firmware', None)
+        if firmware is None:
+            continue
+        helpers.add_to_dict_uniq(exp_files, firmware['name'], firmware['body'])
 
     if print_json:  # output experiment description
         return experiment
@@ -265,14 +266,15 @@ def load_experiment(api, exp_description_path, firmware_list=()):
 
     # Add firmwares from manual list, may be empty
     for firmware in firmware_list:
-        helpers.add_to_dict_uniq(exp_files, *firmware)
+        helpers.add_to_dict_uniq(exp_files, firmware['name'], firmware['body'])
 
     # Add remaining firmware from current directory
     for fw_name in [fw['firmwarename'] for fw in firmware_associations]:
-        if fw_name not in exp_files:
-            # was not already provided by manual list
-            fw_dict = helpers.open_firmware(fw_name)
-            helpers.add_to_dict_uniq(exp_files, *fw_dict)
+        if fw_name in exp_files:
+            continue
+        # was not already provided by manual list
+        firmware = helpers.open_firmware(fw_name)
+        helpers.add_to_dict_uniq(exp_files, firmware['name'], firmware['body'])
 
     #
     # Sanity Check, no more firmware than required

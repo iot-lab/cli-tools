@@ -54,8 +54,8 @@ Examples:
 
     * alias experiment list : resources_number,properties,firmware_path,profile_name
         $ experiment-cli submit -d 20 -l 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
-        $ experiment-cli submit -d 20 -l 9,archi=m3:m3:at86rf231+site=grenoble,gre.elf \\
-                                      -l 5,archi=m3:m3:at86rf231+site=strasbourg,stras.elf
+        $ experiment-cli submit -d 20 -l 9,archi=m3:at86rf231+site=grenoble,gre.elf \\
+                                      -l 5,archi=m3:at86rf231+site=strasbourg,stras.elf
 """
 
 LOAD_EPILOG = """

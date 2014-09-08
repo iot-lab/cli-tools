@@ -37,7 +37,7 @@ def main_cli(function, parser, args=sys.argv[1:]):
     try:
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
-        print json.dumps(result, indent=4, sort_keys=True)
+        print json.dumps(result, indent=4, cls=rest.Encoder, sort_keys=True)
     except Error as err:
         parser.error(str(err))
     except KeyboardInterrupt:
@@ -46,8 +46,8 @@ def main_cli(function, parser, args=sys.argv[1:]):
 
 
 class Singleton(object):
+    """ Singleton methods for memoization """
     _sites = None
-    _current_alias = 0
 
     def __init__(self):
         if Singleton._sites is not None:
@@ -57,9 +57,5 @@ class Singleton(object):
 
     def sites(self):
         """ return platform sites dict """
+        # TODO refactor this in rest I think
         return self._sites
-
-    @staticmethod
-    def new_alias():
-        Singleton._current_alias += 1
-        return Singleton._current_alias

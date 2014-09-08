@@ -4,7 +4,9 @@
 
 class AliasNodes(object):
     """An AliasNodes class"""
-    def __init__(self, alias, nbnodes, properties):
+    _alias = 0  # static count of current alias number
+
+    def __init__(self, nbnodes, properties):
         """
         {
             "alias":"1",
@@ -16,7 +18,8 @@ class AliasNodes(object):
             }
         }
         """
-        self.alias = alias
+        AliasNodes._alias += 1
+        self.alias = AliasNodes._alias
         self.nbnodes = nbnodes
         self.properties = properties
 
@@ -123,9 +126,20 @@ class Experiment(object):
         self._set_type('physical')
 
         self.nodes.extend(nodes_list)
-        self.nodes = list(set(self.nodes))  # Keep unique values
+        # Keep unique values and sorted
+        self.nodes = sorted(list(set(self.nodes)), key=self._node_url_key)
+
+    @staticmethod
+    def _node_url_key(node_url):
+        """
+        >>> Experiment._node_url_key("m3-2.grenoble.iot-lab.info")
+        ('grenoble', 'm3', 2)
+        """
+        _node, site = node_url.split('.')[0:2]
+        node_type, num_str = _node.split('-')[0:2]
+        return site, node_type, int(num_str)
 
     def set_alias_nodes(self, alias_nodes):
         """Set alias nodes list """
         self._set_type('alias')
-        self.nodes.append(alias_nodes.alias)
+        self.nodes.append(alias_nodes)

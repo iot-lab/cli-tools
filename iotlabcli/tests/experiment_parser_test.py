@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """ Test the iotlabcli.experiment_parser module """
+from os import path
 import unittest
+import json
 from mock import patch
 from iotlabcli import experiment_parser
+CURRENT_DIR = path.dirname(path.abspath(__file__))
 
 
 @patch('iotlabcli.helpers.get_current_experiment',
@@ -15,9 +18,9 @@ class TestMainInfoParser(unittest.TestCase):
     def test_main_info_parser(self, api_class, get_credentials):
         """ Run experiment_parser.main.info """
         api = api_class.return_value
-        api.get_resources.return_value = {}
-        api.get_resources.return_value = {}
         get_credentials.return_value = 'username', 'password'
+        api.get_resources.return_value = {}
+        api.get_resources.return_value = {}
 
         experiment_parser.main(['info', '--list'])
         api.get_resources.assert_called_with(False, None)
@@ -79,3 +82,69 @@ class TestMainInfoParser(unittest.TestCase):
         experiment_parser.main(['get', '--list'])
         api.get_experiments.assert_called_with(
             'Terminated,Waiting,Launching,Finishing,Running,Error', 0, 0)
+
+    @patch('iotlabcli.parser_common.Singleton')
+    def test_main_submit_parser(self, plat_class, api_class, get_credentials):
+        """ Run experiment_parser.main.submit """
+        plat_class.return_value.sites.return_value = ['grenoble', 'strasbourg']
+        api = api_class.return_value
+        api.submit_experiment.return_value = {}
+        get_credentials.return_value = 'username', 'password'
+
+        # Physical tests
+        api.reset_mock()
+        experiment_parser.main(['submit', '--name', 'exp_name',
+                                '--duration', '20', '--reservation', '314159',
+                                '--list', 'grenoble,m3,1-5'])
+        call_dict = api.submit_experiment.call_args[0][0]
+        expected = {
+            'name': 'exp_name',
+            'duration': 20,
+            'type': 'physical',
+            'nodes': [
+                'm3-%u.grenoble.iot-lab.info' % num for num in range(1, 6)
+            ],
+            'reservation': 314159,
+            'profileassociations': None,
+            'firmwareassociations': None
+        }
+        self.assertEquals(expected, json.loads(call_dict['new_exp.json']))
+
+        # Alias tests
+        api.reset_mock()
+        experiment_parser.main([
+            'submit', '-d', '20', '-l',
+            '9,archi=m3:at86rf231+site=grenoble,%s/firmware.elf,profile1' %
+            CURRENT_DIR
+        ])
+
+        files_dict = api.submit_experiment.call_args[0][0]
+        exp_desc = json.loads(files_dict['new_exp.json'])
+        expected = {
+            'name': None,
+            'duration': 20,
+            'type': 'alias',
+            'nodes': [
+                {
+                    "alias": 1, "nbnodes": 9, "properties": {
+                        "archi": "m3:at86rf231", "site": "grenoble",
+                        "mobile": False
+                    }
+                }
+            ],
+            'reservation': None,
+            'profileassociations': [{'profilename': 'profile1', 'nodes': 1}],
+            'firmwareassociations': [
+                {'firmwarename': 'firmware.elf', 'nodes': 1}
+            ]
+        }
+        print expected
+        print exp_desc
+        self.assertEquals(expected, exp_desc)
+        self.assertIn('firmware.elf', files_dict)
+
+        # print with simple options
+        api.reset_mock()
+        experiment_parser.main(['submit', '-p', '-d', '20', '-l',
+                                '9,archi=m3:at86rf231+site=grenoble'])
+        self.assertFalse(api.submit_experiment.called)
