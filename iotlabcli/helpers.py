@@ -136,8 +136,11 @@ def check_site(site_name, sites_list):
     raise ArgumentTypeError("The site name %r doesn't exist" % site_name)
 
 
-def check_experiments_running(experiments_json):
-    items = experiments_json["items"]
+def check_experiments_running(experiments_dict):
+    """ Return currently running experiment from experiment dict.
+    If None or more than one are found, raise an Error.
+    """
+    items = experiments_dict["items"]
     if len(items) == 0:
         raise Error("You don't have an experiment with state Running")
 
