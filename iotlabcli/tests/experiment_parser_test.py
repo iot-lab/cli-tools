@@ -126,16 +126,16 @@ class TestMainInfoParser(unittest.TestCase):
             'type': 'alias',
             'nodes': [
                 {
-                    "alias": 1, "nbnodes": 9, "properties": {
+                    "alias": '1', "nbnodes": 9, "properties": {
                         "archi": "m3:at86rf231", "site": "grenoble",
                         "mobile": False
                     }
                 }
             ],
             'reservation': None,
-            'profileassociations': [{'profilename': 'profile1', 'nodes': 1}],
+            'profileassociations': [{'profilename': 'profile1', 'nodes': '1'}],
             'firmwareassociations': [
-                {'firmwarename': 'firmware.elf', 'nodes': 1}
+                {'firmwarename': 'firmware.elf', 'nodes': '1'}
             ]
         }
         print expected

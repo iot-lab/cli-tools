@@ -19,7 +19,7 @@ class AliasNodes(object):
         }
         """
         AliasNodes._alias += 1
-        self.alias = AliasNodes._alias
+        self.alias = str(AliasNodes._alias)
         self.nbnodes = nbnodes
         self.properties = properties
 
