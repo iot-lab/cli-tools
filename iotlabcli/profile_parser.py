@@ -94,18 +94,19 @@ def parse_options():
 
     group_m3_radio.add_argument(
         '-channels', dest='channels', nargs='+',
-        type=helpers.check_radio_channels,
+        type=int, choices=range(11, 27),
+        metavar='{11..26}',
         help='List of channels (11 to 26)')
 
     group_m3_radio.add_argument(
         '-num', dest='num_per_channel',
-        type=helpers.check_radio_num_per_channel,
+        type=int, choices=range(1, 256),
         metavar='{0..255}',
         help='Number of measure by channel')
 
     group_m3_radio.add_argument(
         '-rperiod', dest='rperiod',
-        type=helpers.check_radio_period,
+        type=int, choices=range(1, 2**16),
         metavar='{1..65535}',
         help='period measure')
 

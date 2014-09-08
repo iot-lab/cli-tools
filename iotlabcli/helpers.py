@@ -96,30 +96,6 @@ def get_user_credentials(username=None, password=None):
     return username, password
 
 
-def check_radio_period(period):
-    value = int(period)
-    if value not in range(1, 65536):
-        raise ArgumentTypeError(
-            "invalid period choice : %s (choose from 1 .. 65535)" % (value,))
-    return value
-
-
-def check_radio_num_per_channel(num):
-    value = int(num)
-    if value not in range(1, 256):
-        raise ArgumentTypeError(
-            "invalid period choice : %s (choose from 1 .. 255)" % (value,))
-    return value
-
-
-def check_radio_channels(channel):
-    value = int(channel)
-    if value not in range(11, 27):
-        raise ArgumentTypeError(
-            "invalid channel choice : %s (choose from 11 .. 26)" % (value,))
-    return value
-
-
 def check_experiment_state(state_str=None):
     """ Check that given states are valid if None given, return all states
 
