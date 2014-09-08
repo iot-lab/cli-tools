@@ -169,8 +169,6 @@ class Api(object):
 
     def get_experiments(self, state='Running', limit=0, offset=0):
         """ Get user's experiment
-        :param queryset: queryset with state, limit and offset attribute
-        :type queryset: string
         :returns JSONObject
         """
         queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
@@ -180,7 +178,6 @@ class Api(object):
         """ Get user experiment description.
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s' % expid))
@@ -189,7 +186,6 @@ class Api(object):
         """ Get user experiment resources list description.
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s?resources' % expid))
@@ -198,7 +194,6 @@ class Api(object):
         """ Get user experiment resources list description.
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s?id' % expid))
@@ -207,7 +202,6 @@ class Api(object):
         """ Get user experiment state.
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :returns JSONObject
         """
         return json.loads(self.method('experiments/%s?state' % expid))
@@ -217,7 +211,6 @@ class Api(object):
         and firmware(s).
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :returns File
         """
         return json.loads(self.method('experiments/%s?data' % expid))
@@ -226,16 +219,14 @@ class Api(object):
         """ Stop user experiment.
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         """
-        return json.loads(self.method('experiments/%s' % expid,
-                                      method='DELETE'))
+        return json.loads(self.method('experiments/%s' % expid),
+                          method='DELETE')
 
     def node_command(self, command, expid, nodes=()):
         """ Lanch 'command' on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :param nodes: list of nodes, if empty apply on all nodes
         :returns: dict
         """
@@ -248,7 +239,6 @@ class Api(object):
         experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
-        :type id: string
         :param files: nodes list description and firmware
         :type files: dict
         :returns: dict
