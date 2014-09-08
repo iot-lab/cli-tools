@@ -72,22 +72,25 @@ def read_password_file():
         raise Error('Cannot open password file in home directory: %s' % err)
 
 
-def write_experiment_archive(experiment_id, data):
+def write_experiment_archive(exp_id, data):
+    """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
     try:
-        archive_file = open('%s.tar.gz' % experiment_id, 'wb')
-    except IOError:
-        raise Error("Unable to save experiment archive file: \
-            %s.tar.gz." % experiment_id)
-    else:
-        archive_file.write(json.dumps(data, indent=4, sort_keys=True))
-        archive_file.close()
+        with open('%s.tar.gz' % exp_id, 'wb') as archive:
+            archive.write(json.dumps(data, indent=4, sort_keys=True))
+    except IOError as err:
+        raise Error(
+            "Cannot save experiment archive %s.tar.gz: %s" % (exp_id, err))
 
 
-def get_user_credentials(username, password):
-    if (password is None) and (username is not None):
-        password = getpass.getpass()
-    elif (password is not None) and (username is not None):
+def get_user_credentials(username=None, password=None):
+    """ Return user credentials.
+    If provided in arguments return them, if password missing, ask on console,
+    or try to read them from password file """
+
+    if (password is not None) and (username is not None):
         pass
+    elif (password is None) and (username is not None):
+        password = getpass.getpass()
     else:
         username, password = read_password_file()
     return username, password
@@ -190,6 +193,13 @@ def get_command_list(nodes_list):
 
 
 def extract_firmware_nodes_list(param_list):
+    """
+    Extract a firmware nodes list from param_list
+    param_list is modified by the function call
+    :param param_list: can have following formats
+        * ['9', 'archi=wsn430:cc1101+site=grenoble', ...]  Alias type
+        * ['grenoble', 'm3', '1-4+8-12+7', ...]  Physical type
+    """
 
     # list in experiment-cli (alias or physical)
 
@@ -199,7 +209,7 @@ def extract_firmware_nodes_list(param_list):
         del param_list[0:2]
 
         # parse parameters
-        properties = get_properties(properties_str)
+        properties = get_alias_properties(properties_str)
         nodes = experiment.AliasNodes(int(nb_nodes), properties)
     else:  # physical selection
         # extract parameters
@@ -259,29 +269,24 @@ def add_to_dict_uniq(val_dict, key, value):
 
 
 def open_firmware(firmware_path):
+    """ Open a firmware and return it's name and content as a dict.
+    If firmware_path is None, None is returned.
+    """
     if firmware_path is None:
         return None
     name, body = open_file(firmware_path)
     return {'name': name, 'body': body}
 
 
-def experiment_dict(nodes, firmware_dict=None, profile_name=None):
-
-    if isinstance(nodes, experiment.AliasNodes):
-        exp_type = 'alias'
-    else:
-        exp_type = 'physical'
-
-    exp_dict = {
-        'type': exp_type,
-        'nodes': nodes,
-        'firmware': firmware_dict,
-        'profile': profile_name,
-    }
-    return exp_dict
-
-
 def experiment_dict_from_str(exp_str):
+    """ Extract an 'experiment.experiment_dict' from parameter string
+    Accepted formats:
+        + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
+
+        * grenoble,m3,1-20,/home/cc1101.hex
+        * rocquencourt,a8,1-5,,battery
+
+    """
     try:
         param_list = exp_str.split(',')
         nodes = extract_firmware_nodes_list(param_list)
@@ -291,10 +296,11 @@ def experiment_dict_from_str(exp_str):
             raise ValueError  # two many values in list
         firmware_dict = open_firmware(firmware)
 
-        return experiment_dict(nodes, firmware_dict, profile_name)
+        return experiment.experiment_dict(nodes, firmware_dict, profile_name)
     except ValueError:
         pass
-    raise Error('Invalid argument number in experiment list %s' % exp_str)
+    raise ArgumentTypeError(
+        'Invalid number or arguments in experiment list %r' % exp_str)
 
 
 def nodes_list_from_str(nodes_list_str):
@@ -309,9 +315,7 @@ def nodes_list_from_str(nodes_list_str):
 
 
 def nodes_list_from_info(site, archi, nodes_str):
-    """ Return nodes list from site, archi, nodes_str where nodes_str format is
-    1-34+72+12-14
-    """
+    """ Cheks site, archi, nodes_str format and return a nodes list """
     sites_list = parser_common.Singleton().sites()
     check_site(site, sites_list)
     check_archi(archi)
@@ -338,7 +342,7 @@ def check_archi(archi):
 
 
 def get_nodes_list(site, archi, nodes_list):
-    """
+    """ Expand short nodes_list '1-5+6+8-12' to a regular nodes list
 
     >>> get_nodes_list('grenoble', 'm3', '1-4+6+7-8')
     ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
@@ -428,9 +432,12 @@ def get_property(properties, key):
         return None
 
 
-def get_properties(properties_list):
+def get_alias_properties(properties_str):
+    """ Extract nodes selection properties from given properties_str
 
-    properties = properties_list.split('+')
+    """
+
+    properties = properties_str.split('+')
     try:
         archi = get_property(properties, 'archi')
         site = get_property(properties, 'site')
@@ -445,7 +452,7 @@ def get_properties(properties_list):
     if len(properties) > (2 if mobile is None else 3):
         # Refuse unkown properties
         raise ArgumentTypeError(
-            "Invalid property in %r " % properties_list +
+            "Invalid property in %r " % properties_str +
             "Allowed values are ['archi', 'site', 'mobile']")
 
     sites_list = parser_common.Singleton().sites()

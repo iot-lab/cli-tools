@@ -2,7 +2,31 @@
 """Class python for Experiment serialization JSON"""
 
 
-class AliasNodes(object):
+def experiment_dict(nodes, firmware_dict=None, profile_name=None):
+    """ Create an experiment dict
+
+    :param nodes: a list of nodes url or a AliasNodes object
+    :param firmware_dict: Firmware associated, type dict with:
+    :type firmware_dict: {'name': firmware_name, 'body': firmware_content}
+    :param profile_name: Name of the profile associated
+
+    """
+
+    if isinstance(nodes, AliasNodes):
+        exp_type = 'alias'
+    else:
+        exp_type = 'physical'
+
+    exp_dict = {
+        'type': exp_type,
+        'nodes': nodes,
+        'firmware': firmware_dict,
+        'profile': profile_name,
+    }
+    return exp_dict
+
+
+class AliasNodes(object):  # pylint: disable=too-few-public-methods
     """An AliasNodes class"""
     _alias = 0  # static count of current alias number
 
@@ -24,7 +48,7 @@ class AliasNodes(object):
         self.properties = properties
 
 
-class FirmwareAssociations(object):
+class FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
     """A FirmwareAssociations class
 
     >>> fw = FirmwareAssociations('name', ['3'])
@@ -44,7 +68,7 @@ class FirmwareAssociations(object):
             return False
 
 
-class ProfileAssociations(object):
+class ProfileAssociations(object):  # pylint: disable=too-few-public-methods
     """A ProfileAssociations class
 
     # coverage
@@ -90,6 +114,8 @@ class Experiment(object):
 
     @staticmethod
     def _assocs_append(assoc_list, assoc):
+        """ Append an association to the given association list
+        If a similar association was already present, add assoc.nodes to it """
         l_l = assoc_list or []
 
         if assoc in l_l:
@@ -105,6 +131,9 @@ class Experiment(object):
         return l_l
 
     def add_experiment_dict(self, exp_dict):
+        """ Add an 'experiment_dict' to current experiment
+        It will update node type, nodes, firmware and profile associations
+        """
 
         # register nodes in experiment
         nodes = exp_dict['nodes']
