@@ -122,15 +122,16 @@ def check_experiment_state(state_str=None):
     return state_str
 
 
-def check_site(site_name, sites_list):
+def check_site_with_server(site_name, sites_list=None):
     """ Check if the given site exists
 
     >>> sites = ["strasbourg", "grenoble"]
-    >>> check_site("grenoble", sites)
-    >>> check_site("unknown", sites)
+    >>> check_site_with_server("grenoble", sites)
+    >>> check_site_with_server("unknown", sites)
     Traceback (most recent call last):
     ArgumentTypeError: The site name 'unknown' doesn't exist
     """
+    sites_list = sites_list or parser_common.Singleton().sites()
     if site_name in sites_list:
         return  # site_name is valid
     raise ArgumentTypeError("The site name %r doesn't exist" % site_name)
@@ -290,15 +291,13 @@ def nodes_list_from_str(nodes_list_str):
     """
     # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
     site, archi, nodes_str = get_command_list(nodes_list_str)
+    check_site_with_server(site)  # needs an external request
     return nodes_list_from_info(site, archi, nodes_str)
 
 
 def nodes_list_from_info(site, archi, nodes_str):
-    """ Cheks site, archi, nodes_str format and return a nodes list """
-    sites_list = parser_common.Singleton().sites()
-    check_site(site, sites_list)
+    """ Cheks archi, nodes_str format and return a nodes list """
     check_archi(archi)
-
     nodes_list = get_nodes_list(site, archi, nodes_str)
     return nodes_list
 
@@ -434,8 +433,7 @@ def get_alias_properties(properties_str):
             "Invalid property in %r " % properties_str +
             "Allowed values are ['archi', 'site', 'mobile']")
 
-    sites_list = parser_common.Singleton().sites()
-    check_site(site, sites_list)
+    check_site_with_server(site)
 
     properties_dict = {
         'site': site,
@@ -451,7 +449,7 @@ def open_file(file_path):
         # exanduser replace '~' with the correct path
         file_d = open(os.path.expanduser(file_path), 'r')
     except IOError as err:
-        raise Error(err)
+        raise Error(str(err))
     else:
         file_name = os.path.basename(file_d.name)
         file_data = file_d.read()
@@ -459,7 +457,7 @@ def open_file(file_path):
     return file_name, file_data
 
 
-def get_current_experiment(api, experiment_id=None):
+def get_current_experiment(api, experiment_id):
     """ Return the given experiment or get the currently running one """
     if experiment_id is not None:
         return experiment_id

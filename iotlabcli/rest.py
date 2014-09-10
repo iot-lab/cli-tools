@@ -177,10 +177,9 @@ class Api(object):
         """
         assert option in ('', 'resources', 'id', 'state', 'data')
 
-        query = 'experiment/%s' % expid
+        query = 'experiments/%s' % expid
         if option:
             query += '?%s' % option
-        print '%r' % query
         return self.method(query)
 
     def stop_experiment(self, expid):

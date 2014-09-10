@@ -120,7 +120,7 @@ def node_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command """
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    exp_id = helpers.get_current_experiment(opts.experiment_id)
+    exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     command = opts.command
     firmware = opts.firmware_path  # None if command != 'update'

@@ -176,7 +176,7 @@ def stop_experiment_parser(opts):
     """ Parse namespace 'opts' object and execute requested 'stop' command """
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    exp_id = helpers.get_current_experiment(opts.experiment_id)
+    exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     return stop_experiment(api, exp_id)
 
@@ -195,11 +195,11 @@ def get_experiment_parser(opts):
 
     user, passwd = helpers.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    exp_id = helpers.get_current_experiment(opts.experiment_id)
 
     if opts.get_cmd == 'experiment_list':
         return get_experiments_list(api, opts.state, opts.limit, opts.offset)
     else:
+        exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         return get_experiment(api, exp_id, opts.get_cmd)
 
 
@@ -213,7 +213,7 @@ def get_experiments_list(api, state, limit, offset):
     return api.get_experiments(state, limit, offset)
 
 
-def get_experiment(api, exp_id=None, command=''):
+def get_experiment(api, exp_id, command=''):
     """ Get user experiment's description :
 
     :param api: API Rest api object
@@ -225,7 +225,6 @@ def get_experiment(api, exp_id=None, command=''):
             * 'state':     experiment state
             * 'data':      experiment tar.gz with description and firmwares
     """
-    exp_id = helpers.get_current_experiment(exp_id)
     result = api.get_experiment_info(exp_id, command)
     if command == 'data':
         helpers.write_experiment_archive(exp_id, result)

@@ -10,7 +10,7 @@ CURRENT_DIR = path.dirname(path.abspath(__file__))
 
 
 @patch('iotlabcli.helpers.get_current_experiment',
-       (lambda x: 123 if x is None else x))
+       (lambda a, x: 123 if x is None else x))
 @patch('iotlabcli.helpers.get_user_credentials')
 @patch('iotlabcli.rest.Api')
 class TestMainInfoParser(unittest.TestCase):
