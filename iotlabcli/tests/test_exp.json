@@ -1,0 +1,66 @@
+{
+    "name": null, 
+    "profileassociations": [
+        {
+            "profilename": "profile1", 
+            "nodes": [
+                "1", 
+                "2"
+            ]
+        }, 
+        {
+            "profilename": "profile2", 
+            "nodes": [
+                "3"
+            ]
+        }
+    ], 
+    "duration": 20, 
+    "reservation": null, 
+    "nodes": [
+        {
+            "nbnodes": 1, 
+            "alias": "1", 
+            "properties": {
+                "mobile": false, 
+                "archi": "m3:at86rf231", 
+                "site": "grenoble"
+            }
+        }, 
+        {
+            "nbnodes": 1, 
+            "alias": "2", 
+            "properties": {
+                "mobile": false, 
+                "archi": "m3:at86rf231", 
+                "site": "grenoble"
+            }
+        }, 
+        {
+            "nbnodes": 1, 
+            "alias": "3", 
+            "properties": {
+                "mobile": false, 
+                "archi": "m3:at86rf231", 
+                "site": "grenoble"
+            }
+        }
+    ], 
+    "type": "alias", 
+    "firmwareassociations": [
+        {
+            "firmwarename": "firmware.elf", 
+            "nodes": [
+                "1", 
+                "2"
+            ]
+        }, 
+        {
+            "firmwarename": "firmware_2.elf", 
+            "nodes": [
+                "3"
+            ]
+        }
+    ]
+}
+

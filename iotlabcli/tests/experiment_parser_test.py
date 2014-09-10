@@ -9,17 +9,25 @@ from iotlabcli import experiment_parser
 CURRENT_DIR = path.dirname(path.abspath(__file__))
 
 
-@patch('iotlabcli.helpers.get_current_experiment',
-       (lambda a, x: 123 if x is None else x))
-@patch('iotlabcli.helpers.get_user_credentials')
-@patch('iotlabcli.rest.Api')
 class TestMainInfoParser(unittest.TestCase):
+    def setUp(self):
+        api_class_patcher = patch('iotlabcli.rest.Api')
+        self.api_class = api_class_patcher.start()
 
-    def test_main_info_parser(self, api_class, get_credentials):
-        """ Run experiment_parser.main.info """
-        api = api_class.return_value
+        get_credentials_p = patch('iotlabcli.helpers.get_user_credentials')
+        get_credentials = get_credentials_p.start()
         get_credentials.return_value = 'username', 'password'
-        api.get_resources.return_value = {}
+
+        get_exp_patcher = patch('iotlabcli.helpers.get_current_experiment',
+                                (lambda a, x: 123 if x is None else x))
+        get_exp_patcher.start()
+
+    def tearDown(self):
+        patch.stopall()
+
+    def test_main_info_parser(self):
+        """ Run experiment_parser.main.info """
+        api = self.api_class.return_value
         api.get_resources.return_value = {}
 
         experiment_parser.main(['info', '--list'])
@@ -29,11 +37,10 @@ class TestMainInfoParser(unittest.TestCase):
         experiment_parser.main(['info', '--list-id', '--site', 'grenoble'])
         api.get_resources.assert_called_with(True, 'grenoble')
 
-    def test_main_stop_parser(self, api_class, get_credentials):
+    def test_main_stop_parser(self):
         """ Run experiment_parser.main.stop """
-        api = api_class.return_value
+        api = self.api_class.return_value
         api.stop_experiment.return_value = {}
-        get_credentials.return_value = 'username', 'password'
 
         experiment_parser.main(['stop'])
         api.stop_experiment.assert_called_with(123)
@@ -42,11 +49,9 @@ class TestMainInfoParser(unittest.TestCase):
         experiment_parser.main(['stop', '-i', '345'])
         api.stop_experiment.assert_called_with(345)
 
-    def test_main_get_parser(self, api_class, get_credentials):
+    def test_main_get_parser(self):
         """ Run experiment_parser.main.get """
-        api = api_class.return_value
-
-        get_credentials.return_value = 'username', 'password'
+        api = self.api_class.return_value
 
         api.get_experiment_info.return_value = {}
         api.get_experiments.return_value = {}
@@ -84,12 +89,11 @@ class TestMainInfoParser(unittest.TestCase):
             'Terminated,Waiting,Launching,Finishing,Running,Error', 0, 0)
 
     @patch('iotlabcli.parser_common.Singleton')
-    def test_main_submit_parser(self, plat_class, api_class, get_credentials):
+    def test_main_submit_parser(self, plat_class):
         """ Run experiment_parser.main.submit """
         plat_class.return_value.sites.return_value = ['grenoble', 'strasbourg']
-        api = api_class.return_value
+        api = self.api_class.return_value
         api.submit_experiment.return_value = {}
-        get_credentials.return_value = 'username', 'password'
 
         # Physical tests
         api.reset_mock()
@@ -160,3 +164,14 @@ class TestMainInfoParser(unittest.TestCase):
         experiment_parser.main(['submit', '-p', '-d', '20',
                                 '-l', '9,archi=m3:at86rf231+site=grenoble'])
         self.assertFalse(api.submit_experiment.called)
+
+    @patch('iotlabcli.parser_common.Singleton')
+    def test_main_load_parser(self, plat_class):
+        """ Run experiment_parser.main.load """
+        plat_class.return_value.sites.return_value = ['grenoble', 'strasbourg']
+        api = self.api_class.return_value
+        api.submit_experiment.return_value = {}
+
+        experiment_parser.main(['load', '-f', '%s/test_exp.json' % CURRENT_DIR,
+                                '-l', '%s/firmware.elf,%s/firmware_2.elf' %
+                                (CURRENT_DIR, CURRENT_DIR)])
