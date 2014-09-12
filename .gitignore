@@ -10,3 +10,4 @@ iotlabcli.egg-info
 .coverage
 coverage.xml
 nosetests.xml
+cover/
