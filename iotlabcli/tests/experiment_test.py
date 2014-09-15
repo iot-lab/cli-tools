@@ -81,13 +81,13 @@ class TestExperimentSubmit(unittest.TestCase):
         exp = experiment.Experiment(None, 20)
         nodes_list = [
             experiment.experiment_dict(
-                experiment.AliasNodes(1, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware.elf', 'profile1'),
             experiment.experiment_dict(
-                experiment.AliasNodes(2, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware.elf', 'profile1'),
             experiment.experiment_dict(
-                experiment.AliasNodes(4, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(4, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware_2.elf', 'profile2'),
         ]
 

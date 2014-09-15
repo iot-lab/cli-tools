@@ -155,7 +155,7 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
     """An AliasNodes class"""
     _alias = 0  # static count of current alias number
 
-    def __init__(self, nbnodes, archi, site, mobile=False, _alias=None):
+    def __init__(self, nbnodes, site, archi, mobile=False, _alias=None):
         """
         {
             "alias":"1",
@@ -180,7 +180,7 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
 
     def __repr__(self):
         return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
-            self.nbnodes, self.properties['archi'], self.properties['site'],
+            self.nbnodes, self.properties['site'], self.properties['archi'],
             self.properties['mobile'], self.alias)
 
     def __eq__(self, other):

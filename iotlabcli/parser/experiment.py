@@ -174,8 +174,8 @@ def get_alias_properties(properties_str):
 
     properties = properties_str.split('+')
     try:
-        archi = _get_property(properties, 'archi')
         site = _get_property(properties, 'site')
+        archi = _get_property(properties, 'archi')
         mobile = _get_property(properties, 'mobile')
     except ValueError as err:
         raise ArgumentTypeError(err)
@@ -190,8 +190,7 @@ def get_alias_properties(properties_str):
             "Invalid property in %r " % properties_str +
             "Allowed values are ['archi', 'site', 'mobile']")
 
-    common.check_site_with_server(site)
-    return archi, site, (mobile or False)
+    return site, archi, (mobile or False)
 
 
 def _extract_firmware_nodes_list(param_list):
@@ -211,8 +210,8 @@ def _extract_firmware_nodes_list(param_list):
         del param_list[0:2]
 
         # parse parameters
-        archi, site, mobile = get_alias_properties(properties_str)
-        nodes = experiment.AliasNodes(int(nb_nodes), archi, site, mobile)
+        site, archi, mobile = get_alias_properties(properties_str)
+        nodes = experiment.AliasNodes(int(nb_nodes), site, archi, mobile)
     else:  # physical selection
         # extract parameters
         site, archi, nodes_str = param_list[0:3]
@@ -220,6 +219,7 @@ def _extract_firmware_nodes_list(param_list):
 
         # parse parameters
         nodes = helpers.nodes_list_from_info(site, archi, nodes_str)
+    common.check_site_with_server(site)
     return nodes
 
 

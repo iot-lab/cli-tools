@@ -93,13 +93,13 @@ class TestMainInfoParser(MainMock):
         experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
         nodes_list = [
             experiment.experiment_dict(
-                experiment.AliasNodes(1, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
             experiment.experiment_dict(
-                experiment.AliasNodes(2, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
             experiment.experiment_dict(
-                experiment.AliasNodes(3, 'm3:at86rf231', 'grenoble', False),
+                experiment.AliasNodes(3, 'grenoble', 'm3:at86rf231', False),
                 'firmware_2.elf', 'profile2'),
         ]
 
