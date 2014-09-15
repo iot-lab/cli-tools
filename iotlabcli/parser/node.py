@@ -82,6 +82,13 @@ def nodes_list_from_str(nodes_list_str):
     return helpers.nodes_list_from_info(site, archi, nodes_str)
 
 
+def _get_experiment_nodes_list(api, exp_id):
+    """ Get the nodes_list for given experiment"""
+    exp_resources = api.get_experiment_resources(exp_id)
+    exp_nodes = [res["network_address"] for res in exp_resources["items"]]
+    return exp_nodes
+
+
 def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
     """ Return the list of nodes where the command will apply """
 
@@ -93,11 +100,8 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
         # flatten lists into one
         excl_nodes = list(itertools.chain.from_iterable(excl_nodes_ll))
 
-        # get experiment nodes
-        exp_resources = api.get_experiment_resources(exp_id)
-        exp_nodes = [res["network_address"] for res in exp_resources["items"]]
-
         # remove exclude nodes from experiment nodes
+        exp_nodes = _get_experiment_nodes_list(api, exp_id)
         nodes = [node for node in exp_nodes if node not in excl_nodes]
 
     else:

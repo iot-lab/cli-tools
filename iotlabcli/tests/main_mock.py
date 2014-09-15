@@ -9,9 +9,7 @@ from mock import patch, Mock
 class MainMock(unittest.TestCase):  # pylint: disable=too-many-public-methods
     """ Common mock needed for testing main function of parsers """
     def setUp(self):
-        # TODO remove api_class
-        self.api_class = patch('iotlabcli.rest.Api').start()
-        self.api = self.api_class.return_value
+        self.api = patch('iotlabcli.rest.Api').start().return_value
 
         patch('sys.stderr', sys.stdout).start()
         patch('iotlabcli.parser.common.sites_list', Mock(
