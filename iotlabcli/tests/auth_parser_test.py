@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Test the iotlabcli.auth_parser module """
+""" Test the iotlabcli.parser.auth module """
 
 import sys
 import unittest
@@ -9,7 +9,7 @@ from mock import patch
 import iotlabcli
 import iotlabcli.parser.auth as auth_parser
 
-# pylint: disable=missing-docstring,too-many-public-methods,maybe-no-member
+# pylint: disable=missing-docstring,too-many-public-methods
 
 
 @patch('sys.stderr', sys.stdout)
