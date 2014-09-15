@@ -170,8 +170,29 @@ def _extract_non_empty_val(param_list):
 
 
 def get_alias_properties(properties_str):
-    """ Extract nodes selection properties from given properties_str """
+    """ Extract nodes selection properties from given properties_str
 
+    >>> get_alias_properties("site=grenoble+archi=wsn430:cc1101+mobile=True")
+    ('grenoble', 'wsn430:cc1101', 'True')
+
+    >>> get_alias_properties("site=strasbourg+archi=m3:at86rf231")
+    ('strasbourg', 'm3:at86rf231', None)
+
+    >>> get_alias_properties("site=strasbourg")
+    Traceback (most recent call last):
+    ArgumentTypeError: Properties "archi" and "site" are mandatory.
+
+
+    >>> get_alias_properties("site=strasbourg+archi=val+uknown=test")
+    Traceback (most recent call last):
+    ArgumentTypeError: \
+Invalid property in 'site=strasbourg+archi=val+uknown=test'
+    Allowed values are ['archi', 'site', 'mobile']
+
+    >>> get_alias_properties("site=")
+    Traceback (most recent call last):
+    ArgumentTypeError: Invalid empty value for property 'site' in ['site=']
+    """
     properties = properties_str.split('+')
     try:
         site = _get_property(properties, 'site')
@@ -187,10 +208,10 @@ def get_alias_properties(properties_str):
     if len(properties) > (2 if mobile is None else 3):
         # Refuse unkown properties
         raise ArgumentTypeError(
-            "Invalid property in %r " % properties_str +
+            "Invalid property in %r\n" % properties_str +
             "Allowed values are ['archi', 'site', 'mobile']")
 
-    return site, archi, (mobile or False)
+    return site, archi, mobile
 
 
 def _extract_firmware_nodes_list(param_list):
@@ -210,7 +231,8 @@ def _extract_firmware_nodes_list(param_list):
         del param_list[0:2]
 
         # parse parameters
-        site, archi, mobile = get_alias_properties(properties_str)
+        site, archi, _mobile = get_alias_properties(properties_str)
+        mobile = _mobile or False  # TODO check valid values for 'mobile'
         nodes = experiment.AliasNodes(int(nb_nodes), site, archi, mobile)
     else:  # physical selection
         # extract parameters
