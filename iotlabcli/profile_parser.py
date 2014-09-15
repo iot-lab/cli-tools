@@ -7,20 +7,23 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 from iotlabcli import Error
-from iotlabcli import helpers, rest, help_parser
+from iotlabcli import helpers
+from iotlabcli import rest
+from iotlabcli import auth
+from iotlabcli.parser import help_msgs
+from iotlabcli.parser import common
 from iotlabcli.profile import Profile, Consumption, Radio, Sensor
-from iotlabcli import parser_common
 
 
 def parse_options():
     """
     Handle profile-cli command-line opts with argparse
     """
-    parent_parser = parser_common.base_parser()
+    parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
-        description=help_parser.PROFILE_PARSER,
-        parents=[parent_parser], epilog=help_parser.PARSER_EPILOG
+        description=help_msgs.PROFILE_PARSER,
+        parents=[parent_parser], epilog=help_msgs.PARSER_EPILOG
         % {'cli': 'profile', 'option': 'add'},
         formatter_class=RawTextHelpFormatter)
 
@@ -28,12 +31,12 @@ def parse_options():
 
     add_wsn430_parser = subparsers.add_parser(
         'addwsn430', help='add wsn430 user profile',
-        epilog=help_parser.ADD_EPILOG,
+        epilog=help_msgs.ADD_EPILOG,
         formatter_class=RawTextHelpFormatter)
 
     add_m3_parser = subparsers.add_parser(
         'addm3', help='add m3 user profile',
-        epilog=help_parser.ADD_EPILOG,
+        epilog=help_msgs.ADD_EPILOG,
         formatter_class=RawTextHelpFormatter)
 
     del_parser = subparsers.add_parser(
@@ -294,7 +297,7 @@ def load_profile(api, path_file):
     :type path_file: string
     :param api: API Rest api object
     """
-    file_data = helpers.open_file(path_file)[1]
+    file_data = helpers.read_file(path_file)
     profile = json.loads(file_data)
     if "profilename" not in profile:
         raise Error("You must have a profilename attribute in your JSON file")
@@ -329,10 +332,9 @@ def get_profile(api, opts):
 
 def profile_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command """
-    username, password = helpers.get_user_credentials(
-        opts.username, opts.password)
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
 
-    api = rest.Api(username, password)
     subparser_name = opts.subparser_name
     if subparser_name == 'addwsn430':
         result = add_wsn430_profile(api, opts)
@@ -351,4 +353,4 @@ def profile_parse_and_run(opts):
 def main(args=sys.argv[1:]):
     """ Main command-line execution loop.  """
     parser = parse_options()
-    parser_common.main_cli(profile_parse_and_run, parser, args)
+    common.main_cli(profile_parse_and_run, parser, args)

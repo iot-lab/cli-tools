@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 """Class python for Profile serialization JSON"""
 
+# pylint:disable=too-few-public-methods
+
 
 class Consumption(object):
     """A Consumption measure class"""

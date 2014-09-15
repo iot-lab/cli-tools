@@ -1,75 +1,13 @@
 # -*- coding:utf-8 -*-
 """Helpers methods"""
 
-import getpass
 import os
-import base64
 import json
 from argparse import ArgumentTypeError
 
 from iotlabcli import Error
-from iotlabcli import experiment
-from iotlabcli import parser_common
 
 DOMAIN_DNS = 'iot-lab.info'
-
-
-def password_prompt():
-    """ password prompt when command-line option username (e.g. -u or --user)
-    is used without password
-
-    :returns password
-    """
-    pprompt = lambda: (getpass.getpass(), getpass.getpass('Retype password: '))
-    prompt1, prompt2 = pprompt()
-    while prompt1 != prompt2:
-        print 'Passwords do not match. Try again'
-        prompt1, prompt2 = pprompt()
-    return prompt1
-
-
-def create_password_file(username, password):
-    """ Create a password file for basic authentication http when
-    command-line option username and password are used We write .iotlabrc
-    file in user home directory with format username:base64(password)
-
-    :param username: basic http auth username
-    :type username: string
-    :param password: basic http auth password
-    :type password: string
-    """
-    if username is None or password is None:
-        raise Error("username:password required: %s:%s" % username, password)
-
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    try:
-        with open('%s/%s' % (home_directory, '.iotlabrc'), 'wb') as pass_file:
-            pass_file.write('%s:%s' % (username, base64.b64encode(password)))
-    except IOError as err:
-        raise Error("Cannot create password file in home directory: %s" % err)
-
-
-def read_password_file():
-    """ Try to read password file (.iotlabrc) in user home directory when
-    command-line option username and password are not used. If password
-    file exist whe return username and password for basic auth http
-    authentication
-
-    """
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    path_file = '%s/%s' % (home_directory, '.iotlabrc')
-
-    if not os.path.exists(path_file):
-        return None, None
-    try:
-        with open(path_file, 'rb') as password_file:
-            try:
-                user, enc_passwd = (password_file.readline()).split(':')
-            except ValueError:
-                raise Error('Bad password file format: %r' % path_file)
-            return user, base64.b64decode(enc_passwd)
-    except IOError as err:
-        raise Error('Cannot open password file in home directory: %s' % err)
 
 
 def write_experiment_archive(exp_id, data):
@@ -80,20 +18,6 @@ def write_experiment_archive(exp_id, data):
     except IOError as err:
         raise Error(
             "Cannot save experiment archive %s.tar.gz: %s" % (exp_id, err))
-
-
-def get_user_credentials(username=None, password=None):
-    """ Return user credentials.
-    If provided in arguments return them, if password missing, ask on console,
-    or try to read them from password file """
-
-    if (password is not None) and (username is not None):
-        pass
-    elif (password is None) and (username is not None):
-        password = getpass.getpass()
-    else:
-        username, password = read_password_file()
-    return username, password
 
 
 def check_experiment_state(state_str=None):
@@ -122,21 +46,6 @@ def check_experiment_state(state_str=None):
     return state_str
 
 
-def check_site_with_server(site_name, sites_list=None):
-    """ Check if the given site exists
-
-    >>> sites = ["strasbourg", "grenoble"]
-    >>> check_site_with_server("grenoble", sites)
-    >>> check_site_with_server("unknown", sites)
-    Traceback (most recent call last):
-    ArgumentTypeError: The site name 'unknown' doesn't exist
-    """
-    sites_list = sites_list or parser_common.Singleton().sites()
-    if site_name in sites_list:
-        return  # site_name is valid
-    raise ArgumentTypeError("The site name %r doesn't exist" % site_name)
-
-
 def check_experiments_running(experiments_dict):
     """ Return currently running experiment from experiment dict.
     If None or more than one are found, raise an Error.
@@ -153,146 +62,6 @@ def check_experiments_running(experiments_dict):
             experiments_id)
 
     return experiments_id[0]
-
-
-def get_command_list(nodes_list):
-    """
-    >>> get_command_list('grenoble,m3,0-5+6+8')
-    ['grenoble', 'm3', '0-5+6+8']
-
-    >>> get_command_list('grenoble,m3')
-    Traceback (most recent call last):
-    ArgumentTypeError: Invalid number of argument in nodes list: 'grenoble,m3'
-
-    """
-    param_list = nodes_list.split(',')
-    if len(param_list) == 3:
-        return param_list
-    raise ArgumentTypeError(
-        'Invalid number of argument in nodes list: %r' % nodes_list)
-
-
-def extract_firmware_nodes_list(param_list):
-    """
-    Extract a firmware nodes list from param_list
-    param_list is modified by the function call
-    :param param_list: can have following formats
-        * ['9', 'archi=wsn430:cc1101+site=grenoble', ...]  Alias type
-        * ['grenoble', 'm3', '1-4+8-12+7', ...]  Physical type
-    """
-
-    # list in experiment-cli (alias or physical)
-
-    if param_list[0].isdigit():  # alias selection
-        # extract parameters
-        nb_nodes, properties_str = param_list[0:2]
-        del param_list[0:2]
-
-        # parse parameters
-        properties = get_alias_properties(properties_str)
-        nodes = experiment.AliasNodes(int(nb_nodes), properties)
-    else:  # physical selection
-        # extract parameters
-        site, archi, nodes_str = param_list[0:3]
-        del param_list[0:3]
-
-        # parse parameters
-        nodes = nodes_list_from_info(site, archi, nodes_str)
-    return nodes
-
-
-def extract_non_empty_val(param_list):
-    """ Safe extract value from param_list.
-    It removes item from param_list.
-
-    :returns: value or None if value was '' or not present
-
-    >>> param = ['value', '', 'other_stuff']
-    >>> extract_non_empty_val(param)  # valid value
-    'value'
-    >>> extract_non_empty_val(param)  # empty string
-    >>> extract_non_empty_val([])     # empty list
-
-    >>> print param  # values have been removed
-    ['other_stuff']
-    """
-    if param_list:
-        value = param_list.pop(0)
-        if value != '':
-            return value
-    return None
-
-
-def firmwares_from_string(firmware_str):
-    """
-    Open firmwares given in parameter string
-
-    :param firmware_str: firmware_1_path,../firmware_2_path,~/firmware_3_path
-    :returns: A list of firmware dict where firmware dict has 'name' and 'body'
-    """
-    return [open_firmware(path) for path in firmware_str.split(',')]
-
-
-def add_to_dict_uniq(val_dict, key, value):
-    """ Add (key, val) to _dict files
-        * verify that file cannot have the same name with different content
-    :param val_dict: dict where to add key, value
-    :param key: key to use
-    :param value: value to use
-    """
-    if key not in val_dict:
-        val_dict[key] = value
-
-    elif val_dict[key] != value:
-        # same key, but different value => ERROR
-        raise Error('Found two different files with same key' % key)
-
-
-def open_firmware(firmware_path):
-    """ Open a firmware and return it's name and content as a dict.
-    If firmware_path is None, None is returned.
-    """
-    if firmware_path is None:
-        return None
-    name, body = open_file(firmware_path)
-    return {'name': name, 'body': body}
-
-
-def experiment_dict_from_str(exp_str):
-    """ Extract an 'experiment.experiment_dict' from parameter string
-    Accepted formats:
-        + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
-
-        * grenoble,m3,1-20,/home/cc1101.hex
-        * rocquencourt,a8,1-5,,battery
-
-    """
-    try:
-        param_list = exp_str.split(',')
-        nodes = extract_firmware_nodes_list(param_list)
-        firmware = extract_non_empty_val(param_list)
-        profile_name = extract_non_empty_val(param_list)
-        if param_list:
-            raise ValueError  # two many values in list
-        firmware_dict = open_firmware(firmware)
-
-        return experiment.experiment_dict(nodes, firmware_dict, profile_name)
-    except ValueError:
-        pass
-    raise ArgumentTypeError(
-        'Invalid number or arguments in experiment list %r' % exp_str)
-
-
-def nodes_list_from_str(nodes_list_str):
-    """
-    nodes_list_str format: site_name,archi,nodeid_list
-
-    ex: nodes_list_str == 'grenoble,m3,1-34+72'
-    """
-    # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
-    site, archi, nodes_str = get_command_list(nodes_list_str)
-    check_site_with_server(site)  # needs an external request
-    return nodes_list_from_info(site, archi, nodes_str)
 
 
 def nodes_list_from_info(site, archi, nodes_str):
@@ -379,82 +148,10 @@ def get_nodes_list(site, archi, nodes_list):
         return nodes
 
 
-def get_property(properties, key):
-    """
-    >>> get_property(['archi=val_1', 'site=grenoble', 'archi=val_2'], 'site')
-    'grenoble'
-
-    >>> get_property(['archi=val_1'], 'site')  # None when absent
-
-    # value should appear only once
-    >>> get_property(['archi=1', 'archi=2'], 'archi')
-    Traceback (most recent call last):
-    ValueError: Property 'archi' should appear only once in \
-['archi=1', 'archi=2']
-
-    >>> get_property(['archi='], 'archi')  # There should be a value
-    Traceback (most recent call last):
-    ValueError: Invalid empty value for property 'archi' in ['archi=']
-    """
-    matching = [prop.split('=').pop(1) for prop in properties
-                if prop.startswith(key + '=')]
-    if len(matching) > 1:
-        raise ValueError('Property %r should appear only once in %r' %
-                         (key, properties))
-    if '' in matching:
-        raise ValueError('Invalid empty value for property %r in %r' %
-                         (key, properties))
-    try:
-        return matching.pop(0)
-    except IndexError:
-        return None
-
-
-def get_alias_properties(properties_str):
-    """ Extract nodes selection properties from given properties_str
-
-    """
-
-    properties = properties_str.split('+')
-    try:
-        archi = get_property(properties, 'archi')
-        site = get_property(properties, 'site')
-        mobile = get_property(properties, 'mobile')
-    except ValueError as err:
-        raise ArgumentTypeError(err)
-
-    # check extracted values
-    if archi is None or site is None:
-        raise ArgumentTypeError('Properties "archi" and "site" are mandatory.')
-
-    if len(properties) > (2 if mobile is None else 3):
-        # Refuse unkown properties
-        raise ArgumentTypeError(
-            "Invalid property in %r " % properties_str +
-            "Allowed values are ['archi', 'site', 'mobile']")
-
-    check_site_with_server(site)
-
-    properties_dict = {
-        'site': site,
-        'archi': archi,
-        'mobile': mobile or False,  # False if None
-    }
-    return properties_dict
-
-
-def open_file(file_path):
+def read_file(file_path):
     """ Open and read a file """
-    try:
-        # exanduser replace '~' with the correct path
-        file_d = open(os.path.expanduser(file_path), 'r')
-    except IOError as err:
-        raise Error(str(err))
-    else:
-        file_name = os.path.basename(file_d.name)
-        file_data = file_d.read()
-        file_d.close()
-    return file_name, file_data
+    with open(os.path.expanduser(file_path), 'r') as _fd:  # expand '~'
+        return _fd.read()
 
 
 def get_current_experiment(api, experiment_id):
@@ -466,3 +163,24 @@ def get_current_experiment(api, experiment_id):
     exps_dict = api.get_experiments(state='Running')
     exp_id = check_experiments_running(exps_dict)
     return exp_id
+
+
+class FilesDict(dict):
+    """ Dictionary to store experiment files.
+    We don't want adding two different values for the same key,
+    so __setitem__ is overriden to check that"""
+    def __init__(self):
+        dict.__init__(self)
+
+    def __setitem__(self, key, val):
+        """ Prevent adding a new different value to an existing key """
+        if key not in self:
+            dict.__setitem__(self, key, val)
+        elif self[key] != val:
+            raise ValueError('Has different values for same key %r' % key)
+
+    def add_firmware(self, firmware_path):
+        """ Add a firmwware to the dictionary. If None, do nothing """
+        if firmware_path is None:
+            return
+        self[os.path.basename(firmware_path)] = read_file(firmware_path)

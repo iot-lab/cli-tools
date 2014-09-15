@@ -4,10 +4,8 @@
 
 import sys
 import argparse
-import json
-from iotlabcli import VERSION
+from iotlabcli import VERSION, Error, json_dumps
 from iotlabcli import rest
-from iotlabcli import Error
 
 
 def base_parser(user_required=False):
@@ -37,25 +35,31 @@ def main_cli(function, parser, args=sys.argv[1:]):
     try:
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
-        print json.dumps(result, indent=4, cls=rest.Encoder, sort_keys=True)
-    except Error as err:
+        print json_dumps(result)
+    except (Error, IOError, ValueError) as err:
         parser.error(str(err))
     except KeyboardInterrupt:
         print >> sys.stderr, "\nStopped."
         sys.exit()
 
 
-class Singleton(object):
-    """ Singleton methods for memoization """
-    _sites = None
+def sites_list():
+    """ Return the list of sites """
+    sites_dict = rest.Api.get_sites()
+    return [site["site"] for site in sites_dict["items"]]
 
-    def __init__(self):
-        if Singleton._sites is not None:
-            return
-        sites_dict = rest.Api.get_sites()
-        Singleton._sites = [site["site"] for site in sites_dict["items"]]
 
-    def sites(self):
-        """ return platform sites dict """
-        # TODO refactor this in rest I think
-        return self._sites
+def check_site_with_server(site_name, _sites_list=None):
+    """ Check if the given site exists by requesting the server list.
+    If sites_list is given, it is used instead of doing a remote request
+
+    >>> sites = ["strasbourg", "grenoble"]
+    >>> check_site_with_server("grenoble", sites)
+    >>> check_site_with_server("unknown", sites)
+    Traceback (most recent call last):
+    ArgumentTypeError: Unknown site name 'unknown'
+    """
+    sites = _sites_list or sites_list()
+    if site_name in sites:
+        return  # site_name is valid
+    raise argparse.ArgumentTypeError("Unknown site name %r" % site_name)

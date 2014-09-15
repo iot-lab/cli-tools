@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 from iotlabcli import VERSION
 
@@ -24,7 +24,7 @@ setup(name='iotlabcli',
       author_email='admin@iot-lab.info',
       url='http://www.iot-lab.info',
       download_url='http://github.com/iot-lab/cli-tools/',
-      packages=['iotlabcli'],
+      packages=find_packages(),
       scripts=SCRIPTS,
       classifiers=['Development Status :: 1 - Beta',
                    'Programming Language :: Python',

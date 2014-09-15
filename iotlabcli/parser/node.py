@@ -2,28 +2,27 @@
 """Node parser"""
 
 import argparse
-import json
 import sys
 import itertools
-from argparse import RawTextHelpFormatter
-from iotlabcli import Error
-from iotlabcli import rest, help_parser
-from iotlabcli import parser_common
-
-
-import iotlabcli.helpers as helpers  # for mocking
+from argparse import RawTextHelpFormatter, ArgumentTypeError
+from iotlabcli import rest
+from iotlabcli import helpers
+from iotlabcli import auth
+import iotlabcli.node
+from iotlabcli.parser import help_msgs
+from iotlabcli.parser import common
 
 
 def parse_options():
     """ Handle node-cli command-line options with argparse """
 
-    parent_parser = parser_common.base_parser()
+    parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        epilog=(help_parser.PARSER_EPILOG
+        epilog=(help_msgs.PARSER_EPILOG
                 % {'cli': 'node', 'option': '--update'}
-                + help_parser.COMMAND_EPILOG),
+                + help_msgs.COMMAND_EPILOG),
     )
 
     parser.add_argument(
@@ -56,26 +55,43 @@ def parse_options():
 
     list_group.add_argument(
         '-e', '--exclude', action='append',
-        type=helpers.nodes_list_from_str,
+        type=nodes_list_from_str,
         dest='exclude_nodes_list', help='exclude nodes list')
     list_group.add_argument(
         '-l', '--list', action='append',
-        type=helpers.nodes_list_from_str,
+        type=nodes_list_from_str,
         dest='nodes_list', help='nodes list')
 
     return parser
 
 
-def list_nodes(api, exp_id, nodes_list=None, excl_nodes_list=None):
+def nodes_list_from_str(nodes_list_str):
+    """ Convert the nodes_list_str to a list of nodes hostname
+    Checks that given site exist
+    :param nodes_list_str: short nodes format: site_name,archi,node_id_list
+                           example: 'grenoble,m3,1-34+72'
+    :returns: ['m3-1.grenoble.iot-lab.info', ...]
+    """
+    try:
+        # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
+        site, archi, nodes_str = nodes_list_str.split(',')
+    except ValueError:
+        raise ArgumentTypeError(
+            'Invalid number of argument in nodes list: %r' % nodes_list_str)
+    common.check_site_with_server(site)  # needs an external request
+    return helpers.nodes_list_from_info(site, archi, nodes_str)
+
+
+def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
     """ Return the list of nodes where the command will apply """
 
-    if nodes_list is not None:
+    if nodes_ll is not None:
         # flatten lists into one
-        nodes = list(itertools.chain.from_iterable(nodes_list))
+        nodes = list(itertools.chain.from_iterable(nodes_ll))
 
-    elif excl_nodes_list is not None:
+    elif excl_nodes_ll is not None:
         # flatten lists into one
-        excl_nodes = list(itertools.chain.from_iterable(excl_nodes_list))
+        excl_nodes = list(itertools.chain.from_iterable(excl_nodes_ll))
 
         # get experiment nodes
         exp_resources = api.get_experiment_resources(exp_id)
@@ -90,35 +106,9 @@ def list_nodes(api, exp_id, nodes_list=None, excl_nodes_list=None):
     return nodes
 
 
-def node_command(api, command, exp_id, nodes_list, firmware_path=None):
-    """ Launch commands (start, stop, reset, update)
-    on resources (JSONArray) user experiment
-
-    :param api: API Rest api object
-    :param command: command that should be run
-    :param exp_id: Target experiment id
-    :param nodes_list: List of nodes where to run command
-    :param firmware_path: Firmware path for update command
-    """
-    assert command in ('update', 'start', 'stop', 'reset')
-
-    result = None
-    if 'update' == command:
-        if firmware_path is None:
-            raise Error("Update cmd requires a firmware: %s" % firmware_path)
-        files = {}
-        helpers.add_to_dict_uniq(files, *helpers.open_file(firmware_path))
-        helpers.add_to_dict_uniq(files, 'nodes.json', json.dumps(nodes_list))
-        result = api.node_update(exp_id, files)
-    else:
-        result = api.node_command(command, exp_id, nodes_list)
-
-    return result
-
-
 def node_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command """
-    user, passwd = helpers.get_user_credentials(opts.username, opts.password)
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
@@ -127,10 +117,10 @@ def node_parse_and_run(opts):
 
     nodes = list_nodes(api, exp_id, opts.nodes_list, opts.exclude_nodes_list)
 
-    return node_command(api, command, exp_id, nodes, firmware)
+    return iotlabcli.node.node_command(api, command, exp_id, nodes, firmware)
 
 
 def main(args=sys.argv[1:]):
     """ Main command-line execution loop." """
     parser = parse_options()
-    parser_common.main_cli(node_parse_and_run, parser, args)
+    common.main_cli(node_parse_and_run, parser, args)

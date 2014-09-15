@@ -7,6 +7,7 @@ import json
 import sys
 from requests.auth import HTTPBasicAuth
 from urlparse import urljoin
+from iotlabcli import json_dumps
 
 
 def read_custom_api_url():
@@ -29,20 +30,11 @@ def read_custom_api_url():
 
 API_URL = read_custom_api_url() or 'https://www.iot-lab.info/rest/'
 
+
 # pylint: disable=maybe-no-member,no-member
-
-
-class Encoder(json.JSONEncoder):
-    """ Encoder for serialization object python to JSON format """
-    def default(self, obj):  # pylint: disable=method-hidden
-        try:
-            return obj.serialize()
-        except AttributeError:
-            return obj.__dict__
-
-
 class Api(object):
     """ REST API """
+    _cache = {}
 
     def __init__(self, username, password, url=API_URL):
         """
@@ -101,9 +93,13 @@ class Api(object):
 
         :returns JSONObject
         """
-        # unauthenticated request
-        url = urljoin(API_URL, 'experiments?sites')
-        return Api._method(url)
+        sites = Api._cache.get('sites', None)
+
+        if 'sites' not in Api._cache:
+            # unauthenticated request
+            sites = Api._method(urljoin(API_URL, 'experiments?sites'))
+            Api._cache['sites'] = sites
+        return Api._cache['sites']
 
     def get_resources(self, list_id=False, site=None):
         """ Get testbed resources description
@@ -138,7 +134,7 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        prof_json = json.dumps(profile, cls=Encoder, sort_keys=True, indent=4)
+        prof_json = json_dumps(profile)
         return self.method('profiles/%s' % name, method='POST', data=prof_json)
 
     def del_profile(self, name):
@@ -197,7 +193,7 @@ class Api(object):
         :returns: dict
         """
         return self.method('experiments/%s/nodes?%s' % (expid, command),
-                           method='POST', data=json.dumps(nodes))
+                           method='POST', data=json_dumps(nodes))
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user

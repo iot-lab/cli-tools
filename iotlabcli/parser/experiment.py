@@ -1,0 +1,323 @@
+# -*- coding: utf-8 -*-
+""" Experiment parser """
+import sys
+
+from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
+
+from iotlabcli import experiment
+from iotlabcli import helpers
+from iotlabcli import rest
+from iotlabcli import auth
+from iotlabcli.parser import common, help_msgs
+
+
+def parse_options():
+    """ Handle experiment-cli command-line options with argparse """
+    parent_parser = common.base_parser()
+
+    # We create top level parser
+    parser = ArgumentParser(
+        description=help_msgs.EXPERIMENT_PARSER,
+        parents=[parent_parser],
+        epilog=help_msgs.PARSER_EPILOG %
+        {'cli': 'experiment', 'option': 'submit'},
+        formatter_class=RawTextHelpFormatter)
+
+    subparsers = parser.add_subparsers(dest='command')
+
+    submit_parser = subparsers.add_parser(
+        'submit', help='submit user experiment',
+        epilog=help_msgs.SUBMIT_EPILOG, formatter_class=RawTextHelpFormatter)
+
+    submit_parser.add_argument('-l', '--list', action='append',
+                               dest='nodes_list', required=True,
+                               type=experiment_dict_from_str,
+                               help="experiment list")
+
+    submit_parser.add_argument('-n', '--name', help='experiment name')
+
+    submit_parser.add_argument('-d', '--duration', required=True, type=int,
+                               help='experiment duration in minutes')
+
+    submit_parser.add_argument('-r', '--reservation', type=int,
+                               help=('experiment schedule starting : seconds '
+                                     'since 1970-01-01 00:00:00 UTC'))
+
+    submit_parser.add_argument('-p', '--print',
+                               dest='print_json', action='store_true',
+                               help='print experiment submission')
+
+    # ####### STOP PARSER ###############
+    stop_parser = subparsers.add_parser('stop', help='stop user experiment')
+    stop_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                             help='experiment id submission')
+
+    # ####### GET PARSER ###############
+    get_parser = subparsers.add_parser(
+        'get',
+        epilog=help_msgs.GET_EPILOG,
+        help='get user\'s experiment',
+        formatter_class=RawTextHelpFormatter)
+
+    get_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                            help='experiment id')
+
+    get_group = get_parser.add_mutually_exclusive_group(required=True)
+    get_group.add_argument(
+        '-r', '--resources', dest='get_cmd', action='store_const',
+        const='resources', help='get an experiment resources list')
+    get_group.add_argument(
+        '-ri', '--resources-id', dest='get_cmd', action='store_const',
+        const='id', help=('get an experiment resources id list '
+                          '(EXP_LIST format : 1-34+72)'))
+
+    get_group.add_argument(
+        '-s', '--exp-state', dest='get_cmd', action='store_const',
+        const='state', help='get an experiment state')
+    get_group.add_argument(
+        '-p', '--print', dest='get_cmd', action='store_const',
+        const='', help='get an experiment submission')
+    get_group.add_argument(
+        '-a', '--archive', dest='get_cmd', action='store_const',
+        const='data', help='get an experiment archive (tar.gz)')
+
+    # --list with its options
+    get_group.add_argument(
+        '-l', '--list', dest='get_cmd', action='store_const',
+        const='experiment_list', help='get user\'s experiment list')
+
+    get_parser.add_argument('--offset', default=0, type=int,
+                            help='experiment list start index')
+
+    get_parser.add_argument('--limit', default=0, type=int,
+                            help='experiment list lenght')
+
+    get_parser.add_argument('--state', help='experiment list state filter')
+
+    # ####### LOAD PARSER ###############
+    load_parser = subparsers.add_parser('load', epilog=help_msgs.LOAD_EPILOG,
+                                        help='load and submit user experiment',
+                                        formatter_class=RawTextHelpFormatter)
+
+    load_parser.add_argument('-f', '--file', dest='path_file',
+                             required=True, help='experiment path file')
+
+    load_parser.add_argument('-l', '--list', dest='firmware_list', default=[],
+                             type=(lambda s: s.split(',')),
+                             help='comma separated firmware(s) path list')
+
+    # ####### INFO PARSER ###############
+    info_parser = subparsers.add_parser('info', epilog=help_msgs.INFO_EPILOG,
+                                        help='resources description list',
+                                        formatter_class=RawTextHelpFormatter)
+
+    info_parser.add_argument('--site', help='resources list filter by site')
+    # subcommand
+    info_group = info_parser.add_mutually_exclusive_group(required=True)
+    info_group.add_argument('-l', '--list', dest='list_id',
+                            action='store_false', help='list resources')
+    info_group.add_argument('-li', '--list-id', dest='list_id',
+                            action='store_true',
+                            help=('resources id list by archi and state '
+                                  '(EXP_LIST format : 1-34+72)'))
+    return parser
+
+
+def experiment_dict_from_str(exp_str):
+    """ Extract an 'experiment.experiment_dict' from parameter string
+    Accepted formats:
+        + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
+
+        * grenoble,m3,1-20,/home/cc1101.hex
+        * rocquencourt,a8,1-5,,battery
+
+    """
+    try:
+        param_list = exp_str.split(',')
+        nodes = _extract_firmware_nodes_list(param_list)
+        firmware_path = _extract_non_empty_val(param_list)
+        profile_name = _extract_non_empty_val(param_list)
+        if param_list:
+            raise ValueError  # two many values in list
+
+        return experiment.experiment_dict(nodes, firmware_path, profile_name)
+    except ValueError:
+        pass
+    raise ArgumentTypeError(
+        'Invalid number or arguments in experiment list %r' % exp_str)
+
+
+def _extract_non_empty_val(param_list):
+    """ Safe extract value from param_list.
+    It removes item from param_list.
+
+    :returns: value or None if value was '' or not present
+
+    >>> param = ['value', '', 'other_stuff']
+    >>> _extract_non_empty_val(param)  # valid value
+    'value'
+    >>> _extract_non_empty_val(param)  # empty string
+    >>> _extract_non_empty_val([])     # empty list
+
+    >>> print param  # values have been removed
+    ['other_stuff']
+    """
+    if param_list:
+        value = param_list.pop(0)
+        if value != '':
+            return value
+    return None
+
+
+def get_alias_properties(properties_str):
+    """ Extract nodes selection properties from given properties_str """
+
+    properties = properties_str.split('+')
+    try:
+        archi = _get_property(properties, 'archi')
+        site = _get_property(properties, 'site')
+        mobile = _get_property(properties, 'mobile')
+    except ValueError as err:
+        raise ArgumentTypeError(err)
+
+    # check extracted values
+    if archi is None or site is None:
+        raise ArgumentTypeError('Properties "archi" and "site" are mandatory.')
+
+    if len(properties) > (2 if mobile is None else 3):
+        # Refuse unkown properties
+        raise ArgumentTypeError(
+            "Invalid property in %r " % properties_str +
+            "Allowed values are ['archi', 'site', 'mobile']")
+
+    common.check_site_with_server(site)
+    return archi, site, (mobile or False)
+
+
+def _extract_firmware_nodes_list(param_list):
+    """
+    Extract a firmware nodes list from param_list
+    param_list is modified by the function call
+    :param param_list: can have following formats
+        * ['9', 'archi=wsn430:cc1101+site=grenoble', ...]  Alias type
+        * ['grenoble', 'm3', '1-4+8-12+7', ...]  Physical type
+    """
+
+    # list in experiment-cli (alias or physical)
+
+    if param_list[0].isdigit():  # alias selection
+        # extract parameters
+        nb_nodes, properties_str = param_list[0:2]
+        del param_list[0:2]
+
+        # parse parameters
+        archi, site, mobile = get_alias_properties(properties_str)
+        nodes = experiment.AliasNodes(int(nb_nodes), archi, site, mobile)
+    else:  # physical selection
+        # extract parameters
+        site, archi, nodes_str = param_list[0:3]
+        del param_list[0:3]
+
+        # parse parameters
+        nodes = helpers.nodes_list_from_info(site, archi, nodes_str)
+    return nodes
+
+
+def _get_property(properties, key):
+    """
+    >>> _get_property(['archi=val_1', 'site=grenoble', 'archi=val_2'], 'site')
+    'grenoble'
+
+    >>> _get_property(['archi=val_1'], 'site')  # None when absent
+
+    # value should appear only once
+    >>> _get_property(['archi=1', 'archi=2'], 'archi')
+    Traceback (most recent call last):
+    ValueError: Property 'archi' should appear only once in \
+['archi=1', 'archi=2']
+
+    >>> _get_property(['archi='], 'archi')  # There should be a value
+    Traceback (most recent call last):
+    ValueError: Invalid empty value for property 'archi' in ['archi=']
+    """
+    matching = [prop.split('=').pop(1) for prop in properties
+                if prop.startswith(key + '=')]
+    if len(matching) > 1:
+        raise ValueError('Property %r should appear only once in %r' %
+                         (key, properties))
+    if '' in matching:
+        raise ValueError('Invalid empty value for property %r in %r' %
+                         (key, properties))
+    try:
+        return matching.pop(0)
+    except IndexError:
+        return None
+
+
+def submit_experiment_parser(opts):
+    """ Parse namespace 'opts' and execute requested 'submit' command """
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+
+    exp = experiment.Experiment(opts.name, opts.duration, opts.reservation)
+    return experiment.submit_experiment(api, exp, opts.nodes_list,
+                                        opts.print_json)
+
+
+def stop_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'stop' command """
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    exp_id = helpers.get_current_experiment(api, opts.experiment_id)
+
+    return experiment.stop_experiment(api, exp_id)
+
+
+def get_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'get' command """
+
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+
+    if opts.get_cmd == 'experiment_list':
+        return experiment.get_experiments_list(api, opts.state, opts.limit,
+                                               opts.offset)
+    else:
+        exp_id = helpers.get_current_experiment(api, opts.experiment_id)
+        return experiment.get_experiment(api, exp_id, opts.get_cmd)
+
+
+def load_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'load' command """
+
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return experiment.load_experiment(api, opts.path_file, opts.firmware_list)
+
+
+def info_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'info' command """
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return experiment.info_experiment(api, opts.list_id, opts.site)
+
+
+def experiment_parse_and_run(opts):
+    """ Parse namespace 'opts' object and execute requested command
+    Return result object
+    """
+    command = {
+        'submit': submit_experiment_parser,
+        'stop': stop_experiment_parser,
+        'get': get_experiment_parser,
+        'load': load_experiment_parser,
+        'info': info_experiment_parser,
+    }[opts.command]
+
+    return command(opts)
+
+
+def main(args=sys.argv[1:]):
+    """ Main command-line execution loop." """
+    parser = parse_options()
+    common.main_cli(experiment_parse_and_run, parser, args)

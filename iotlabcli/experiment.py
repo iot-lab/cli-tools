@@ -1,13 +1,138 @@
 # -*- coding:utf-8 -*-
-"""Class python for Experiment serialization JSON"""
+""" Implement the 'experiment' requests """
+
+from os.path import basename
+import json
+from iotlabcli import Error, json_dumps
+from iotlabcli import helpers
+
+# static name for experiment file : rename by server-rest
+EXP_FILENAME = 'new_exp.json'
 
 
-def experiment_dict(nodes, firmware_dict=None, profile_name=None):
+def submit_experiment(api, experiment, nodes_list, print_json=False):
+    """ Submit user experiment with JSON Encoder serialization object
+    Experiment and firmware(s). If submission is accepted by scheduler OAR
+    we print JSONObject response with id submission.
+
+    :param api: API Rest api object
+    :param experiment: experiment.Experiment object
+    :param nodes_list: list of 'nodes' where 'nodes' is either
+        experiment.AliasNodes or a list of nodes network addresses like:
+        ['m3-1.grenoble.iot-lab.info', 'wsn430-1.strasbourg.iot-lab.info']
+    :param print_json: select if experiment should be printed as json instead
+        of submitted
+    """
+    assert nodes_list, 'Empty nodes_list: %r' % nodes_list
+
+    exp_files = helpers.FilesDict()
+    for exp_dict in nodes_list:
+        experiment.add_experiment_dict(exp_dict)
+        exp_files.add_firmware(exp_dict.get('firmware', None))  # firmware
+
+    if print_json:  # output experiment description
+        return experiment
+    # submit experiment
+    exp_files[EXP_FILENAME] = json_dumps(experiment)  # add exp description
+    return api.submit_experiment(exp_files)
+
+
+def stop_experiment(api, exp_id):
+    """ Stop user experiment submission.
+
+    :param api: API Rest api object
+    :param exp_id: scheduler OAR id submission
+    """
+    return api.stop_experiment(exp_id)
+
+
+def get_experiments_list(api, state, limit, offset):
+    """ Get the experiment list with the specific restriction:
+    :param state: State of the experiment
+    :param limit: maximum number of outputs
+    :param offset: offset of experiments to start at
+    """
+    state = helpers.check_experiment_state(state)
+    return api.get_experiments(state, limit, offset)
+
+
+def get_experiment(api, exp_id, command=''):
+    """ Get user experiment's description :
+
+    :param api: API Rest api object
+    :param exp_id: experiment id
+    :param option: Restrict to some values
+            * '':          experiment submission
+            * 'resources': resources list
+            * 'id':        resources id list: (1-34+72 format)
+            * 'state':     experiment state
+            * 'data':      experiment tar.gz with description and firmwares
+    """
+    result = api.get_experiment_info(exp_id, command)
+    if command == 'data':
+        helpers.write_experiment_archive(exp_id, result)
+        result = 'Written'
+
+    return result
+
+
+def load_experiment(api, exp_desc_path, firmware_list=()):
+    """ Load and submit user experiment description with firmware(s)
+
+    :param api: API Rest api object
+    :param exp_desc_path: path to experiment json description file
+    :param firmware_list: list of firmware path
+    """
+
+    exp_dict = json.loads(helpers.read_file(exp_desc_path))  # exp desc json
+    exp_files = helpers.FilesDict()
+
+    fw_association = exp_dict['firmwareassociations'] or []
+
+    #
+    # Add firmwares to experiment_files dictionary
+    #
+
+    # Add firmwares from manual list, may be empty
+    for firmware_path in firmware_list:
+        exp_files.add_firmware(firmware_path)
+
+    # Add remaining firmware from current directory
+    for firmware_name in [fw['firmwarename'] for fw in fw_association]:
+        if firmware_name in exp_files:
+            continue
+        # was not already provided by manual list
+        exp_files.add_firmware(firmware_name)
+
+    #
+    # Sanity Check, no more firmware than required
+    #
+    if len(fw_association) != len(exp_files):
+        raise Error("Too many firmwares provided")
+
+    # Add experiment description
+    exp_files[EXP_FILENAME] = json_dumps(exp_dict)
+    return api.submit_experiment(exp_files)
+
+
+def info_experiment(api, list_id=False, site=None):
+    """ Print testbed information for user experiment submission:
+    * resources description
+    * resources description in short mode
+
+    :param api: API Rest api object
+    :param list_id: By default, return full nodes list, if list_id
+        return output in exp_list format '3-12+42'
+    :param site: Restrict informations collection on site
+    """
+    return api.get_resources(list_id, site)
+
+
+def experiment_dict(nodes, firmware_path=None, profile_name=None):
     """ Create an experiment dict
 
     :param nodes: a list of nodes url or a AliasNodes object
-    :param firmware_dict: Firmware associated, type dict with:
-    :type firmware_dict: {'name': firmware_name, 'body': firmware_content}
+    :param firmware_path: Firmware associated
     :param profile_name: Name of the profile associated
 
     """
@@ -20,7 +145,7 @@ def experiment_dict(nodes, firmware_dict=None, profile_name=None):
     exp_dict = {
         'type': exp_type,
         'nodes': nodes,
-        'firmware': firmware_dict,
+        'firmware': firmware_path,
         'profile': profile_name,
     }
     return exp_dict
@@ -30,7 +155,7 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
     """An AliasNodes class"""
     _alias = 0  # static count of current alias number
 
-    def __init__(self, nbnodes, properties):
+    def __init__(self, nbnodes, archi, site, mobile=False, _alias=None):
         """
         {
             "alias":"1",
@@ -42,10 +167,24 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
             }
         }
         """
-        AliasNodes._alias += 1
-        self.alias = str(AliasNodes._alias)
+        if _alias is None:
+            AliasNodes._alias += 1
+            _alias = str(AliasNodes._alias)
+        self.alias = _alias
         self.nbnodes = nbnodes
-        self.properties = properties
+        self.properties = {
+            "archi": archi,
+            "site": site,
+            "mobile": mobile,
+        }
+
+    def __repr__(self):
+        return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
+            self.nbnodes, self.properties['archi'], self.properties['site'],
+            self.properties['mobile'], self.alias)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 
 class FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
@@ -92,7 +231,7 @@ class ProfileAssociations(object):  # pylint: disable=too-few-public-methods
 
 class Experiment(object):
     """An Experiment class"""
-    def __init__(self, name, duration, reservation):
+    def __init__(self, name, duration, reservation=None):
         self.duration = duration
         self.reservation = reservation
         self.name = name
@@ -147,11 +286,10 @@ class Experiment(object):
 
         # register firmware
         if exp_dict['firmware'] is not None:
-            firmware = exp_dict['firmware']
+            firmware_name = basename(exp_dict['firmware'])
+            self.set_fw_association(firmware_name, nodes)
 
-            self.set_firmware_associations(firmware['name'], nodes)
-
-    def set_firmware_associations(self, firmware_name, nodes):
+    def set_fw_association(self, firmware_name, nodes):
         """Set firmware associations list"""
         # use alias number for AliasNodes
         _nodes = [nodes.alias] if self.type == 'alias' else nodes
