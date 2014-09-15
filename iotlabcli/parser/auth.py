@@ -39,7 +39,7 @@ def password_prompt():
     """
     pprompt = lambda: (getpass.getpass(), getpass.getpass('Retype password: '))
     prompt1, prompt2 = pprompt()
-    while prompt1 != prompt2:
+    while prompt1 != prompt2:  # pragma: no cover
         print 'Passwords do not match. Try again'
         prompt1, prompt2 = pprompt()
     return prompt1
