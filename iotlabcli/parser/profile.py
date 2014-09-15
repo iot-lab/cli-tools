@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-"""Profile parser"""
+""" Profile parser"""
 
 import json
 import sys
