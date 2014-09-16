@@ -3,7 +3,13 @@
 """ Test the iotlabcli.parser.node module """
 
 import unittest
-import mock
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch, Mock
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch, Mock
+
 from argparse import ArgumentTypeError
 import iotlabcli.parser.node as node_parser
 from iotlabcli.tests.main_mock import MainMock
@@ -11,8 +17,8 @@ from iotlabcli.tests.main_mock import MainMock
 # pylint: disable=missing-docstring,too-many-public-methods
 
 
-@mock.patch('iotlabcli.node.node_command')
-@mock.patch('iotlabcli.parser.node.list_nodes')
+@patch('iotlabcli.node.node_command')
+@patch('iotlabcli.parser.node.list_nodes')
 class TestMainNodeParser(MainMock):
     def test_main(self, list_nodes, node_command):
         """ Run the parser.node.main function """
@@ -53,10 +59,10 @@ class TestMainNodeParser(MainMock):
 
 
 class TestNodeParser(unittest.TestCase):
-    @mock.patch('iotlabcli.parser.node._get_experiment_nodes_list')
+    @patch('iotlabcli.parser.node._get_experiment_nodes_list')
     def test_list_nodes(self, g_nodes_list):
         """ Run the different list_nodes cases """
-        api = mock.Mock()
+        api = Mock()
         g_nodes_list.return_value = [
             "m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info",
             "m3-3.grenoble.iot-lab.info",
@@ -89,7 +95,7 @@ class TestNodeParser(unittest.TestCase):
 
     def test__get_experiment_nodes_list(self):
         """ Run get_experiment_nodes_list """
-        api = mock.Mock()
+        api = Mock()
         api.get_experiment_resources.return_value = {
             "items": [
                 {"network_address": "m3-1.grenoble.iot-lab.info"},
@@ -103,7 +109,7 @@ class TestNodeParser(unittest.TestCase):
                            "m3-2.grenoble.iot-lab.info",
                            "m3-3.grenoble.iot-lab.info"])
 
-    @mock.patch('iotlabcli.parser.common.check_site_with_server')
+    @patch('iotlabcli.parser.common.check_site_with_server')
     def test_nodes_list_from_str(self, _):
         """ Run error case from test_nodes_list_from_str invalid string """
 

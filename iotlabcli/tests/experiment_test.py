@@ -6,7 +6,13 @@
 
 import os.path
 import unittest
-from mock import patch
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch
+
 import json
 from iotlabcli import experiment
 

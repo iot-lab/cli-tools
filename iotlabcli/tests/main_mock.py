@@ -3,7 +3,12 @@
 """ common TestCase class  for testing main parsers """
 import sys
 import unittest
-from mock import patch, Mock
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch, Mock
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch, Mock
 
 
 class MainMock(unittest.TestCase):  # pylint: disable=too-many-public-methods

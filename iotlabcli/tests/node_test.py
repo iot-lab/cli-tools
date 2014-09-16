@@ -4,14 +4,19 @@
 
 # pylint: disable=too-many-public-methods
 import unittest
-import mock
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch, Mock
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch, Mock
 import iotlabcli
 from iotlabcli import node
 
 
 class TestNode(unittest.TestCase):
     """ Test the 'iotlabcli.node' module """
-    @mock.patch('iotlabcli.helpers.read_file')
+    @patch('iotlabcli.helpers.read_file')
     def test_node_command(self, read_file_mock):
         """ Test 'node_command' """
 
@@ -19,7 +24,7 @@ class TestNode(unittest.TestCase):
         read_file_mock.return_value = 'file_data'
 
         _api_result = {'result': 'test'}
-        api = mock.Mock()
+        api = Mock()
         api.node_command.return_value = _api_result
         api.node_update.return_value = _api_result
 

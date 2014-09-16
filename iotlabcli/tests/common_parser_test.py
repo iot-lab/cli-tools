@@ -4,7 +4,12 @@
 # pylint: disable=missing-docstring,too-many-public-methods
 
 import unittest
-from mock import patch
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch
 from iotlabcli.parser import common
 
 

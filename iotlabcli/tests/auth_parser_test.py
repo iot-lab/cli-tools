@@ -4,7 +4,12 @@
 
 import sys
 import unittest
-from mock import patch
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch
 
 import iotlabcli
 import iotlabcli.parser.auth as auth_parser

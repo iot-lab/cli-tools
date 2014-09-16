@@ -3,7 +3,12 @@
 """ Test the iotlabcli.experiment_parser module """
 
 # pylint:disable=missing-docstring,too-many-public-methods
-from mock import patch
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from mock import patch
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from unittest.mock import patch
 
 from iotlabcli.tests.main_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
