@@ -2,6 +2,7 @@
 
 """ Common parsing methods """
 
+from __future__ import print_function
 import sys
 import argparse
 from iotlabcli import VERSION, Error, json_dumps
@@ -35,11 +36,11 @@ def main_cli(function, parser, args=sys.argv[1:]):
     try:
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
-        print json_dumps(result)
+        print(json_dumps(result))
     except (Error, IOError, ValueError) as err:
         parser.error(str(err))
     except KeyboardInterrupt:
-        print >> sys.stderr, "\nStopped."
+        print("\nStopped.", file=sys.stderr)
         sys.exit()
 
 
@@ -55,9 +56,10 @@ def check_site_with_server(site_name, _sites_list=None):
 
     >>> sites = ["strasbourg", "grenoble"]
     >>> check_site_with_server("grenoble", sites)
-    >>> check_site_with_server("unknown", sites)
+    >>> check_site_with_server("unknown", sites)  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Unknown site name 'unknown'
+    argparse.ArgumentTypeError: Unknown site name 'unknown'
     """
     sites = _sites_list or sites_list()
     if site_name in sites:

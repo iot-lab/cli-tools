@@ -30,9 +30,9 @@ def check_experiment_state(state_str=None):
     >>> check_experiment_state(None)
     'Terminated,Waiting,Launching,Finishing,Running,Error'
 
-    >>> check_experiment_state('Invalid')
+    >>> check_experiment_state('Invalid')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    Error: "The experiment filter state 'Invalid' is invalid."
+    iotlabcli.Error: "The experiment filter state 'Invalid' is invalid."
     """
     oar_state = ["Terminated", "Waiting", "Launching", "Finishing",
                  "Running", "Error"]
@@ -76,16 +76,18 @@ def check_archi(archi):
     >>> [check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
     [None, None, None]
 
-    >>> check_archi('msp430')
+    >>> check_archi('msp430')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    Error: "Invalid not architecture: 'msp430' not in ['wsn430', 'm3', 'a8']"
+    iotlabcli.Error: "Invalid node architecture: \
+        'msp430' not in ['wsn430', 'm3', 'a8']"
 
     """
 
     archi_list = ['wsn430', 'm3', 'a8']
     if archi in archi_list:
         return  # valid archi
-    raise Error("Invalid not architecture: %r not in %s" % (archi, archi_list))
+    raise Error("Invalid node architecture: %r not in %s" %
+                (archi, archi_list))
 
 
 def get_nodes_list(site, archi, nodes_list):
@@ -97,21 +99,25 @@ def get_nodes_list(site, archi, nodes_list):
 'm3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
 'm3-8.grenoble.iot-lab.info']
 
-    >>> get_nodes_list('grenoble', 'm3', '1-4-5')
+    >>> get_nodes_list('grenoble', 'm3', '1-4-5')  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid nodes list: 1-4-5 ([0-9+-])
+    argparse.ArgumentTypeError: Invalid nodes list: 1-4-5 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', '3-3')
+    >>> get_nodes_list('grenoble', 'm3', '3-3')  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid nodes list: 3-3 ([0-9+-])
+    argparse.ArgumentTypeError: Invalid nodes list: 3-3 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', '3-2')
+    >>> get_nodes_list('grenoble', 'm3', '3-2')  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid nodes list: 3-2 ([0-9+-])
+    argparse.ArgumentTypeError: Invalid nodes list: 3-2 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', 'a-b')
+    >>> get_nodes_list('grenoble', 'm3', 'a-b')  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid nodes list: a-b ([0-9+-])
+    argparse.ArgumentTypeError: Invalid nodes list: a-b ([0-9+-])
 
     """
 

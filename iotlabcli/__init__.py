@@ -7,9 +7,9 @@ import json
 class Error(Exception):
     """ iotlabcli Exception
 
-    >>> raise Error('error_message')
+    >>> raise Error('error_message')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    Error: 'error_message'
+    iotlabcli.Error: 'error_message'
     """
     def __init__(self, value):
         super(Error, self).__init__()

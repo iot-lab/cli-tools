@@ -159,7 +159,7 @@ def _extract_non_empty_val(param_list):
     >>> _extract_non_empty_val(param)  # empty string
     >>> _extract_non_empty_val([])     # empty list
 
-    >>> print param  # values have been removed
+    >>> print(param)  # values have been removed
     ['other_stuff']
     """
     if param_list:
@@ -178,20 +178,25 @@ def get_alias_properties(properties_str):
     >>> get_alias_properties("site=strasbourg+archi=m3:at86rf231")
     ('strasbourg', 'm3:at86rf231', None)
 
-    >>> get_alias_properties("site=strasbourg")
+    >>> get_alias_properties("site=strasbourg")  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Properties "archi" and "site" are mandatory.
+    argparse.ArgumentTypeError: Properties "archi" and "site" are mandatory.
 
 
-    >>> get_alias_properties("site=strasbourg+archi=val+uknown=test")
+    >>> inval_prop = "site=strasbourg+archi=val+uknown=test"
+    >>> get_alias_properties(inval_prop)  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: \
+    argparse.ArgumentTypeError: \
 Invalid property in 'site=strasbourg+archi=val+uknown=test'
     Allowed values are ['archi', 'site', 'mobile']
 
-    >>> get_alias_properties("site=")
+    >>> get_alias_properties("site=")  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid empty value for property 'site' in ['site=']
+    argparse.ArgumentTypeError: \
+Invalid empty value for property 'site' in ['site=']
     """
     properties = properties_str.split('+')
     try:
@@ -253,12 +258,14 @@ def _get_property(properties, key):
     >>> _get_property(['archi=val_1'], 'site')  # None when absent
 
     # value should appear only once
-    >>> _get_property(['archi=1', 'archi=2'], 'archi')
+    >>> _get_property(['archi=1', 'archi=2'], 'archi')  \
+        # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ValueError: Property 'archi' should appear only once in \
 ['archi=1', 'archi=2']
 
-    >>> _get_property(['archi='], 'archi')  # There should be a value
+    # invalid format
+    >>> _get_property(['archi='], 'archi')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ValueError: Invalid empty value for property 'archi' in ['archi=']
     """

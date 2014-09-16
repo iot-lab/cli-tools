@@ -1,12 +1,18 @@
 # -*- coding:utf-8 -*-
 """ Rest API class """
 
+from __future__ import print_function
 import os
 import requests
 import json
 import sys
 from requests.auth import HTTPBasicAuth
-from urlparse import urljoin
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from urllib.parse import urljoin
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from urlparse import urljoin
 from iotlabcli import json_dumps
 
 
@@ -76,7 +82,8 @@ class Api(object):
 
         if req.status_code != requests.codes.ok:
             # we have HTTP error (code != 200)
-            print "HTTP error code : %s \n%s" % (req.status_code, req.text)
+            print("HTTP error code : {code} \n{text}".format(
+                code=req.status_code, text=req.text), file=sys.stderr)
             sys.exit()
 
         # request OK, return result object or direct answer

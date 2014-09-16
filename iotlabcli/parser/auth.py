@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 """Authentication parser"""
 
+from __future__ import print_function
 import argparse
 import sys
 import getpass
@@ -40,7 +41,7 @@ def password_prompt():
     pprompt = lambda: (getpass.getpass(), getpass.getpass('Retype password: '))
     prompt1, prompt2 = pprompt()
     while prompt1 != prompt2:  # pragma: no cover
-        print 'Passwords do not match. Try again'
+        print('Passwords do not match. Try again')
         prompt1, prompt2 = pprompt()
     return prompt1
 

@@ -15,7 +15,7 @@ Commands are self-documented, and usually have sub-commands which are also
 self-documented.  Use e.g. ``node-cli --help``, ``profile-cli add --help``.
 
 The cli-tools leverage the IoT-LAB [[REST API]] and simply wrap calls to
-module ``iotlabcli``, which is a Python (2.5 or higher, but not 3)
+module ``iotlabcli``, which is a Python (2.6 or higher)
 client for the API.
 
 The cli-tools come as an installable Python package and require that
