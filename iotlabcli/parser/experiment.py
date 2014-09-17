@@ -219,6 +219,46 @@ Invalid empty value for property 'site' in ['site=']
     return site, archi, mobile
 
 
+def mobile_from_mobile_str(mobile_str=None):
+    """ Return the value to put in experiment json from mobile_str
+
+    >>> mobile_from_mobile_str(None)
+    False
+
+    >>> mobile_from_mobile_str('true')
+    True
+    >>> mobile_from_mobile_str('True')
+    True
+
+    >>> mobile_from_mobile_str('false')
+    False
+
+    >>> mobile_from_mobile_str('1')
+    True
+    >>> mobile_from_mobile_str('0')
+    False
+
+    >>> mobile_from_mobile_str('invalid_value')
+    Traceback (most recent call last):
+    ValueError: Invalid 'mobile' property: %r. Should be in 'true|false|0|1'
+    """
+    if mobile_str is None:
+        return False
+
+    if mobile_str.lower() == 'true':
+        return True
+
+    if mobile_str.lower() == 'false':
+        return False
+
+    try:
+        return bool(int(mobile_str))
+    except ValueError:
+        pass
+    raise ValueError(
+        "Invalid 'mobile' property: %r. Should be in 'true|false|0|1'")
+
+
 def _extract_firmware_nodes_list(param_list):
     """
     Extract a firmware nodes list from param_list
@@ -237,7 +277,7 @@ def _extract_firmware_nodes_list(param_list):
 
         # parse parameters
         site, archi, _mobile = get_alias_properties(properties_str)
-        mobile = _mobile or False  # TODO check valid values for 'mobile'
+        mobile = mobile_from_mobile_str(_mobile)
         nodes = experiment.AliasNodes(int(nb_nodes), site, archi, mobile)
     else:  # physical selection
         # extract parameters
