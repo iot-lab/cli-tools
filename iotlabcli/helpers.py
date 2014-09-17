@@ -193,7 +193,20 @@ class FilesDict(dict):
 
     >>> file_dict = FilesDict()
 
+    # can re-add same value
+    >>> file_dict['test'] = 'value'
+    >>> file_dict['test'] = 'value'
 
+    >>> file_dict['test2'] = 'value'
+    >>> file_dict['test3'] = 'value3'
+    >>> file_dict == {'test': 'value', 'test3': 'value3', 'test2': 'value'}
+    True
+
+    # cannot add a new value to an existing key
+
+    >>> file_dict['test'] = 'a_new_value'
+    Traceback (most recent call last):
+    ValueError: Has different values for same key 'test'
     """
     def __init__(self):
         dict.__init__(self)
