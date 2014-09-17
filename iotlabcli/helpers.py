@@ -3,8 +3,6 @@
 
 import os
 import json
-from argparse import ArgumentTypeError
-
 from iotlabcli import Error
 
 DOMAIN_DNS = 'iot-lab.info'
@@ -90,50 +88,38 @@ def check_archi(archi):
                 (archi, archi_list))
 
 
-def get_nodes_list(site, archi, nodes_list):
+def expand_short_nodes_list(short_nodes_list):
     """ Expand short nodes_list '1-5+6+8-12' to a regular nodes list
 
-    >>> get_nodes_list('grenoble', 'm3', '1-4+6+7-8')
-    ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
-'m3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
-'m3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
-'m3-8.grenoble.iot-lab.info']
+    >>> expand_short_nodes_list('1-4+6+7-8')
+    [1, 2, 3, 4, 6, 7, 8]
 
-    >>> get_nodes_list('grenoble', 'm3', '1-4-5')  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> expand_short_nodes_list('1-4-5')
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Invalid nodes list: 1-4-5 ([0-9+-])
+    ValueError: Invalid nodes list: 1-4-5 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', '3-3')  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> expand_short_nodes_list('3-3')
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Invalid nodes list: 3-3 ([0-9+-])
+    ValueError: Invalid nodes list: 3-3 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', '3-2')  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> expand_short_nodes_list('3-2')
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Invalid nodes list: 3-2 ([0-9+-])
+    ValueError: Invalid nodes list: 3-2 ([0-9+-])
 
-    >>> get_nodes_list('grenoble', 'm3', 'a-b')  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> expand_short_nodes_list('a-b')
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Invalid nodes list: a-b ([0-9+-])
-
+    ValueError: Invalid nodes list: a-b ([0-9+-])
     """
-
-    node_fmt = '{archi}-%u.{site}.{domain}'.format(
-        archi=archi, site=site, domain=DOMAIN_DNS)
-
     nodes = []
     try:
         # '1-4+6+8-8'
-        for plus_nodes in nodes_list.split('+'):
+        for plus_nodes in short_nodes_list.split('+'):
             # ['1-4', '6', '7-8']
 
             minus_node = plus_nodes.split('-')
             if len(minus_node) == 1:
                 # ['6']
-                nodes.append(node_fmt % int(minus_node[0]))
+                nodes.append(int(minus_node[0]))
             else:
                 # ['1', '4'] or ['7', '8']
                 first, last = minus_node
@@ -144,14 +130,42 @@ def get_nodes_list(site, archi, nodes_list):
                     raise ValueError
 
                 # Add nodes range
-                nodes.extend([node_fmt % num for num in nodes_range])
+                nodes.extend(nodes_range)
 
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
-        raise ArgumentTypeError('Invalid nodes list: %s ([0-9+-])' %
-                                nodes_list)
+        raise ValueError('Invalid nodes list: %s ([0-9+-])' % short_nodes_list)
     else:
         return nodes
+
+
+def get_nodes_list(site, archi, nodes_list):
+    """ Expand short nodes_list 'site', 'archi', '1-5+6+8-12'
+    to a regular nodes list
+
+    >>> get_nodes_list('grenoble', 'm3', '1-4+6+7-8')
+    ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
+'m3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
+'m3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
+'m3-8.grenoble.iot-lab.info']
+
+    >>> get_nodes_list('grenoble', 'm3', '1-4-5')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: 1-4-5 ([0-9+-])
+
+    >>> get_nodes_list('grenoble', 'm3', 'a-b')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: a-b ([0-9+-])
+    """
+
+    node_fmt = '{archi}-%u.{site}.{domain}'.format(
+        archi=archi, site=site, domain=DOMAIN_DNS)
+
+    nodes_num_list = expand_short_nodes_list(nodes_list)
+
+    nodes = [node_fmt % num for num in nodes_num_list]
+
+    return nodes
 
 
 def read_file(file_path):
@@ -174,7 +188,13 @@ def get_current_experiment(api, experiment_id):
 class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
-    so __setitem__ is overriden to check that"""
+    so __setitem__ is overriden to check that
+
+
+    >>> file_dict = FilesDict()
+
+
+    """
     def __init__(self):
         dict.__init__(self)
 
