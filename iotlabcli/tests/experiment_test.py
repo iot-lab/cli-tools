@@ -164,3 +164,17 @@ class TestExperimentGet(command_mock.CommandMock):
         ret = experiment.get_experiment(self.api, 123, command='data')
         self.assertEquals(ret, 'Written')
         w_exp_archive.assert_called_with(123, ret_val)
+
+
+class TestExperimentInfo(command_mock.CommandMock):
+    """ Test ioclabcli.experiment.info_experiment """
+
+    def test_info_experiment(self):
+        """ Test experiment.get_resources """
+        self.api.get_resources.return_value = {}
+
+        experiment.info_experiment(self.api)
+        self.api.get_resources.assert_called_with(False, None)
+
+        experiment.info_experiment(self.api, list_id=True, site='grenoble')
+        self.api.get_resources.assert_called_with(True, 'grenoble')
