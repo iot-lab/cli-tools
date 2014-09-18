@@ -8,10 +8,10 @@ import os.path
 import unittest
 try:
     # pylint: disable=import-error,no-name-in-module
-    from mock import patch, MagicMock
+    from mock import patch, mock_open
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import patch, mock_open
 import json
 import iotlabcli
 from iotlabcli import json_dumps
@@ -253,9 +253,9 @@ class TestWriteExperimentArchive(unittest.TestCase):
         """ Test experiment.write_experiment_archive """
         open_name = 'iotlabcli.experiment.open'
         dict_val = {'test': ['value', 'value2']}
-        with patch(open_name, create=True) as mock_open:
-            mock_open.return_value = MagicMock(spec=file)
+        m_open = mock_open()
+        with patch(open_name, m_open, create=True):
             experiment.write_experiment_archive(123, dict_val)
 
-            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle = m_open.return_value
             file_handle.write.assert_called_with(json_dumps(dict_val))
