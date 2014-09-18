@@ -74,7 +74,10 @@ class TestExperimentSubmit(command_mock.CommandMock):
             'firmwareassociations': None
         }
         self.assertEquals(expected, json.loads(call_dict['new_exp.json']))
-        return 0
+
+        # Try 'print', should return exp_dict
+        ret = experiment.submit_experiment(self.api, exp, nodes_list, True)
+        self.assertEquals(ret.__dict__, expected)
 
     def test_experiment_submit_alias(self):
         """ Run experiment_submit alias """
