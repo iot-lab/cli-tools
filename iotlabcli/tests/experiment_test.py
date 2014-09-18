@@ -13,6 +13,7 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
 import json
+import iotlabcli
 from iotlabcli import experiment
 from iotlabcli.tests import command_mock
 
@@ -20,7 +21,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestExperiment(unittest.TestCase):
-    """ Test ioclabcli.experiment module """
+    """ Test iotlabcli.experiment module """
 
     def test_create_experiment(self):
         """ Try creating an 'Experiment' object """
@@ -50,7 +51,7 @@ class TestExperiment(unittest.TestCase):
 
 
 class TestExperimentSubmit(command_mock.CommandMock):
-    """ Test ioclabcli.experiment.submit_experiment """
+    """ Test iotlabcli.experiment.submit_experiment """
 
     def test_experiment_submit_physical(self):
         """ Run experiment_submit physical """
@@ -143,9 +144,58 @@ class TestExperimentSubmit(command_mock.CommandMock):
         self.assertRaises(ValueError, experiment.submit_experiment,
                           self.api, exp, nodes_list)
 
+    @patch('iotlabcli.helpers.read_file')
+    def test_experiment_load(self, read_file_mock):
+        """ Try experiment_load """
+        self.api.submit_experiment.return_value = {}
+        node_fmt = 'm3-%u.grenoble.iot-lab.info'
+        expected = {
+            "name": None,
+            "duration": 20,
+            "nodes": [node_fmt % num for num in range(1, 6)],
+            "firmwareassociations": [
+                {
+                    "firmwarename": "firmware.elf",
+                    "nodes": [node_fmt % num for num in range(1, 3)],
+                },
+                {
+                    "firmwarename": "firmware_2.elf",
+                    "nodes": [node_fmt % num for num in range(3, 5)],
+                }
+            ],
+            "type": "physical",
+            "profileassociations": None,
+            "reservation": None,
+        }
+
+        def read_file(file_path):
+            """ read_file mock """
+            if file_path == experiment.EXP_FILENAME:
+                return json.dumps(expected)
+            else:
+                return "elf32arm"
+        read_file_mock.side_effect = read_file
+
+        experiment.load_experiment(self.api, experiment.EXP_FILENAME,
+                                   ['firmware.elf'])
+        # check calls
+        _calls = read_file_mock.call_args_list
+        for fmw in [experiment.EXP_FILENAME, 'firmware.elf', 'firmware_2.elf']:
+            for _call in _calls:
+                if fmw in _call[0]:
+                    break
+            else:
+                self.assertIn(fmw, _calls)
+
+        self.assertRaises(
+            iotlabcli.Error,
+            experiment.load_experiment,
+            self.api, experiment.EXP_FILENAME,
+            ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])
+
 
 class TestExperimentStop(command_mock.CommandMock):
-    """ Test ioclabcli.experiment.stop_experiment """
+    """ Test iotlabcli.experiment.stop_experiment """
 
     def test_experiment_stop(self):
         """ Test running stop experiment """
@@ -156,7 +206,7 @@ class TestExperimentStop(command_mock.CommandMock):
 
 
 class TestExperimentGet(command_mock.CommandMock):
-    """ Test ioclabcli.experiment.stop_experiment """
+    """ Test iotlabcli.experiment.stop_experiment """
 
     @patch('iotlabcli.helpers.check_experiment_state')
     def test_get_experiments_list(self, c_exp_state):
@@ -184,7 +234,7 @@ class TestExperimentGet(command_mock.CommandMock):
 
 
 class TestExperimentInfo(command_mock.CommandMock):
-    """ Test ioclabcli.experiment.info_experiment """
+    """ Test iotlabcli.experiment.info_experiment """
 
     def test_info_experiment(self):
         """ Test experiment.get_resources """
