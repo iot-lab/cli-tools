@@ -3,7 +3,7 @@
 
 import os
 import getpass
-import base64
+from base64 import b64encode, b64decode
 
 HOME_DIRECTORY = os.getenv('USERPROFILE') or os.getenv('HOME')
 RC_FILE = os.path.join(HOME_DIRECTORY, '.iotlabrc')
@@ -34,8 +34,10 @@ def write_password_file(username, password):
     :type password: string
     """
     assert (username is not None) and (password is not None)
-    with open(RC_FILE, 'wb') as pass_file:
-        pass_file.write('%s:%s' % (username, base64.b64encode(password)))
+    with open(RC_FILE, 'w') as pass_file:
+        # encode/decode for python3
+        enc_password = b64encode(password.encode('utf-8')).decode('utf-8')
+        pass_file.write('{}:{}'.format(username, enc_password))
 
 
 def _read_password_file():
@@ -47,8 +49,10 @@ def _read_password_file():
     if not os.path.exists(RC_FILE):
         return None, None
     try:
-        with open(RC_FILE, 'rb') as password_file:
-            user, enc_passwd = password_file.readline().split(':')
-            return user, base64.b64decode(enc_passwd)
+        with open(RC_FILE, 'r') as password_file:
+            username, enc_password = password_file.readline().split(':')
+            # encode/decode for python3
+            password = b64decode(enc_password.encode('utf-8')).decode('utf-8')
+            return username, password
     except ValueError:
         raise ValueError('Bad password file format: %r' % RC_FILE)
