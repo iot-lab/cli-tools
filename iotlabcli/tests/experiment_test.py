@@ -8,12 +8,13 @@ import os.path
 import unittest
 try:
     # pylint: disable=import-error,no-name-in-module
-    from mock import patch
+    from mock import patch, MagicMock
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch
+    from unittest.mock import patch, MagicMock
 import json
 import iotlabcli
+from iotlabcli import json_dumps
 from iotlabcli import experiment
 from iotlabcli.tests import command_mock
 
@@ -208,16 +209,14 @@ class TestExperimentStop(command_mock.CommandMock):
 class TestExperimentGet(command_mock.CommandMock):
     """ Test iotlabcli.experiment.stop_experiment """
 
-    @patch('iotlabcli.helpers.check_experiment_state')
-    def test_get_experiments_list(self, c_exp_state):
+    def test_get_experiments_list(self):
         """ Test experiment.get_experiments_list """
         self.api.get_experiments.return_value = {}
-        c_exp_state.side_effect = (lambda x: x)
 
         experiment.get_experiments_list(self.api, 'Running', 100, 100)
         self.api.get_experiments.assert_called_with('Running', 100, 100)
 
-    @patch('iotlabcli.helpers.write_experiment_archive')
+    @patch('iotlabcli.experiment.write_experiment_archive')
     def test_get_experiment(self, w_exp_archive):
         """ Test experiment.get_experiment """
 
@@ -245,3 +244,18 @@ class TestExperimentInfo(command_mock.CommandMock):
 
         experiment.info_experiment(self.api, list_id=True, site='grenoble')
         self.api.get_resources.assert_called_with(True, 'grenoble')
+
+
+class TestWriteExperimentArchive(unittest.TestCase):
+    """ Test iotlabcli.experiment.write_experiment_archive """
+    @staticmethod
+    def test_write_experiment_archive():
+        """ Test experiment.write_experiment_archive """
+        open_name = 'iotlabcli.experiment.open'
+        dict_val = {'test': ['value', 'value2']}
+        with patch(open_name, create=True) as mock_open:
+            mock_open.return_value = MagicMock(spec=file)
+            experiment.write_experiment_archive(123, dict_val)
+
+            file_handle = mock_open.return_value.__enter__.return_value
+            file_handle.write.assert_called_with(json_dumps(dict_val))

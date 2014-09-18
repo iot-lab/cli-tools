@@ -70,7 +70,7 @@ def get_experiment(api, exp_id, command=''):
     """
     result = api.get_experiment_info(exp_id, command)
     if command == 'data':
-        helpers.write_experiment_archive(exp_id, result)
+        write_experiment_archive(exp_id, result)
         result = 'Written'
 
     return result
@@ -255,7 +255,6 @@ class Experiment(object):
         """ Set current experiment type.
         If type was already set and is different ValueError is raised
         """
-
         if self.type is not None and self.type != exp_type:
             raise ValueError(
                 "Invalid experiment, should be only physical or only alias")
@@ -348,3 +347,9 @@ class Experiment(object):
         """Set alias nodes list """
         self._set_type('alias')
         self.nodes.append(alias_nodes)
+
+
+def write_experiment_archive(exp_id, data):
+    """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
+    with open('%s.tar.gz' % exp_id, 'wb') as archive:
+        archive.write(json_dumps(data))

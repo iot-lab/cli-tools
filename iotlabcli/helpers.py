@@ -2,20 +2,9 @@
 """Helpers methods"""
 
 import os
-import json
 from iotlabcli import Error
 
 DOMAIN_DNS = 'iot-lab.info'
-
-
-def write_experiment_archive(exp_id, data):
-    """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
-    try:
-        with open('%s.tar.gz' % exp_id, 'wb') as archive:
-            archive.write(json.dumps(data, indent=4, sort_keys=True))
-    except IOError as err:
-        raise Error(
-            "Cannot save experiment archive %s.tar.gz: %s" % (exp_id, err))
 
 
 def check_experiment_state(state_str=None):
@@ -28,19 +17,19 @@ def check_experiment_state(state_str=None):
     >>> check_experiment_state(None)
     'Terminated,Waiting,Launching,Finishing,Running,Error'
 
-    >>> check_experiment_state('Invalid')  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> check_experiment_state('invalid')
     Traceback (most recent call last):
-    iotlabcli.Error: "The experiment filter state 'Invalid' is invalid."
+    ValueError: Invalid experiment state 'invalid'.
     """
-    oar_state = ["Terminated", "Waiting", "Launching", "Finishing",
-                 "Running", "Error"]
+    oar_states = [
+        "Terminated", "Waiting", "Launching", "Finishing", "Running", "Error"]
 
     if state_str is None:
-        return ','.join(oar_state)
+        return ','.join(oar_states)
 
     for state in state_str.split(','):
-        if state not in oar_state:
-            raise Error('The experiment filter state %r is invalid.' % state)
+        if state not in oar_states:
+            raise ValueError('Invalid experiment state %r.' % state)
     return state_str
 
 
@@ -158,11 +147,10 @@ def get_nodes_list(site, archi, nodes_list):
     ValueError: Invalid nodes list: a-b ([0-9+-])
     """
 
-    node_fmt = '{archi}-%u.{site}.{domain}'.format(
-        archi=archi, site=site, domain=DOMAIN_DNS)
-
     nodes_num_list = expand_short_nodes_list(nodes_list)
 
+    node_fmt = '{archi}-%u.{site}.{domain}'.format(
+        archi=archi, site=site, domain=DOMAIN_DNS)
     nodes = [node_fmt % num for num in nodes_num_list]
 
     return nodes
@@ -189,7 +177,6 @@ class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
     so __setitem__ is overriden to check that
-
 
     >>> file_dict = FilesDict()
 
