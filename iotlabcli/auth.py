@@ -4,7 +4,6 @@
 import os
 import getpass
 import base64
-from iotlabcli import Error
 
 HOME_DIRECTORY = os.getenv('USERPROFILE') or os.getenv('HOME')
 RC_FILE = os.path.join(HOME_DIRECTORY, '.iotlabrc')
@@ -34,14 +33,9 @@ def write_password_file(username, password):
     :param password: basic http auth password
     :type password: string
     """
-    if username is None or password is None:
-        raise Error("username:password required: %s:%s" % username, password)
-
-    try:
-        with open(RC_FILE, 'wb') as pass_file:
-            pass_file.write('%s:%s' % (username, base64.b64encode(password)))
-    except IOError as err:
-        raise Error("Cannot create password file in home directory: %s" % err)
+    assert (username is not None) and (password is not None)
+    with open(RC_FILE, 'wb') as pass_file:
+        pass_file.write('%s:%s' % (username, base64.b64encode(password)))
 
 
 def _read_password_file():
@@ -49,7 +43,6 @@ def _read_password_file():
     command-line option username and password are not used. If password
     file exist whe return username and password for basic auth http
     authentication
-
     """
     if not os.path.exists(RC_FILE):
         return None, None
@@ -57,7 +50,5 @@ def _read_password_file():
         with open(RC_FILE, 'rb') as password_file:
             user, enc_passwd = password_file.readline().split(':')
             return user, base64.b64decode(enc_passwd)
-    except IOError as err:
-        raise Error('Cannot open password file in home directory: %s' % err)
-    except ValueError as err:
-        raise Error('Bad password file format: %r' % RC_FILE)
+    except ValueError:
+        raise ValueError('Bad password file format: %r' % RC_FILE)
