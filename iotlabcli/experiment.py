@@ -152,7 +152,17 @@ def experiment_dict(nodes, firmware_path=None, profile_name=None):
 
 
 class AliasNodes(object):  # pylint: disable=too-few-public-methods
-    """An AliasNodes class"""
+    """An AliasNodes class
+
+    >>> AliasNodes(5, 'grenoble', 'm3:at86rf231', False)
+    AliasNodes(5, 'grenoble', 'm3:at86rf231', False, _alias='1')
+    >>> save = AliasNodes(2, 'strasbourg', 'wsn430:cc1101', True)
+    >>> save
+    AliasNodes(2, 'strasbourg', 'wsn430:cc1101', True, _alias='2')
+
+    >>> save == AliasNodes(2, 'strasbourg', 'wsn430:cc1101', True, _alias='2')
+    True
+    """
     _alias = 0  # static count of current alias number
 
     def __init__(self, nbnodes, site, archi, mobile=False, _alias=None):

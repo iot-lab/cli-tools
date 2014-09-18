@@ -126,6 +126,20 @@ class TestExperimentSubmit(command_mock.CommandMock):
         self.assertEquals(expected, exp_desc)
         self.assertIn('firmware.elf', files_dict)
 
+    def test_exp_submit_types_detect(self):
+        """ Try experiment submit types detection"""
+        # Physical tests and Alias Nodes
+        nodes_list = []
+        nodes_list.append(experiment.experiment_dict(
+            ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
+        nodes_list.append(experiment.experiment_dict(
+            experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
+            CURRENT_DIR + '/firmware.elf', 'profile1'))
+
+        exp = experiment.Experiment('exp_name', 20, 314159)
+        self.assertRaises(ValueError, experiment.submit_experiment,
+                          self.api, exp, nodes_list)
+
 
 class TestExperimentStop(command_mock.CommandMock):
     """ Test ioclabcli.experiment.stop_experiment """

@@ -16,6 +16,11 @@ from iotlabcli import experiment
 
 
 class TestMainInfoParser(MainMock):
+
+    def setUp(self):
+        MainMock.setUp(self)
+        experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
+
     @patch('iotlabcli.experiment.info_experiment')
     def test_main_info_parser(self, info_exp):
         """ Run experiment_parser.main.info """
