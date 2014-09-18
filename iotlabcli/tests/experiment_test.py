@@ -12,9 +12,9 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
-
 import json
 from iotlabcli import experiment
+from iotlabcli.tests import command_mock
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -49,13 +49,8 @@ class TestExperiment(unittest.TestCase):
         self.assertEquals(2, len(exp.profileassociations))
 
 
-class TestExperimentSubmit(unittest.TestCase):
+class TestExperimentSubmit(command_mock.CommandMock):
     """ Test ioclabcli.experiment.submit_experiment """
-
-    def setUp(self):
-        self.api = patch('iotlabcli.rest.Api').start().return_value
-        self.api.submit_experiment.return_value = {}
-        experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
 
     def test_experiment_submit_physical(self):
         """ Run experiment_submit physical """
@@ -130,3 +125,42 @@ class TestExperimentSubmit(unittest.TestCase):
         }
         self.assertEquals(expected, exp_desc)
         self.assertIn('firmware.elf', files_dict)
+
+
+class TestExperimentStop(command_mock.CommandMock):
+    """ Test ioclabcli.experiment.stop_experiment """
+
+    def test_experiment_stop(self):
+        """ Test running stop experiment """
+        self.api.stop_experiment.return_value = {}
+
+        experiment.stop_experiment(self.api, 123)
+        self.api.stop_experiment.assert_called_with(123)
+
+
+class TestExperimentGet(command_mock.CommandMock):
+    """ Test ioclabcli.experiment.stop_experiment """
+
+    @patch('iotlabcli.helpers.check_experiment_state')
+    def test_get_experiments_list(self, c_exp_state):
+        """ Test experiment.get_experiments_list """
+        self.api.get_experiments.return_value = {}
+        c_exp_state.side_effect = (lambda x: x)
+
+        experiment.get_experiments_list(self.api, 'Running', 100, 100)
+        self.api.get_experiments.assert_called_with('Running', 100, 100)
+
+    @patch('iotlabcli.helpers.write_experiment_archive')
+    def test_get_experiment(self, w_exp_archive):
+        """ Test experiment.get_experiment """
+
+        ret_val = {"ret": 0}
+        self.api.get_experiment_info.return_value = ret_val
+
+        ret = experiment.get_experiment(self.api, 123, command='resources')
+        self.assertEquals(ret, ret_val)
+        self.assertFalse(w_exp_archive.called)
+
+        ret = experiment.get_experiment(self.api, 123, command='data')
+        self.assertEquals(ret, 'Written')
+        w_exp_archive.assert_called_with(123, ret_val)
