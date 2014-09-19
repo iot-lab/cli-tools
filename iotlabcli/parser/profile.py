@@ -234,29 +234,29 @@ def add_m3_profile_parser(api, opts):
         return api.add_profile(opts.name, profile)
 
 
-def load_profile_parser(api, path_file):
+def load_profile_parser(api, opts):
     """  Load and add user profile description
 
     :param api: API Rest api object
-    :param path_file: path file profile description
-    :type path_file: string
+    :param opts: command-line parser opts
+    :type opts: Namespace object with opts attribute
     """
-    profile = json.loads(helpers.read_file(path_file))
+    profile = json.loads(helpers.read_file(opts.path_file))
     if "profilename" not in profile:
         raise ValueError("'profilename' attribute required in JSON file: %r" %
-                         path_file)
+                         opts.path_file)
 
     return api.add_profile(profile["profilename"], profile)
 
 
-def del_profile_parser(api, name):
+def del_profile_parser(api, opts):
     """ Delete user profile description
 
-    :param name: profile name
-    :type name: string
     :param api: API Rest api object
+    :param opts: command-line parser opts
+    :type opts: Namespace object with opts attribute
     """
-    return api.del_profile(name)
+    return api.del_profile(opts.name)
 
 
 def get_profile_parser(api, opts):
@@ -264,9 +264,9 @@ def get_profile_parser(api, opts):
     _ print JSONObject profile description
     _ print JSONObject profile's list description
 
+    :param api: API Rest api object
     :param opts: command-line parser opts
     :type opts: Namespace object with opts attribute
-    :param api: API Rest api object
     """
     if opts.list:
         profile_dict = api.get_profiles()
@@ -280,19 +280,15 @@ def profile_parse_and_run(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
 
-    subparser_name = opts.subparser_name
-    if subparser_name == 'addwsn430':
-        result = add_wsn430_profile_parser(api, opts)
-    elif subparser_name == 'addm3':
-        result = add_m3_profile_parser(api, opts)
-    elif subparser_name == 'load':
-        result = load_profile_parser(api, opts.path_file)
-    elif subparser_name == 'get':
-        result = get_profile_parser(api, opts)
-    elif subparser_name == 'del':
-        result = del_profile_parser(api, opts.name)
+    fct_parser = {
+        'addwsn430': add_wsn430_profile_parser,
+        'addm3': add_m3_profile_parser,
+        'load': load_profile_parser,
+        'get': get_profile_parser,
+        'del': del_profile_parser,
+    }[opts.subparser_name]
 
-    return result
+    return fct_parser(api, opts)
 
 
 def main(args=sys.argv[1:]):
