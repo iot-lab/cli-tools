@@ -169,7 +169,7 @@ class TestExperimentSubmit(command_mock.CommandMock):
             "reservation": None,
         }
 
-        def read_file(file_path):
+        def read_file(file_path, _=''):
             """ read_file mock """
             if file_path == experiment.EXP_FILENAME:
                 return json.dumps(expected)

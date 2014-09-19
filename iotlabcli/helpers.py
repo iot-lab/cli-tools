@@ -156,9 +156,9 @@ def get_nodes_list(site, archi, nodes_list):
     return nodes
 
 
-def read_file(file_path):
+def read_file(file_path, opt=''):
     """ Open and read a file """
-    with open(os.path.expanduser(file_path), 'r') as _fd:  # expand '~'
+    with open(os.path.expanduser(file_path), 'r' + opt) as _fd:  # expand '~'
         return _fd.read()
 
 
@@ -209,4 +209,4 @@ class FilesDict(dict):
         """ Add a firmwware to the dictionary. If None, do nothing """
         if firmware_path is None:
             return
-        self[os.path.basename(firmware_path)] = read_file(firmware_path)
+        self[os.path.basename(firmware_path)] = read_file(firmware_path, 'b')

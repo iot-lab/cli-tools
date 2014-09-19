@@ -84,7 +84,8 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     :param firmware_list: list of firmware path
     """
 
-    exp_dict = json.loads(helpers.read_file(exp_desc_path))  # exp desc json
+    # exp desc json
+    exp_dict = json.loads(helpers.read_file(exp_desc_path))
     exp_files = helpers.FilesDict()
 
     fw_association = exp_dict['firmwareassociations'] or []
