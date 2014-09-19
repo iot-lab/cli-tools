@@ -203,7 +203,7 @@ def add_wsn430_profile_parser(api, opts):
                                 opts.current)
         profile.set_sensors(opts.sfreq, opts.temperature, opts.luminosity)
     except AssertionError as err:
-        raise ValueError(err.message)
+        raise ValueError(str(err))
 
     if opts.json:
         return profile
@@ -226,7 +226,7 @@ def add_m3_profile_parser(api, opts):
         profile.set_radio('rssi', opts.channels, opts.rperiod,
                           opts.num_per_channel)
     except AssertionError as err:
-        raise ValueError(err.message)
+        raise ValueError(str(err))
 
     if opts.json:
         return profile
