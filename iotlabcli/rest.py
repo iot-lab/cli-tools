@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from urlparse import urljoin
 from iotlabcli import json_dumps
+import iotlabcli
 
 
 def read_custom_api_url():
@@ -27,10 +28,8 @@ def read_custom_api_url():
         return api_url
 
     # try getting url from config file
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    api_url_filename = os.path.join(home_directory, ".iotlab.api-url")
     try:
-        return open(api_url_filename).readline().strip()
+        return iotlabcli.helpers.read_file('~/.iotlab.api-url').strip()
     except IOError:
         return None
 
