@@ -15,10 +15,12 @@ from iotlabcli.parser import common
 
 class TestSitesList(unittest.TestCase):
 
-    @patch('iotlabcli.rest.Api.get_sites')
-    def test_sites_list(self, get_sites):
-        get_sites.return_value = {
+    @patch('iotlabcli.rest.Api._method')
+    def test_sites_list(self, _method_get_sited):
+        _method_get_sited.return_value = {
             "items": [{'site': 'grenoble'}, {'site': 'strasbourg'}]
         }
 
         self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
+        self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
+        self.assertEquals(1, _method_get_sited.call_count)
