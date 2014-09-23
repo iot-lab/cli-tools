@@ -215,6 +215,10 @@ class TestExperimentGet(CommandMock):
     def test_get_experiment(self, w_exp_archive):
         """ Test experiment.get_experiment """
 
+        ret = experiment.get_experiment(self.api, 123)
+        self.assertEquals(ret, API_RET)
+        self.assertFalse(w_exp_archive.called)
+
         ret = experiment.get_experiment(self.api, 123, command='resources')
         self.assertEquals(ret, API_RET)
         self.assertFalse(w_exp_archive.called)
