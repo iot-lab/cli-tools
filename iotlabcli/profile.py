@@ -4,68 +4,6 @@
 # pylint:disable=too-few-public-methods
 
 
-class ProfileWSN430(object):
-    """A Profile measure class for WSN430 """
-    choices = {
-        'power_mode': ['dc', 'battery'],
-        'consumption': {'frequency': [5000, 1000, 500, 100, 70]},
-        'radio': {'frequency': [5000, 1000, 500]},
-        'sensor': {'frequency': [30000, 10000, 5000, 1000]},
-    }
-
-    def __init__(self, profilename, power):
-        self.nodearch = 'wsn430'
-        self.profilename = profilename
-        self.power = power
-
-        self.consumption = None
-        self.radio = None
-        self.sensor = None
-
-    def set_consumption(self, frequency, power=False, voltage=False,
-                        current=False):
-        """ Configure consumption measures """
-        if not power and not voltage and not current:
-            return
-        _err = "Required 'frequency' for consumption measure"
-        assert frequency is not None, _err
-
-        assert frequency in self.choices['consumption']['frequency']
-        self.consumption = {
-            'frequency': frequency,
-            'power': power,
-            'voltage': voltage,
-            'current': current,
-        }
-
-    def set_sensors(self, frequency, temperature=False, luminosity=False):
-        """ Configure sensor measures """
-        if not temperature and not luminosity:
-            return
-        _err = "Required 'frequency' for sensor measure"
-        assert frequency is not None, _err
-
-        assert frequency in self.choices['sensor']['frequency']
-        self.sensor = {
-            'frequency': frequency,
-            'luminosity': luminosity,
-            'temperature': temperature,
-        }
-
-    def set_radio(self, frequency, rssi=False):
-        """ Configure radio measures """
-        if not rssi:
-            return
-        _err = "Required 'frequency' for radio measure"
-        assert frequency is not None, _err
-
-        assert frequency in self.choices['radio']['frequency']
-        self.radio = {
-            'frequency': frequency,
-            'rssi': True,
-        }
-
-
 class ProfileM3(object):
     """A Profile measure class for M3 """
     choices = {
@@ -136,3 +74,68 @@ class ProfileM3(object):
 
         assert period in self.choices['radio']['period']
         assert num_per_channel in self.choices['radio']['num_per_channel']
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+
+class ProfileWSN430(object):
+    """A Profile measure class for WSN430 """
+    choices = {
+        'power_mode': ['dc', 'battery'],
+        'consumption': {'frequency': [5000, 1000, 500, 100, 70]},
+        'radio': {'frequency': [5000, 1000, 500]},
+        'sensor': {'frequency': [30000, 10000, 5000, 1000]},
+    }
+
+    def __init__(self, profilename, power):
+        self.nodearch = 'wsn430'
+        self.profilename = profilename
+        self.power = power
+
+        self.consumption = None
+        self.radio = None
+        self.sensor = None
+
+    def set_consumption(self, frequency, power=False, voltage=False,
+                        current=False):
+        """ Configure consumption measures """
+        if not power and not voltage and not current:
+            return
+        _err = "Required 'frequency' for consumption measure"
+        assert frequency is not None, _err
+
+        assert frequency in self.choices['consumption']['frequency']
+        self.consumption = {
+            'frequency': frequency,
+            'power': power,
+            'voltage': voltage,
+            'current': current,
+        }
+
+    def set_radio(self, frequency):
+        """ Configure radio measures """
+        if not frequency:
+            return
+        assert frequency in self.choices['radio']['frequency']
+        self.radio = {
+            'frequency': frequency,
+            'rssi': True,
+        }
+
+    def set_sensors(self, frequency, temperature=False, luminosity=False):
+        """ Configure sensor measures """
+        if not temperature and not luminosity:
+            return
+        _err = "Required 'frequency' for sensor measure"
+        assert frequency is not None, _err
+
+        assert frequency in self.choices['sensor']['frequency']
+        self.sensor = {
+            'frequency': frequency,
+            'luminosity': luminosity,
+            'temperature': temperature,
+        }
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

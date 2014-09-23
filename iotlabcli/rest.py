@@ -72,7 +72,8 @@ class Api(object):
         """
         if method == 'POST':
             headers = {'content-type': 'application/json'}
-            req = requests.post(url, auth=auth, data=data, headers=headers)
+            req = requests.post(url, auth=auth, data=json_dumps(data),
+                                headers=headers)
         elif method == 'MULTIPART':
             req = requests.post(url, auth=auth, files=data)
         elif method == 'DELETE':
@@ -141,8 +142,7 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        prof_json = json_dumps(profile)
-        return self.method('profiles/%s' % name, method='POST', data=prof_json)
+        return self.method('profiles/%s' % name, method='POST', data=profile)
 
     def del_profile(self, name):
         """ Delete user profile
@@ -200,7 +200,7 @@ class Api(object):
         :returns: dict
         """
         return self.method('experiments/%s/nodes?%s' % (expid, command),
-                           method='POST', data=json_dumps(nodes))
+                           method='POST', data=nodes)
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user
