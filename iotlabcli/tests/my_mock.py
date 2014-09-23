@@ -11,22 +11,54 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch, Mock
 
+from collections import namedtuple
+
+from iotlabcli.rest import Api
+from iotlabcli import json_dumps
+
+API_RET = {"result": "test"}
+
+
+def api_mock(ret=None):
+    """ Return a mock of an api object
+    returned value for api methods will be 'ret' parameter or API_RET
+    """
+    ret = ret or API_RET
+    _request_ret = namedtuple('request_ret', ['status_code', 'text'])
+    ret_val = _request_ret(
+        text=json_dumps(ret),
+        status_code=200,  # HTTP OK
+    )
+    patch('requests.post', return_value=ret_val).start()
+    patch('requests.delete', return_value=ret_val).start()
+    patch('requests.get', return_value=ret_val).start()
+    api_class = patch('iotlabcli.rest.Api').start()
+    api_class.return_value = Mock(wraps=Api('user', 'password'))
+    return api_class.return_value
+
+
+def api_mock_stop():
+    """ Stop all patches started by api_mock.
+    Actually it stops everything but not a problem """
+    patch.stopall()
+
 
 # pylint: disable=too-many-public-methods
 class CommandMock(unittest.TestCase):
     """ Common mock needed for testing commands """
     def setUp(self):
-        self.api = patch('iotlabcli.rest.Api').start().return_value
+        self.api = api_mock()
         experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
 
     def tearDown(self):
+        api_mock_stop()
         patch.stopall()
 
 
 class MainMock(unittest.TestCase):
     """ Common mock needed for testing main function of parsers """
     def setUp(self):
-        self.api = patch('iotlabcli.rest.Api').start().return_value
+        self.api = api_mock()
 
         patch('sys.stderr', sys.stdout).start()
         patch('iotlabcli.parser.common.sites_list', Mock(
@@ -39,4 +71,5 @@ class MainMock(unittest.TestCase):
               (lambda a, x: 123 if x is None else x)).start()
 
     def tearDown(self):
+        api_mock_stop()
         patch.stopall()

@@ -16,7 +16,7 @@ import json
 import iotlabcli
 from iotlabcli import json_dumps
 from iotlabcli import experiment
-from iotlabcli.tests.my_mock import CommandMock
+from iotlabcli.tests.my_mock import CommandMock, API_RET
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -148,7 +148,6 @@ class TestExperimentSubmit(CommandMock):
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load(self, read_file_mock):
         """ Try experiment_load """
-        self.api.submit_experiment.return_value = {}
         node_fmt = 'm3-%u.grenoble.iot-lab.info'
         expected = {
             "name": None,
@@ -200,8 +199,6 @@ class TestExperimentStop(CommandMock):
 
     def test_experiment_stop(self):
         """ Test running stop experiment """
-        self.api.stop_experiment.return_value = {}
-
         experiment.stop_experiment(self.api, 123)
         self.api.stop_experiment.assert_called_with(123)
 
@@ -211,8 +208,6 @@ class TestExperimentGet(CommandMock):
 
     def test_get_experiments_list(self):
         """ Test experiment.get_experiments_list """
-        self.api.get_experiments.return_value = {}
-
         experiment.get_experiments_list(self.api, 'Running', 100, 100)
         self.api.get_experiments.assert_called_with('Running', 100, 100)
 
@@ -220,16 +215,13 @@ class TestExperimentGet(CommandMock):
     def test_get_experiment(self, w_exp_archive):
         """ Test experiment.get_experiment """
 
-        ret_val = {"ret": 0}
-        self.api.get_experiment_info.return_value = ret_val
-
         ret = experiment.get_experiment(self.api, 123, command='resources')
-        self.assertEquals(ret, ret_val)
+        self.assertEquals(ret, API_RET)
         self.assertFalse(w_exp_archive.called)
 
         ret = experiment.get_experiment(self.api, 123, command='data')
         self.assertEquals(ret, 'Written')
-        w_exp_archive.assert_called_with(123, ret_val)
+        w_exp_archive.assert_called_with(123, API_RET)
 
 
 class TestExperimentInfo(CommandMock):
@@ -237,8 +229,6 @@ class TestExperimentInfo(CommandMock):
 
     def test_info_experiment(self):
         """ Test experiment.get_resources """
-        self.api.get_resources.return_value = {}
-
         experiment.info_experiment(self.api)
         self.api.get_resources.assert_called_with(False, None)
 

@@ -18,7 +18,6 @@ import iotlabcli.profile as profile
 class TestMainProfileParser(MainMock):
 
     def test_main_add_parser(self):
-        self.api.add_profile.return_value = {}
         # add simple add
         profile_parser.main(['addwsn430', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
@@ -101,16 +100,12 @@ class TestMainProfileParser(MainMock):
             frequency=1000, temperature=True, luminosity=True)
 
     def test__add_profile(self):
-        self.api.add_profile.return_value = {}
         ret = profile_parser._add_profile(  # pylint: disable=protected-access
             self.api, 'name', {'test_profile': 1}, json_out=True)
         self.assertEquals(ret, {'test_profile': 1})
         self.assertFalse(self.api.add_profile.called)
 
     def test_main_get_parser(self):
-        self.api.get_profiles.return_value = {}
-        self.api.get_profile.return_value = {}
-
         profile_parser.main(['get', '--name', 'profile_name'])
         self.api.get_profile.assert_called_with('profile_name')
 
@@ -118,15 +113,11 @@ class TestMainProfileParser(MainMock):
         self.api.get_profiles.assert_called_with()
 
     def test_main_del_parser(self):
-        self.api.del_profile.return_value = {}
-
         profile_parser.main(['del', '--name', 'profile_name'])
         self.api.del_profile.assert_called_with('profile_name')
 
     @patch('iotlabcli.helpers.read_file')
     def test_main_load_parser(self, read_file_mock):
-        self.api.add_profile.return_value = {}
-
         read_file_mock.return_value = '{"profilename": "prof_name"}'
         profile_parser.main(['load', '--file', 'prof.json'])
         self.api.add_profile.assert_called_with('prof_name',

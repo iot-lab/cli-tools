@@ -6,20 +6,17 @@ import unittest
 
 from iotlabcli import Error
 from iotlabcli import helpers
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import Mock
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import Mock
+from iotlabcli.tests import my_mock
 
 
 class TestHelpers(unittest.TestCase):
     """ Test the iotlabcli.helpers module """
+    def tearDown(self):
+        my_mock.api_mock_stop()
+
     def test_get_current_experiment(self):
         """ Test get_current_experiment """
-        api = Mock()
-        api.get_experiments.return_value = {"items": [{"id": 234}]}
+        api = my_mock.api_mock(ret={"items": [{"id": 234}]})
         self.assertEquals(123, helpers.get_current_experiment(api, 123))
         self.assertEquals(234, helpers.get_current_experiment(api, None))
 

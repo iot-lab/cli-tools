@@ -84,7 +84,7 @@ def nodes_list_from_str(nodes_list_str):
 
 def _get_experiment_nodes_list(api, exp_id):
     """ Get the nodes_list for given experiment"""
-    exp_resources = api.get_experiment_resources(exp_id)
+    exp_resources = api.get_experiment_info(exp_id, 'resources')
     exp_nodes = [res["network_address"] for res in exp_resources["items"]]
     return exp_nodes
 

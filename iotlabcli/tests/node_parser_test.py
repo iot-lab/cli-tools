@@ -5,14 +5,14 @@
 import unittest
 try:
     # pylint: disable=import-error,no-name-in-module
-    from mock import patch, Mock
+    from mock import patch
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, Mock
+    from unittest.mock import patch
 
 from argparse import ArgumentTypeError
 import iotlabcli.parser.node as node_parser
-from iotlabcli.tests.my_mock import MainMock
+from iotlabcli.tests.my_mock import MainMock, api_mock, api_mock_stop
 
 # pylint: disable=missing-docstring,too-many-public-methods
 
@@ -59,10 +59,13 @@ class TestMainNodeParser(MainMock):
 
 
 class TestNodeParser(unittest.TestCase):
+    def tearDown(self):
+        api_mock_stop()
+
     @patch('iotlabcli.parser.node._get_experiment_nodes_list')
     def test_list_nodes(self, g_nodes_list):
         """ Run the different list_nodes cases """
-        api = Mock()
+        api = api_mock()
         g_nodes_list.return_value = [
             "m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info",
             "m3-3.grenoble.iot-lab.info",
@@ -95,14 +98,15 @@ class TestNodeParser(unittest.TestCase):
 
     def test__get_experiment_nodes_list(self):
         """ Run get_experiment_nodes_list """
-        api = Mock()
-        api.get_experiment_resources.return_value = {
-            "items": [
-                {"network_address": "m3-1.grenoble.iot-lab.info"},
-                {"network_address": "m3-2.grenoble.iot-lab.info"},
-                {"network_address": "m3-3.grenoble.iot-lab.info"},
-            ]
-        }
+        api = api_mock(
+            ret={
+                "items": [
+                    {"network_address": "m3-1.grenoble.iot-lab.info"},
+                    {"network_address": "m3-2.grenoble.iot-lab.info"},
+                    {"network_address": "m3-3.grenoble.iot-lab.info"},
+                ]
+            }
+        )
         # pylint: disable=protected-access
         self.assertEquals(node_parser._get_experiment_nodes_list(api, 3),
                           ["m3-1.grenoble.iot-lab.info",
