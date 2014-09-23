@@ -50,10 +50,7 @@ class ProfileM3(object):
             assert channel in self.choices['radio']['channels']
 
         assert mode in ['rssi']
-        if mode == 'rssi':
-            self._check_radio_rssi(channels, period, num_per_channel)
-        else:  # pragma: no cover
-            pass
+        self._check_radio_rssi(channels, period, num_per_channel)
 
         self.radio = {
             'mode': mode,
@@ -89,6 +86,7 @@ class ProfileWSN430(object):
     }
 
     def __init__(self, profilename, power):
+        assert power in ProfileWSN430.choices['power_mode']
         self.nodearch = 'wsn430'
         self.profilename = profilename
         self.power = power
