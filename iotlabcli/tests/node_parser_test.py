@@ -12,7 +12,7 @@ except ImportError:  # pragma: no cover
 
 from argparse import ArgumentTypeError
 import iotlabcli.parser.node as node_parser
-from iotlabcli.tests.main_mock import MainMock
+from iotlabcli.tests.my_mock import MainMock
 
 # pylint: disable=missing-docstring,too-many-public-methods
 

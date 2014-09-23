@@ -16,7 +16,7 @@ import json
 import iotlabcli
 from iotlabcli import json_dumps
 from iotlabcli import experiment
-from iotlabcli.tests import command_mock
+from iotlabcli.tests.my_mock import CommandMock
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -51,7 +51,7 @@ class TestExperiment(unittest.TestCase):
         self.assertEquals(2, len(exp.profileassociations))
 
 
-class TestExperimentSubmit(command_mock.CommandMock):
+class TestExperimentSubmit(CommandMock):
     """ Test iotlabcli.experiment.submit_experiment """
 
     def test_experiment_submit_physical(self):
@@ -195,7 +195,7 @@ class TestExperimentSubmit(command_mock.CommandMock):
             ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])
 
 
-class TestExperimentStop(command_mock.CommandMock):
+class TestExperimentStop(CommandMock):
     """ Test iotlabcli.experiment.stop_experiment """
 
     def test_experiment_stop(self):
@@ -206,7 +206,7 @@ class TestExperimentStop(command_mock.CommandMock):
         self.api.stop_experiment.assert_called_with(123)
 
 
-class TestExperimentGet(command_mock.CommandMock):
+class TestExperimentGet(CommandMock):
     """ Test iotlabcli.experiment.stop_experiment """
 
     def test_get_experiments_list(self):
@@ -232,7 +232,7 @@ class TestExperimentGet(command_mock.CommandMock):
         w_exp_archive.assert_called_with(123, ret_val)
 
 
-class TestExperimentInfo(command_mock.CommandMock):
+class TestExperimentInfo(CommandMock):
     """ Test iotlabcli.experiment.info_experiment """
 
     def test_info_experiment(self):

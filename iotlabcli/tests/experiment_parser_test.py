@@ -10,7 +10,7 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
 
-from iotlabcli.tests.main_mock import MainMock
+from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
 
