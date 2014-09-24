@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover
     from urlparse import urljoin
 from iotlabcli import json_dumps
 import iotlabcli
+from iotlabcli.helpers import read_file
 
 
 def read_custom_api_url():
@@ -28,7 +29,7 @@ def read_custom_api_url():
 
     # try getting url from config file
     try:
-        return iotlabcli.helpers.read_file('~/.iotlab.api-url').strip()
+        return read_file('~/.iotlab.api-url').strip()
     except IOError:
         return None
 

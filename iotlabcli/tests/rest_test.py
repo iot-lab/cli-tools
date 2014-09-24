@@ -84,7 +84,7 @@ class TestRest(unittest.TestCase):
             ret = rest.Api._method(_url)
             self.assertEquals(ret, 'text_only')
 
-    @patch('iotlabcli.helpers.read_file')
+    @patch('iotlabcli.rest.read_file')
     def test_read_custom_api_url(self, read_file_mock):
         """ Test API URL reading """
         read_file_mock.side_effect = IOError()
