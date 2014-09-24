@@ -47,8 +47,8 @@ class TestExperiment(unittest.TestCase):
         self.assertEquals(exp.type, 'physical')
         self.assertEquals(exp.nodes, ['m3-%u.grenoble.iot-lab.info' % num for
                                       num in (0, 1, 2, 3, 4, 6, 8, 9, 27)])
-        self.assertIsNotNone(exp.firmwareassociations)
-        self.assertIsNotNone(exp.profileassociations)
+        self.assertTrue(exp.firmwareassociations is not None)
+        self.assertTrue(exp.profileassociations is not None)
         self.assertEquals(2, len(exp.firmwareassociations))
         self.assertEquals(2, len(exp.profileassociations))
 
@@ -132,7 +132,7 @@ class TestExperimentSubmit(CommandMock):
             ]
         }
         self.assertEquals(expected, exp_desc)
-        self.assertIn('firmware.elf', files_dict)
+        self.assertTrue('firmware.elf' in files_dict)
 
     def test_exp_submit_types_detect(self):
         """ Try experiment submit types detection"""
@@ -187,7 +187,7 @@ class TestExperimentSubmit(CommandMock):
                 if fmw in _call[0]:
                     break
             else:
-                self.assertIn(fmw, _calls)
+                self.assertTrue(fmw in _calls)
 
         self.assertRaises(
             iotlabcli.Error,

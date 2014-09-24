@@ -59,7 +59,7 @@ def check_site_with_server(site_name, _sites_list=None):
     >>> check_site_with_server("unknown", sites)  \
         # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Unknown site name 'unknown'
+    ArgumentTypeError: Unknown site name 'unknown'
     """
     sites = _sites_list or sites_list()
     if site_name in sites:

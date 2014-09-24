@@ -37,7 +37,8 @@ def write_password_file(username, password):
     with open(RC_FILE, 'w') as pass_file:
         # encode/decode for python3
         enc_password = b64encode(password.encode('utf-8')).decode('utf-8')
-        pass_file.write('{}:{}'.format(username, enc_password))
+        pass_file.write('{user}:{passwd}'.format(user=username,
+                                                 passwd=enc_password))
 
 
 def _read_password_file():

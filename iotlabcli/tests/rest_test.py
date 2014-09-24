@@ -89,7 +89,7 @@ class TestRest(unittest.TestCase):
         """ Test API URL reading """
         read_file_mock.side_effect = IOError()
 
-        self.assertIsNone(rest.read_custom_api_url())
+        self.assertTrue(rest.read_custom_api_url() is None)
 
         read_file_mock.side_effect = None
         read_file_mock.return_value = 'API_URL_CUSTOM'

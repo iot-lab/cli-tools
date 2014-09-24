@@ -183,21 +183,21 @@ def get_alias_properties(properties_str):
     >>> get_alias_properties("site=strasbourg")  \
         # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: Properties "archi" and "site" are mandatory.
+    ArgumentTypeError: Properties "archi" and "site" are mandatory.
 
 
     >>> inval_prop = "site=strasbourg+archi=val+uknown=test"
     >>> get_alias_properties(inval_prop)  \
         # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: \
+    ArgumentTypeError: \
 Invalid property in 'site=strasbourg+archi=val+uknown=test'
     Allowed values are ['archi', 'site', 'mobile']
 
     >>> get_alias_properties("site=")  \
         # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    argparse.ArgumentTypeError: \
+    ArgumentTypeError: \
 Invalid empty value for property 'site' in ['site=']
     """
     properties = properties_str.split('+')

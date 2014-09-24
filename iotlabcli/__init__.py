@@ -9,7 +9,7 @@ class Error(Exception):
 
     >>> raise Error('error_message')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    iotlabcli.Error: 'error_message'
+    Error: 'error_message'
     """
     def __init__(self, message):
         super(Error, self).__init__()
