@@ -3,6 +3,7 @@
 """ Test the iotlabcli.experiment module """
 
 # pylint:disable=too-many-public-methods
+# pylint:disable=protected-access
 
 import os.path
 import unittest
@@ -37,7 +38,8 @@ class TestExperiment(unittest.TestCase):
         exp_d_2 = experiment.experiment_dict(nodes_list_2, firmware_2, 'prof2')
         exp_d_3 = experiment.experiment_dict(nodes_list_3, firmware_3, 'prof3')
 
-        exp = experiment.Experiment('ExpName', 30, None)
+        # pylint:disable=protected-access
+        exp = experiment._Experiment('ExpName', 30, None)
 
         exp.add_experiment_dict(exp_d_2)
         exp.add_experiment_dict(exp_d_3)
@@ -60,8 +62,8 @@ class TestExperimentSubmit(CommandMock):
         # Physical tests
         nodes_list = [experiment.experiment_dict(
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)])]
-        exp = experiment.Experiment('exp_name', 20, 314159)
-        experiment.submit_experiment(self.api, exp, nodes_list)
+        experiment.submit_experiment(self.api, 'exp_name', 20, nodes_list,
+                                     start_time=314159)
 
         call_dict = self.api.submit_experiment.call_args[0][0]
         expected = {
@@ -78,13 +80,14 @@ class TestExperimentSubmit(CommandMock):
         self.assertEquals(expected, json.loads(call_dict['new_exp.json']))
 
         # Try 'print', should return exp_dict
-        ret = experiment.submit_experiment(self.api, exp, nodes_list, True)
+        ret = experiment.submit_experiment(self.api, 'exp_name', 20,
+                                           nodes_list, start_time=314159,
+                                           print_json=True)
         self.assertEquals(ret.__dict__, expected)
 
     def test_experiment_submit_alias(self):
         """ Run experiment_submit alias """
         # Alias tests
-        exp = experiment.Experiment(None, 20)
         nodes_list = [
             experiment.experiment_dict(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
@@ -97,7 +100,7 @@ class TestExperimentSubmit(CommandMock):
                 CURRENT_DIR + '/firmware_2.elf', 'profile2'),
         ]
 
-        experiment.submit_experiment(self.api, exp, nodes_list, False)
+        experiment.submit_experiment(self.api, None, 20, nodes_list)
         files_dict = self.api.submit_experiment.call_args[0][0]
         exp_desc = json.loads(files_dict['new_exp.json'])
         expected = {
@@ -141,9 +144,8 @@ class TestExperimentSubmit(CommandMock):
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
             CURRENT_DIR + '/firmware.elf', 'profile1'))
 
-        exp = experiment.Experiment('exp_name', 20, 314159)
         self.assertRaises(ValueError, experiment.submit_experiment,
-                          self.api, exp, nodes_list)
+                          self.api, 'exp_name', 20, nodes_list)
 
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load(self, read_file_mock):
@@ -211,7 +213,7 @@ class TestExperimentGet(CommandMock):
         experiment.get_experiments_list(self.api, 'Running', 100, 100)
         self.api.get_experiments.assert_called_with('Running', 100, 100)
 
-    @patch('iotlabcli.experiment.write_experiment_archive')
+    @patch('iotlabcli.experiment._write_experiment_archive')
     def test_get_experiment(self, w_exp_archive):
         """ Test experiment.get_experiment """
 
@@ -241,15 +243,15 @@ class TestExperimentInfo(CommandMock):
 
 
 class TestWriteExperimentArchive(unittest.TestCase):
-    """ Test iotlabcli.experiment.write_experiment_archive """
+    """ Test iotlabcli.experiment._write_experiment_archive """
     @staticmethod
     def test_write_experiment_archive():
-        """ Test experiment.write_experiment_archive """
+        """ Test experiment._write_experiment_archive """
         open_name = 'iotlabcli.experiment.open'
         dict_val = {'test': ['value', 'value2']}
         m_open = mock_open()
         with patch(open_name, m_open, create=True):
-            experiment.write_experiment_archive(123, dict_val)
+            experiment._write_experiment_archive(123, dict_val)
 
             file_handle = m_open.return_value
             file_handle.write.assert_called_with(json_dumps(dict_val))

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """ Experiment parser """
+# pylint:disable=protected-access
+
 import sys
 
 from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
@@ -328,8 +330,8 @@ def submit_experiment_parser(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
 
-    exp = experiment.Experiment(opts.name, opts.duration, opts.reservation)
-    return experiment.submit_experiment(api, exp, opts.nodes_list,
+    return experiment.submit_experiment(api, opts.name, opts.duration,
+                                        opts.nodes_list, opts.reservation,
                                         opts.print_json)
 
 

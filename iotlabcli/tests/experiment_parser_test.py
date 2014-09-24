@@ -69,12 +69,10 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['get', '--list'])
         get_exp_list.assert_called_with(self.api, None, 0, 0)
 
-    @patch('iotlabcli.experiment.Experiment')
     @patch('iotlabcli.experiment.submit_experiment')
-    def test_main_submit_parser(self, submit_exp, exp_class):
+    def test_main_submit_parser(self, submit_exp):
         """ Run experiment_parser.main.submit """
         submit_exp.return_value = {}
-        exp = exp_class.return_value
 
         # Physical tests
         experiment_parser.main(['submit', '--name', 'exp_name',
@@ -85,13 +83,15 @@ class TestMainInfoParser(MainMock):
                 ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)],
                 None, None)
         ]
-        submit_exp.assert_called_with(self.api, exp, nodes_list, False)
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, nodes_list,
+                                      314159, False)
 
         # print with simple options
         nodes = [experiment.experiment_dict(['m3-1.grenoble.iot-lab.info'])]
         experiment_parser.main(
             ['submit', '-p', '-d', '20', '-l', 'grenoble,m3,1'])
-        submit_exp.assert_called_with(self.api, exp, nodes, True)
+        submit_exp.assert_called_with(self.api, None, 20, nodes,
+                                      None, True)
 
         # Alias tests
         experiment_parser.main([
@@ -113,7 +113,8 @@ class TestMainInfoParser(MainMock):
                 'firmware_2.elf', 'profile2'),
         ]
 
-        submit_exp.assert_called_with(self.api, exp, nodes_list, False)
+        submit_exp.assert_called_with(self.api, None, 20, nodes_list,
+                                      None, False)
 
     def test_main_submit_parser_error(self):
         """ Run experiment_parser.main.submit with error"""

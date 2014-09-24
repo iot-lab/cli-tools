@@ -10,20 +10,24 @@ from iotlabcli import helpers
 EXP_FILENAME = 'new_exp.json'
 
 
-def submit_experiment(api, experiment, nodes_list, print_json=False):
+def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
+                      nodes_list, start_time=None, print_json=False):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
 
     :param api: API Rest api object
-    :param experiment: experiment.Experiment object
+    :param name: experiment name
+    :param duration: experiment duration in seconds
     :param nodes_list: list of 'nodes' where 'nodes' is either
         experiment.AliasNodes or a list of nodes network addresses like:
         ['m3-1.grenoble.iot-lab.info', 'wsn430-1.strasbourg.iot-lab.info']
     :param print_json: select if experiment should be printed as json instead
         of submitted
     """
+
     assert nodes_list, 'Empty nodes_list: %r' % nodes_list
+    experiment = _Experiment(name, duration, start_time)
 
     exp_files = helpers.FilesDict()
     for exp_dict in nodes_list:
@@ -70,7 +74,7 @@ def get_experiment(api, exp_id, command=''):
     """
     result = api.get_experiment_info(exp_id, command)
     if command == 'data':
-        write_experiment_archive(exp_id, result)
+        _write_experiment_archive(exp_id, result)
         result = 'Written'
 
     return result
@@ -198,11 +202,16 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
         return self.__dict__ == other.__dict__
 
 
-class FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
-    """A FirmwareAssociations class
+#
+# Private methods
+#
 
-    >>> fw = FirmwareAssociations('name', ['3'])
-    >>> fw == FirmwareAssociations('name', ['bla bla bla', 'test test'])
+
+class _FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
+    """A _FirmwareAssociations class
+
+    >>> fw = _FirmwareAssociations('name', ['3'])
+    >>> fw == _FirmwareAssociations('name', ['bla bla bla', 'test test'])
     True
     >>> fw == {'firmwarename': 'name', 'nodes':['3']}
     False
@@ -218,12 +227,12 @@ class FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
             return False
 
 
-class ProfileAssociations(object):  # pylint: disable=too-few-public-methods
-    """A ProfileAssociations class
+class _ProfileAssociations(object):  # pylint: disable=too-few-public-methods
+    """A _ProfileAssociations class
 
     # coverage
-    >>> pr = ProfileAssociations('name', ['3'])
-    >>> pr == ProfileAssociations('name', ['bla bla bla', 'test test'])
+    >>> pr = _ProfileAssociations('name', ['3'])
+    >>> pr == _ProfileAssociations('name', ['bla bla bla', 'test test'])
     True
     >>> pr == {'profilename': 'name', 'nodes':['3']}
     False
@@ -240,11 +249,11 @@ class ProfileAssociations(object):  # pylint: disable=too-few-public-methods
             return False
 
 
-class Experiment(object):
-    """An Experiment class"""
-    def __init__(self, name, duration, reservation=None):
+class _Experiment(object):
+    """ Class describing an experiment """
+    def __init__(self, name, duration, start_time=None):
         self.duration = duration
-        self.reservation = reservation
+        self.reservation = start_time
         self.name = name
 
         self.type = None
@@ -274,7 +283,7 @@ class Experiment(object):
             # Add nodes to the list, uniq
             nodes = list(set(cur_assoc.nodes + assoc.nodes))
             # keep sorted to ease tests and readability
-            assoc.nodes = sorted(nodes, key=Experiment._node_url_key)
+            assoc.nodes = sorted(nodes, key=_Experiment._node_url_key)
 
         l_l.append(assoc)
         return l_l
@@ -304,7 +313,7 @@ class Experiment(object):
         # use alias number for AliasNodes
         _nodes = [nodes.alias] if self.type == 'alias' else nodes
 
-        assoc = FirmwareAssociations(firmware_name, _nodes)
+        assoc = _FirmwareAssociations(firmware_name, _nodes)
         assocs = self._assocs_append(self.firmwareassociations, assoc)
         self.firmwareassociations = sorted(
             assocs, key=lambda x: x.firmwarename)
@@ -316,7 +325,7 @@ class Experiment(object):
         # use alias number for AliasNodes
         _nodes = [nodes.alias] if self.type == 'alias' else nodes
 
-        assoc = ProfileAssociations(profile_name, _nodes)
+        assoc = _ProfileAssociations(profile_name, _nodes)
         assocs = self._assocs_append(self.profileassociations, assoc)
         self.profileassociations = sorted(
             assocs, key=lambda x: x.profilename)
@@ -332,10 +341,10 @@ class Experiment(object):
     @staticmethod
     def _node_url_key(node_url):
         """
-        >>> Experiment._node_url_key("m3-2.grenoble.iot-lab.info")
+        >>> _Experiment._node_url_key("m3-2.grenoble.iot-lab.info")
         ('grenoble', 'm3', 2)
 
-        >>> Experiment._node_url_key("3")  # for alias nodes
+        >>> _Experiment._node_url_key("3")  # for alias nodes
         3
         """
         if node_url.isdigit():
@@ -350,7 +359,7 @@ class Experiment(object):
         self.nodes.append(alias_nodes)
 
 
-def write_experiment_archive(exp_id, data):
+def _write_experiment_archive(exp_id, data):
     """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
     with open('%s.tar.gz' % exp_id, 'wb') as archive:
         archive.write(json_dumps(data))
