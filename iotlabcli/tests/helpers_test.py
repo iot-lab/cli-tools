@@ -20,11 +20,12 @@ class TestHelpers(unittest.TestCase):
         self.assertEquals(123, helpers.get_current_experiment(api, 123))
         self.assertEquals(234, helpers.get_current_experiment(api, None))
 
-    def test_check_experiments_running(self):
-        """ Test check_experiments_running """
+    def test__check_experiments_running(self):
+        """ Test _check_experiments_running """
+        # pylint:disable=protected-access
         self.assertEquals(
-            123, helpers.check_experiments_running({"items": [{"id": 123}]}))
-        self.assertRaises(Error, helpers.check_experiments_running,
+            123, helpers._check_experiments_running({"items": [{"id": 123}]}))
+        self.assertRaises(Error, helpers._check_experiments_running,
                           {"items": []})
-        self.assertRaises(Error, helpers.check_experiments_running,
+        self.assertRaises(Error, helpers._check_experiments_running,
                           {"items": [{"id": 123}, {"id": 124}]})
