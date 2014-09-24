@@ -1,5 +1,5 @@
 """ iotlabcli package implementing a cli for iotlab REST API """
-VERSION = "1.3.1"
+VERSION = "1.4.0"
 
 import json
 
