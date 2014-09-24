@@ -11,12 +11,12 @@ class Error(Exception):
     Traceback (most recent call last):
     iotlabcli.Error: 'error_message'
     """
-    def __init__(self, value):
+    def __init__(self, message):
         super(Error, self).__init__()
-        self.value = value
+        self.message = message
 
     def __str__(self):
-        return repr(self.value)
+        return str(self.message)
 
 
 class _Encoder(json.JSONEncoder):
