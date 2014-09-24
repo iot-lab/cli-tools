@@ -5,7 +5,6 @@ from __future__ import print_function
 import os
 import requests
 import json
-import sys
 from requests.auth import HTTPBasicAuth
 try:
     # pylint: disable=import-error,no-name-in-module
@@ -82,9 +81,8 @@ class Api(object):
 
         if req.status_code != requests.codes.ok:
             # we have HTTP error (code != 200)
-            print("HTTP error code : {code} \n{text}".format(
-                code=req.status_code, text=req.text), file=sys.stderr)
-            sys.exit()
+            raise iotlabcli.Error("HTTP error code: {code}\n{text}".format(
+                code=req.status_code, text=req.text))
 
         # request OK, return result object or direct answer
         try:
