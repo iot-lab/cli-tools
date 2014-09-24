@@ -72,13 +72,13 @@ class Api(object):
         if method == 'POST':
             headers = {'content-type': 'application/json'}
             req = requests.post(url, auth=auth, data=json_dumps(data),
-                                headers=headers)
+                                headers=headers, verify=False)
         elif method == 'MULTIPART':
-            req = requests.post(url, auth=auth, files=data)
+            req = requests.post(url, auth=auth, files=data, verify=False)
         elif method == 'DELETE':
-            req = requests.delete(url, auth=auth)
+            req = requests.delete(url, auth=auth, verify=False)
         else:
-            req = requests.get(url, auth=auth)
+            req = requests.get(url, auth=auth, verify=False)
 
         if req.status_code != requests.codes.ok:
             # we have HTTP error (code != 200)
