@@ -84,6 +84,23 @@ class FilesDict(dict):
         self[os.path.basename(firmware_path)] = read_file(firmware_path, 'b')
 
 
+def read_custom_api_url():
+    """ Return the customized api url from:
+     * environment variable IOTLAB_API_URL
+     * config file in <HOME_DIR>/.iotlab.api-url
+    """
+    # try getting url from environment variable
+    api_url = os.getenv('IOTLAB_API_URL')
+    if api_url is not None:
+        return api_url
+
+    # try getting url from config file
+    try:
+        return read_file('~/.iotlab.api-url').strip()
+    except IOError:
+        return None
+
+
 def read_file(file_path, opt=''):
     """ Open and read a file """
     with open(os.path.expanduser(file_path), 'r' + opt) as _fd:  # expand '~'

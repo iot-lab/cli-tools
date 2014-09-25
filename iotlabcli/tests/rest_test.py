@@ -83,19 +83,3 @@ class TestRest(unittest.TestCase):
         with patch('requests.get', return_value=ret_val):
             ret = rest.Api._method(_url)
             self.assertEquals(ret, 'text_only')
-
-    @patch('iotlabcli.rest.read_file')
-    def test_read_custom_api_url(self, read_file_mock):
-        """ Test API URL reading """
-
-        with patch('os.getenv', return_value=None):
-            read_file_mock.side_effect = IOError()
-            self.assertTrue(rest.read_custom_api_url() is None)
-
-        with patch('os.getenv', return_value=None):
-            read_file_mock.side_effect = None
-            read_file_mock.return_value = 'API_URL_CUSTOM'
-            self.assertEquals('API_URL_CUSTOM', rest.read_custom_api_url())
-
-        with patch('os.getenv', return_value='API_URL_2'):
-            self.assertEquals('API_URL_2', rest.read_custom_api_url())
