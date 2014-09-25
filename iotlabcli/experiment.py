@@ -135,6 +135,8 @@ def exp_resources(nodes, firmware_path=None, profile_name=None):
     """ Create an experiment dict
 
     :param nodes: a list of nodes url or a AliasNodes object
+        * ['m3-1.grenoble.iot-lab.info', 'wsn430-2.strasbourg.iot-lab.info']
+        * AliasNodes(5, 'grenoble', 'm3:at86rf321', mobile=False)
     :param firmware_path: Firmware associated
     :param profile_name: Name of the profile associated
 
