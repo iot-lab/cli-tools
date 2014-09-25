@@ -60,7 +60,7 @@ def get_experiments_list(api, state, limit, offset):
     return api.get_experiments(state, limit, offset)
 
 
-def get_experiment(api, exp_id, command=''):
+def get_experiment(api, exp_id, option=''):
     """ Get user experiment's description :
 
     :param api: API Rest api object
@@ -72,8 +72,8 @@ def get_experiment(api, exp_id, command=''):
             * 'state':     experiment state
             * 'data':      experiment tar.gz with description and firmwares
     """
-    result = api.get_experiment_info(exp_id, command)
-    if command == 'data':
+    result = api.get_experiment_info(exp_id, option)
+    if option == 'data':
         _write_experiment_archive(exp_id, result)
         result = 'Written'
 

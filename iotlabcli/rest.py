@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 """ Rest API class """
 
-from __future__ import print_function
 import os
 import requests
 import json
