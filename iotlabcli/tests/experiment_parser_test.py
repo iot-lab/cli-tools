@@ -79,7 +79,7 @@ class TestMainInfoParser(MainMock):
                                 '--duration', '20', '--reservation', '314159',
                                 '--list', 'grenoble,m3,1-5'])
         nodes_list = [
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)],
                 None, None)
         ]
@@ -87,7 +87,7 @@ class TestMainInfoParser(MainMock):
                                       314159, False)
 
         # print with simple options
-        nodes = [experiment.experiment_dict(['m3-1.grenoble.iot-lab.info'])]
+        nodes = [experiment.exp_resources(['m3-1.grenoble.iot-lab.info'])]
         experiment_parser.main(
             ['submit', '-p', '-d', '20', '-l', 'grenoble,m3,1'])
         submit_exp.assert_called_with(self.api, None, 20, nodes,
@@ -102,13 +102,13 @@ class TestMainInfoParser(MainMock):
         ])
         experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
         nodes_list = [
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(3, 'grenoble', 'm3:at86rf231', False),
                 'firmware_2.elf', 'profile2'),
         ]

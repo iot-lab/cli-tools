@@ -33,7 +33,7 @@ def parse_options():
 
     submit_parser.add_argument('-l', '--list', action='append',
                                dest='nodes_list', required=True,
-                               type=experiment_dict_from_str,
+                               type=exp_resources_from_str,
                                help="experiment list")
 
     submit_parser.add_argument('-n', '--name', help='experiment name')
@@ -125,8 +125,8 @@ def parse_options():
     return parser
 
 
-def experiment_dict_from_str(exp_str):
-    """ Extract an 'experiment.experiment_dict' from parameter string
+def exp_resources_from_str(exp_str):
+    """ Extract an 'experiment.exp_resources' from parameter string
     Accepted formats:
         + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
 
@@ -142,7 +142,7 @@ def experiment_dict_from_str(exp_str):
         if param_list:
             raise ValueError  # two many values in list
 
-        return experiment.experiment_dict(nodes, firmware_path, profile_name)
+        return experiment.exp_resources(nodes, firmware_path, profile_name)
     except ValueError:
         pass
     raise ArgumentTypeError(

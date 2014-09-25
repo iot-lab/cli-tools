@@ -35,14 +35,14 @@ class TestExperiment(unittest.TestCase):
         firmware_3 = 'firmware_3.elf'
         nodes_list_3 = ['m3-%u.grenoble.iot-lab.info' % num for num in
                         (1, 3, 9, 27)]
-        exp_d_2 = experiment.experiment_dict(nodes_list_2, firmware_2, 'prof2')
-        exp_d_3 = experiment.experiment_dict(nodes_list_3, firmware_3, 'prof3')
+        exp_d_2 = experiment.exp_resources(nodes_list_2, firmware_2, 'prof2')
+        exp_d_3 = experiment.exp_resources(nodes_list_3, firmware_3, 'prof3')
 
         # pylint:disable=protected-access
         exp = experiment._Experiment('ExpName', 30, None)
 
-        exp.add_experiment_dict(exp_d_2)
-        exp.add_experiment_dict(exp_d_3)
+        exp.add_exp_resources(exp_d_2)
+        exp.add_exp_resources(exp_d_3)
 
         self.assertEquals(exp.type, 'physical')
         self.assertEquals(exp.nodes, ['m3-%u.grenoble.iot-lab.info' % num for
@@ -60,7 +60,7 @@ class TestExperimentSubmit(CommandMock):
         """ Run experiment_submit physical """
 
         # Physical tests
-        nodes_list = [experiment.experiment_dict(
+        nodes_list = [experiment.exp_resources(
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)])]
         experiment.submit_experiment(self.api, 'exp_name', 20, nodes_list,
                                      start_time=314159)
@@ -89,13 +89,13 @@ class TestExperimentSubmit(CommandMock):
         """ Run experiment_submit alias """
         # Alias tests
         nodes_list = [
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware.elf', 'profile1'),
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware.elf', 'profile1'),
-            experiment.experiment_dict(
+            experiment.exp_resources(
                 experiment.AliasNodes(4, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware_2.elf', 'profile2'),
         ]
@@ -138,9 +138,9 @@ class TestExperimentSubmit(CommandMock):
         """ Try experiment submit types detection"""
         # Physical tests and Alias Nodes
         nodes_list = []
-        nodes_list.append(experiment.experiment_dict(
+        nodes_list.append(experiment.exp_resources(
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
-        nodes_list.append(experiment.experiment_dict(
+        nodes_list.append(experiment.exp_resources(
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
             CURRENT_DIR + '/firmware.elf', 'profile1'))
 

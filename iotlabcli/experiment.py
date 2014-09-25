@@ -19,9 +19,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     :param api: API Rest api object
     :param name: experiment name
     :param duration: experiment duration in seconds
-    :param nodes_list: list of 'nodes' where 'nodes' is either
-        experiment.AliasNodes or a list of nodes network addresses like:
-        ['m3-1.grenoble.iot-lab.info', 'wsn430-1.strasbourg.iot-lab.info']
+    :param resources_list: list of 'exp_resources' which
     :param print_json: select if experiment should be printed as json instead
         of submitted
     """
@@ -31,7 +29,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
     exp_files = helpers.FilesDict()
     for exp_dict in nodes_list:
-        experiment.add_experiment_dict(exp_dict)
+        experiment.add_exp_resources(exp_dict)
         exp_files.add_firmware(exp_dict.get('firmware', None))  # firmware
 
     if print_json:  # output experiment description
@@ -133,7 +131,7 @@ def info_experiment(api, list_id=False, site=None):
     return api.get_resources(list_id, site)
 
 
-def experiment_dict(nodes, firmware_path=None, profile_name=None):
+def exp_resources(nodes, firmware_path=None, profile_name=None):
     """ Create an experiment dict
 
     :param nodes: a list of nodes url or a AliasNodes object
@@ -288,8 +286,8 @@ class _Experiment(object):
         l_l.append(assoc)
         return l_l
 
-    def add_experiment_dict(self, exp_dict):
-        """ Add an 'experiment_dict' to current experiment
+    def add_exp_resources(self, exp_dict):
+        """ Add 'exp_resources' to current experiment
         It will update node type, nodes, firmware and profile associations
         """
 
