@@ -53,12 +53,12 @@ class Api(object):
         else:
             req = requests.get(method_url, auth=self.auth)
 
-        if req.status_code == requests.codes.ok:
-            return req.text
-        # we have HTTP error (code != 200)
-        else:
+        if req.status_code != requests.codes.ok:
+            # we have HTTP error (code != 200)
             print "HTTP error code : %s \n%s" % (req.status_code, req.text)
             sys.exit()
+
+        return req.content  # .content to handle file return values
 
     def get_sites(self):
         """ Get testbed sites description
