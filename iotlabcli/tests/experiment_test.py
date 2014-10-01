@@ -15,9 +15,9 @@ except ImportError:  # pragma: no cover
     from unittest.mock import patch, mock_open
 import json
 import iotlabcli
-from iotlabcli import json_dumps
 from iotlabcli import experiment
-from iotlabcli.tests.my_mock import CommandMock, API_RET
+from iotlabcli import rest
+from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -206,28 +206,38 @@ class TestExperimentStop(CommandMock):
 
 
 class TestExperimentGet(CommandMock):
-    """ Test iotlabcli.experiment.stop_experiment """
+    """ Test iotlabcli.experiment.get_experiments """
 
     def test_get_experiments_list(self):
         """ Test experiment.get_experiments_list """
         experiment.get_experiments_list(self.api, 'Running', 100, 100)
         self.api.get_experiments.assert_called_with('Running', 100, 100)
 
-    @patch('iotlabcli.experiment._write_experiment_archive')
-    def test_get_experiment(self, w_exp_archive):
+    def test_get_experiment(self):
         """ Test experiment.get_experiment """
 
         ret = experiment.get_experiment(self.api, 123)
         self.assertEquals(ret, API_RET)
-        self.assertFalse(w_exp_archive.called)
 
         ret = experiment.get_experiment(self.api, 123, option='resources')
         self.assertEquals(ret, API_RET)
-        self.assertFalse(w_exp_archive.called)
 
-        ret = experiment.get_experiment(self.api, 123, option='data')
+
+class TestExperimentGetWriteExpArchive(unittest.TestCase):
+    """ Test iotlabcli.experiment.get archive """
+
+    @patch('iotlabcli.experiment._write_experiment_archive')
+    def test_get_experiment(self, w_exp_archive):
+        """ Test experiment.get_experiment """
+        arch_content = '\x42\x69'
+
+        ret_val = RequestRet(content=arch_content, status_code=200)
+        patch('requests.get', return_value=ret_val).start()
+        api = rest.Api('user', 'password')
+
+        ret = experiment.get_experiment(api, 123, option='data')
         self.assertEquals(ret, 'Written')
-        w_exp_archive.assert_called_with(123, API_RET)
+        w_exp_archive.assert_called_with(123, arch_content)
 
 
 class TestExperimentInfo(CommandMock):
@@ -248,10 +258,10 @@ class TestWriteExperimentArchive(unittest.TestCase):
     def test_write_experiment_archive():
         """ Test experiment._write_experiment_archive """
         open_name = 'iotlabcli.experiment.open'
-        dict_val = {'test': ['value', 'value2']}
+        exp_data = 'binary_content'
         m_open = mock_open()
         with patch(open_name, m_open, create=True):
-            experiment._write_experiment_archive(123, dict_val)
+            experiment._write_experiment_archive(123, exp_data)
 
             file_handle = m_open.return_value
-            file_handle.write.assert_called_with(json_dumps(dict_val))
+            file_handle.write.assert_called_with(exp_data)

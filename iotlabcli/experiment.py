@@ -362,4 +362,4 @@ class _Experiment(object):
 def _write_experiment_archive(exp_id, data):
     """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
     with open('%s.tar.gz' % exp_id, 'wb') as archive:
-        archive.write(json_dumps(data))
+        archive.write(data)

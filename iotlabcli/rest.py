@@ -81,7 +81,7 @@ class Api(object):
         query = 'experiments/%s' % expid
         if option:
             query += '?%s' % option
-        return self.method(query)
+        return self.method(query, raw=('data' == option))
 
     def stop_experiment(self, expid):
         """ Stop user experiment.
@@ -138,7 +138,8 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        return self.method('profiles/%s' % name, method='POST', data=profile)
+        return self.method('profiles/%s' % name, method='POST',
+                           data=profile, raw=True)
 
     def del_profile(self, name):
         """ Delete user profile
@@ -146,11 +147,12 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
-        return self.method('profiles/%s' % name, method='DELETE')
+        return self.method('profiles/%s' % name,
+                           method='DELETE', raw=True)
 
     # Common methods
 
-    def method(self, url, method='GET', data=None):
+    def method(self, url, method='GET', data=None, raw=False):
         """
         :param url: url of API.
         :param method: request method
@@ -158,10 +160,10 @@ class Api(object):
         """
         method_url = urljoin(self.url, url)
 
-        return self._method(method_url, method, self.auth, data)
+        return self._method(method_url, method, self.auth, data, raw)
 
     @staticmethod
-    def _method(url, method='GET', auth=None, data=None):
+    def _method(url, method='GET', auth=None, data=None, raw=False):
         """
         :param url: url to request.
         :param method: request method
@@ -182,13 +184,13 @@ class Api(object):
         if req.status_code != requests.codes.ok:
             # we have HTTP error (code != 200)
             raise iotlabcli.Error("HTTP error code: {code}\n{text}".format(
-                code=req.status_code, text=req.text))
+                code=req.status_code, text=req.content))
 
         # request OK, return result object or direct answer
-        try:
-            result = json.loads(req.text)
-        except ValueError:
-            result = req.text
+        if raw:
+            result = req.content   # when getting archive or profile name
+        else:
+            result = json.loads(req.content)
         return result
 
     @staticmethod

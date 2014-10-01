@@ -17,7 +17,7 @@ from iotlabcli.rest import Api
 from iotlabcli import json_dumps
 
 API_RET = {"result": "test"}
-RequestRet = namedtuple('request_ret', ['status_code', 'text'])
+RequestRet = namedtuple('request_ret', ['status_code', 'content'])
 
 
 def api_mock(ret=None):
@@ -25,7 +25,7 @@ def api_mock(ret=None):
     returned value for api methods will be 'ret' parameter or API_RET
     """
     ret = ret or API_RET
-    ret_val = RequestRet(text=json_dumps(ret), status_code=200)  # HTTP OK
+    ret_val = RequestRet(content=json_dumps(ret), status_code=200)  # HTTP OK
     patch('requests.post', return_value=ret_val).start()
     patch('requests.delete', return_value=ret_val).start()
     patch('requests.get', return_value=ret_val).start()

@@ -2,6 +2,7 @@
 """ Test the iotlabcli.rest module """
 
 # pylint: disable=too-many-public-methods
+# pylint: disable=protected-access
 
 import unittest
 try:
@@ -23,63 +24,63 @@ class TestRest(unittest.TestCase):
     Also, most of the internal code execution has been done by the upper layers
     So I don't re-check every method that just does formatting.
     """
+    _url = 'http://url.test.org/rest/method/query'
 
     def test__method(self):
         """ Test Api._method rest submission """
         ret = {'test': 'val'}
-        ret_val = RequestRet(text=json_dumps(ret), status_code=200)
+        ret_val = RequestRet(content=json_dumps(ret), status_code=200)
         post = patch('requests.post', return_value=ret_val).start()
         delete = patch('requests.delete', return_value=ret_val).start()
         get = patch('requests.get', return_value=ret_val).start()
 
         # pylint:disable=protected-access
         _auth = Mock()
-        _url = 'http://url.test.org/rest/method/query'
 
         # call get
-        ret = rest.Api._method(_url)
-        get.assert_called_with(_url, auth=None, verify=False)
+        ret = rest.Api._method(self._url)
+        get.assert_called_with(self._url, auth=None, verify=False)
         self.assertEquals(ret, ret)
-        ret = rest.Api._method(_url, method='GET', auth=_auth)
-        get.assert_called_with(_url, auth=_auth, verify=False)
+        ret = rest.Api._method(self._url, method='GET', auth=_auth)
+        get.assert_called_with(self._url, auth=_auth, verify=False)
         self.assertEquals(ret, ret)
 
         # call delete
-        ret = rest.Api._method(_url, method='DELETE')
-        delete.assert_called_with(_url, auth=None, verify=False)
+        ret = rest.Api._method(self._url, method='DELETE')
+        delete.assert_called_with(self._url, auth=None, verify=False)
         self.assertEquals(ret, ret)
 
         # call post
-        ret = rest.Api._method(_url, method='POST', data={})
+        ret = rest.Api._method(self._url, method='POST', data={})
         post.assert_called_with(
-            _url, data='{}', headers={'content-type': 'application/json'},
+            self._url, data='{}', headers={'content-type': 'application/json'},
             auth=None, verify=False)
         self.assertEquals(ret, ret)
 
         # call multipart
         _files = {'entry': '{}'}
-        ret = rest.Api._method(_url, method='MULTIPART', data=_files)
-        post.assert_called_with(_url, files=_files, auth=None, verify=False)
+        ret = rest.Api._method(self._url, method='MULTIPART', data=_files)
+        post.assert_called_with(self._url, files=_files, auth=None,
+                                verify=False)
         self.assertEquals(ret, ret)
         patch.stopall()
 
+    def test__method_raw(self):
+        """ Run as Raw mode """
+        ret_val = RequestRet(content='text_only', status_code=200)
+        with patch('requests.get', return_value=ret_val):
+            ret = rest.Api._method(self._url, raw=True)
+            self.assertEquals(ret, 'text_only')
+
     def test__method_errors(self):
         """ Test Api._method rest submission error cases """
-        # pylint:disable=protected-access
-        _url = 'http://url.test.org/rest/method/query'
 
         # invalid status code
-        ret_val = RequestRet(text='return_text', status_code=404)
+        ret_val = RequestRet(content='return_text', status_code=404)
         with patch('requests.get', return_value=ret_val):
             try:
-                rest.Api._method(_url)
+                rest.Api._method(self._url)
                 self.fail("iotlabcli.Error not raised")
             except iotlabcli.Error as err:
                 self.assertEquals("HTTP error code: 404\nreturn_text",
                                   str(err))
-
-        # Non JSON output, mainly when returning simple text
-        ret_val = RequestRet(text='text_only', status_code=200)
-        with patch('requests.get', return_value=ret_val):
-            ret = rest.Api._method(_url)
-            self.assertEquals(ret, 'text_only')
