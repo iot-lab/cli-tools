@@ -292,7 +292,8 @@ def profile_parse_and_run(opts):
     return fct_parser(api, opts)
 
 
-def main(args=sys.argv[1:]):
-    """ Main command-line execution loop.  """
+def main(args=None):
+    """ Main command-line execution loop." """
+    args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(profile_parse_and_run, parser, args)

@@ -46,7 +46,8 @@ def password_prompt():
     return prompt1
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main command-line execution loop." """
+    args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(auth_parse_and_run, parser, args)

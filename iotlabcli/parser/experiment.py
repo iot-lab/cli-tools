@@ -388,7 +388,8 @@ def experiment_parse_and_run(opts):
     return command(opts)
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main command-line execution loop." """
+    args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(experiment_parse_and_run, parser, args)
