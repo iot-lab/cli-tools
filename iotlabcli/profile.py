@@ -72,7 +72,7 @@ class ProfileM3(object):
         assert period in self.choices['radio']['period']
         assert num_per_channel in self.choices['radio']['num_per_channel']
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__
 
 
@@ -135,5 +135,5 @@ class ProfileWSN430(object):
             'temperature': temperature,
         }
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__
