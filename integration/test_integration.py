@@ -3,6 +3,14 @@
 # pylint:disable=too-many-public-methods
 # pylint:disable=attribute-defined-outside-init
 
+#
+# Test that may be added:
+#  * use node commands
+#  * Multi-wsn/m3-sites experiments and validate outputs
+#  * Validates JSON outputs
+#
+#
+
 from __future__ import print_function
 import os
 import sys
@@ -26,6 +34,39 @@ except ImportError:  # pragma: no cover
 class TestCliToolsExperiments(unittest.TestCase):
     """ Test the cli tools experiments """
 
+    def test_an_experiment_alias_multi_same_node(self):
+        """ Run an experiment """
+        nodes = '5,site=devgrenoble+archi=m3:at86rf231'
+        cmd = ('experiment-cli submit -d 5 -n test_cli ' +
+               '-l {} '.format(nodes) + '-l {}'.format(nodes))
+
+        self._start_experiment(cmd)
+        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        time.sleep(1)
+        self._get_exp_info()
+        self._stop_experiment()
+        self._wait_state_or_finished()
+
+    def test_an_experiment_alias_multisite(self):
+        """ Run an experiment with multisite/archi """
+        call_cli('profile-cli addm3 -n {}'.format('test_m3'))
+        call_cli('profile-cli addwsn430 -n {}'.format('test_wsn430'))
+
+        cmd = ('experiment-cli submit -d 5 -n test_cli' +
+               (' -l 5,site=devgrenoble+archi=m3:at86rf231,' +
+                'integration/m3_autotest.elf,test_m3') +
+               (' -l 2,site=devlille+archi=wsn430:cc2420,' +
+                'integration/tp.hex,test_wsn430'))
+
+        self._start_experiment(cmd)
+        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        time.sleep(1)
+        self._get_exp_info()
+        self._stop_experiment()
+        self._wait_state_or_finished()
+
+    # helpers methods
+
     def _start_experiment(self, cmd, firmwares=()):
         """ Start an experiment using 'cmd'.
         Add firmwares path to allow checking later """
@@ -36,6 +77,12 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.id_str = ' --id {} '.format(self.exp_id)
         print(self.exp_id)
 
+    def _stop_experiment(self):
+        cmd = 'experiment-cli stop -i {}'.format(self.exp_id)
+        print(cmd)
+        ret = call_cli(cmd)
+        print(ret['status'])
+
     def _get_exp_info(self):
         """ Get experiment info and check them """
         cmd = 'experiment-cli get --print' + self.id_str
@@ -43,34 +90,14 @@ class TestCliToolsExperiments(unittest.TestCase):
         # TODO check returned values
         # there should be successfull deployements
         self.assertNotEquals([], exp_json['deploymentresults']['0'])
+        if type(exp_json["nodes"][0]) == dict:
+            print("Nodes are not expanded: {}".format(exp_json["nodes"]))
 
         cmd = 'experiment-cli get --resources-id -i {}'.format(self.exp_id)
         call_cli(cmd)
         cmd = 'experiment-cli get --resources -i {}'.format(self.exp_id)
         call_cli(cmd)
         call_cli('experiment-cli get -a -i {}'.format(self.exp_id))
-
-    def test_an_experiment_alias(self):
-        """ Run an experiment """
-        call_cli('profile-cli addm3 -n {}'.format('test'))
-
-        nodes = '5,site=devgrenoble+archi=m3:at86rf231,,test'
-        cmd = ('experiment-cli submit -d 5 -n test_cli ' +
-               '-l {} '.format(nodes) + '-l {}'.format(nodes))
-
-        self._start_experiment(cmd)
-        self.assertEquals('Running', self._wait_state_or_finished('Running'))
-
-        time.sleep(5)
-        self._get_exp_info()
-        time.sleep(5)
-
-        cmd = 'experiment-cli stop -i {}'.format(self.exp_id)
-        print(cmd)
-        ret = call_cli(cmd)
-        print(ret['status'])
-
-        self._wait_state_or_finished()
 
     def _wait_state_or_finished(self, state=None):
         """ Wait experiment get in state, or states error and terminated """
