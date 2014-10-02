@@ -184,6 +184,32 @@ class TestCliToolsAProfile(unittest.TestCase):
         call_cli('profile-cli del --name {}'.format(self.profile['m3']))
         call_cli('profile-cli del --name {}'.format(self.profile['m3_full']))
 
+    def test_wsn430_profile(self):
+        """ Test creating wsn430 profiles and deleting them """
+
+        profs = call_cli('profile-cli get -l')
+        profiles_names = set([p['profilename'] for p in profs])
+
+        self._add_prof('profile-cli addwsn430 -n {}', self.profile['wsn430'])
+        profiles_names.add(self.profile['wsn430'])
+
+        prof_cmd = 'profile-cli addwsn430 -n {} -p battery'
+        prof_cmd += ' -power -voltage -current -cfreq 5000'
+        prof_cmd += ' -rfreq 5000'
+        prof_cmd += ' -temperature -luminosity -sfreq 30000'
+        self._add_prof(prof_cmd, self.profile['wsn430_full'])
+        profiles_names.add(self.profile['wsn430_full'])
+
+        # check that profiles have been added
+        profs = call_cli('profile-cli get -l')
+        profiles_names_new = set([p['profilename'] for p in profs])
+        self.assertEquals(profiles_names, profiles_names_new)
+
+        # ret == ''
+        call_cli('profile-cli del --name {}'.format(self.profile['wsn430']))
+        call_cli('profile-cli del --name {}'.format(
+            self.profile['wsn430_full']))
+
 
 def call_cli(cmd, field=None):
     """ Call cli tool """
