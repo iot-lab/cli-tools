@@ -52,7 +52,9 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias(self):
         """ Run an experiment """
-        nodes = '5,site=devgrenoble+archi=m3:at86rf231'
+        call_cli('profile-cli addm3 -n {}'.format('test'))
+
+        nodes = '5,site=devgrenoble+archi=m3:at86rf231,,test'
         cmd = ('experiment-cli submit -d 5 -n test_cli ' +
                '-l {} '.format(nodes) + '-l {}'.format(nodes))
 
@@ -91,7 +93,7 @@ class TestCliToolsExperiments(unittest.TestCase):
     def tearDown(self):
         try:
             os.remove("{}.tar.gz".format(self.exp_id))
-        except OSError:
+        except (OSError, AttributeError):
             pass
 
     @classmethod
