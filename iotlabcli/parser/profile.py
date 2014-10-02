@@ -228,7 +228,7 @@ def add_profile_parser(api, opts):
     try:
         profile = profile_func_d[opts.subparser_name](opts)
         return _add_profile(api, opts.name, profile, opts.json)
-    except AssertionError as err:
+    except AssertionError as err:   # pragma: no cover
         raise ValueError(str(err))
 
 
@@ -242,7 +242,7 @@ def load_profile_parser(api, opts):
     try:
         profile = json.loads(helpers.read_file(opts.path_file))
         return _add_profile(api, profile['profilename'], profile)
-    except KeyError:
+    except KeyError:  # pragma: no cover
         raise ValueError(
             "'profilename' required in profile JSON file: %r" % opts.path_file)
 

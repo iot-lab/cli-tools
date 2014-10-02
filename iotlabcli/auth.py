@@ -6,7 +6,8 @@ import getpass
 from base64 import b64encode, b64decode
 
 HOME_DIRECTORY = os.getenv('USERPROFILE') or os.getenv('HOME')
-RC_FILE = os.path.join(HOME_DIRECTORY, '.iotlabrc')
+RC_FILE = (os.getenv('IOTLAB_PASSWORD_FILE') or
+           os.path.join(HOME_DIRECTORY, '.iotlabrc'))
 
 
 def get_user_credentials(username=None, password=None):
