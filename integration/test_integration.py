@@ -82,6 +82,12 @@ class TestCliToolsExperiments(unittest.TestCase):
     def setUp(self):
         self.cleanup()
 
+    def tearDown(self):
+        try:
+            os.remove("{}.tar.gz".format(self.exp_id))
+        except OSError:
+            pass
+
     @classmethod
     def tearDownClass(cls):
         cls.cleanup()
