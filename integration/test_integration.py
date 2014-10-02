@@ -116,16 +116,17 @@ class TestCliToolsAProfile(unittest.TestCase):
         'm3': 'test_cli_profile_m3',
         'm3_full': 'test_cli_profile_m3_full',
         'wsn430': 'test_cli_profile_wsn430',
+        'wsn430_full': 'test_cli_profile_wsn430_full',
     }
 
     @classmethod
     def setUpClass(cls):
         """ Remove the tests profiles if they are here """
-        remote_prof = call_cli('profile-cli get --list')
+        remote_profs = call_cli('profile-cli get --list')
+        profiles_names = [p['profilename'] for p in remote_profs]
         for prof in cls.profile.values():
-            if prof not in remote_prof:
-                continue
-            call_cli('profile-cli del --name {}'.format(prof['profilename']))
+            if prof in profiles_names:
+                call_cli('profile-cli del --name {}'.format(prof))
 
     def _add_profile_simple(self, cmd, name):
         """ Add a profile and get it to check it's the same """
@@ -154,24 +155,24 @@ class TestCliToolsAProfile(unittest.TestCase):
         # returned profile are the same
         self.assertEquals(get_profile_dict, get_loaded_profile)
 
-    def _add_profile(self, cmd, name):
+    def _add_prof(self, cmd, name):
         """ Test adding and loading a user profile """
         self._add_profile_simple(cmd.format(name), name)
         self._get_and_load(name)  # erase same profile
 
     def test_m3_profile(self):
-        """ Test creating an M3 profile and deleting it """
+        """ Test creating M3 profiles and deleting them """
 
         profs = call_cli('profile-cli get -l')
         profiles_names = set([p['profilename'] for p in profs])
 
-        self._add_profile('profile-cli addm3 -n {} -p dc', self.profile['m3'])
+        self._add_prof('profile-cli addm3 -n {}', self.profile['m3'])
         profiles_names.add(self.profile['m3'])
 
-        prof_cmd = 'profile-cli addm3 -n {} -p dc'
+        prof_cmd = 'profile-cli addm3 -n {} -p battery'
         prof_cmd += ' -power -voltage -current -period 8244 -avg 1024'
         prof_cmd += ' -rssi -channels 11 16 21 26 -num 255 -rperiod 65535'
-        self._add_profile(prof_cmd, self.profile['m3_full'])
+        self._add_prof(prof_cmd, self.profile['m3_full'])
         profiles_names.add(self.profile['m3_full'])
 
         # check that profiles have been added
