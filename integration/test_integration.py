@@ -1,7 +1,8 @@
 """ Integration tests for cli-tools """
 
-# pylint:disable=too-many-public-methods
-# pylint:disable=attribute-defined-outside-init
+# pylint:disable=I0011,too-many-public-methods
+# pylint:disable=I0011,attribute-defined-outside-init
+# pylint:disable=I0011,invalid-name
 
 #
 # Test that may be added:
@@ -19,15 +20,25 @@ import shlex
 import time
 import runpy
 import unittest
+import logging
+
+
+LOGGER = logging.getLogger(__file__)
+LOGGER.setLevel(logging.INFO)
+
+_FMT = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+_HANDLER = logging.StreamHandler()
+_HANDLER.setFormatter(_FMT)
+LOGGER.addHandler(_HANDLER)
 
 from tempfile import NamedTemporaryFile
 
 try:
-    # pylint:disable=F0401,E0611
+    # pylint:disable=I0011,F0401,E0611
     from mock import patch
     from cStringIO import StringIO
 except ImportError:  # pragma: no cover
-    from unittest.mock import patch  # pylint:disable=F0401,E0611
+    from unittest.mock import patch  # pylint:disable=I0011,F0401,E0611
     from io import StringIO
 
 
@@ -70,28 +81,30 @@ class TestCliToolsExperiments(unittest.TestCase):
     def _start_experiment(self, cmd, firmwares=()):
         """ Start an experiment using 'cmd'.
         Add firmwares path to allow checking later """
-        print(cmd)
+        LOGGER.info(cmd)
         self.firmwares = firmwares
         self.exp_desc = call_cli(cmd + ' --print')
         self.exp_id = call_cli(cmd, "id")
         self.id_str = ' --id {} '.format(self.exp_id)
-        print(self.exp_id)
+        LOGGER.info(self.exp_id)
 
     def _stop_experiment(self):
+        """ Stop current experiment """
         cmd = 'experiment-cli stop -i {}'.format(self.exp_id)
-        print(cmd)
         ret = call_cli(cmd)
-        print(ret['status'])
+        LOGGER.info("%s: %r", cmd, ret['status'])
 
     def _get_exp_info(self):
         """ Get experiment info and check them """
         cmd = 'experiment-cli get --print' + self.id_str
         exp_json = call_cli(cmd)
-        # TODO check returned values
-        # there should be successfull deployements
-        self.assertNotEquals([], exp_json['deploymentresults']['0'])
+        try:
+            self.assertNotEquals([], exp_json['deploymentresults']['0'])
+        except KeyError:
+            LOGGER.warning("No Deploymentresults:%r", exp_json.keys())
+
         if type(exp_json["nodes"][0]) == dict:
-            print("Nodes are not expanded: {}".format(exp_json["nodes"]))
+            LOGGER.warning("Nodes are not expanded: %r", exp_json["nodes"])
 
         cmd = 'experiment-cli get --resources-id -i {}'.format(self.exp_id)
         call_cli(cmd)
@@ -101,14 +114,24 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def _wait_state_or_finished(self, state=None):
         """ Wait experiment get in state, or states error and terminated """
+        cur_state = None
         states_list = ['Error', 'Terminated']
+        states_str = ''
         if state is not None:
             states_list.append(state)
         while True:
             cmd = 'experiment-cli get --exp-state -i {}'.format(self.exp_id)
-            state = call_cli(cmd, "state")
-            print(state)
+            state = call_cli(cmd, "state").strip()
+            if state != cur_state:
+                states_str += state
+                print(state, end='')
+            states_str += '.'
+            print('.', end='')
+            sys.stdout.flush()
+            cur_state = state
             if state in states_list:
+                print('')
+                LOGGER.debug(states_str)
                 return state
             time.sleep(5)
 
@@ -130,7 +153,7 @@ class TestCliToolsExperiments(unittest.TestCase):
     @classmethod
     def cleanup(cls):
         """ Cleanup currently running experiments """
-        print("Cleanup", file=sys.stderr)
+        LOGGER.debug("cleanup")
         cmd = 'experiment-cli get --list --state Running,Waiting'
         experiments = call_cli(cmd, "items")
 
