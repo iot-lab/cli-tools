@@ -11,7 +11,6 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
 
-import iotlabcli
 import iotlabcli.parser.auth as auth_parser
 
 # pylint: disable=missing-docstring,too-many-public-methods
@@ -37,7 +36,7 @@ class TestMainAuthParser(unittest.TestCase):
     def test_main_exceptions(self, store_m):
         """ Test parser.auth.main error cases """
 
-        store_m.side_effect = iotlabcli.Error('message')
+        store_m.side_effect = IOError('message')
         self.assertRaises(SystemExit, auth_parser.main,
                           ['-u', 'error', '-p', 'password'])
 

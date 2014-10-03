@@ -14,7 +14,6 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch, mock_open
 import json
-import iotlabcli
 from iotlabcli import experiment
 from iotlabcli import rest
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
@@ -190,7 +189,7 @@ class TestExperimentSubmit(CommandMock):
                 self.assertTrue(fmw in _calls)
 
         self.assertRaises(
-            iotlabcli.Error,
+            ValueError,
             experiment.load_experiment,
             self.api, experiment.EXP_FILENAME,
             ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])

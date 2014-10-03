@@ -3,7 +3,7 @@
 
 from os.path import basename
 import json
-from iotlabcli import Error, json_dumps
+from iotlabcli import json_dumps
 from iotlabcli import helpers
 
 # static name for experiment file : rename by server-rest
@@ -111,7 +111,7 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     # Sanity Check, no more firmware than required
     #
     if len(fw_association) != len(exp_files):
-        raise Error("Too many firmwares provided")
+        raise ValueError("Too many firmwares provided")
 
     # Add experiment description
     exp_files[EXP_FILENAME] = json_dumps(exp_dict)

@@ -11,7 +11,6 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch, Mock
-import iotlabcli
 from iotlabcli import rest, json_dumps
 from iotlabcli.tests.my_mock import RequestRet
 
@@ -78,9 +77,6 @@ class TestRest(unittest.TestCase):
         # invalid status code
         ret_val = RequestRet(content='return_text', status_code=404)
         with patch('requests.get', return_value=ret_val):
-            try:
-                rest.Api._method(self._url)
-                self.fail("iotlabcli.Error not raised")
-            except iotlabcli.Error as err:
-                self.assertEquals("HTTP error code: 404\nreturn_text",
-                                  str(err))
+            self.assertRaisesRegexp(
+                RuntimeError, "HTTP error code: 404\nreturn_text",
+                rest.Api._method, self._url)

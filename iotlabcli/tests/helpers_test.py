@@ -10,7 +10,6 @@ except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
 
-from iotlabcli import Error
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
 
@@ -30,9 +29,9 @@ class TestHelpers(unittest.TestCase):
         # pylint:disable=protected-access
         self.assertEquals(
             123, helpers._check_experiments_running({"items": [{"id": 123}]}))
-        self.assertRaises(Error, helpers._check_experiments_running,
+        self.assertRaises(RuntimeError, helpers._check_experiments_running,
                           {"items": []})
-        self.assertRaises(Error, helpers._check_experiments_running,
+        self.assertRaises(RuntimeError, helpers._check_experiments_running,
                           {"items": [{"id": 123}, {"id": 124}]})
 
     @patch('iotlabcli.helpers.read_file')

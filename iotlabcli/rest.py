@@ -19,7 +19,6 @@ except ImportError:  # pragma: no cover
     from urlparse import urljoin
 from iotlabcli import json_dumps
 from iotlabcli import helpers
-import iotlabcli
 
 
 API_URL = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
@@ -183,7 +182,7 @@ class Api(object):
 
         if req.status_code != requests.codes.ok:
             # we have HTTP error (code != 200)
-            raise iotlabcli.Error("HTTP error code: {code}\n{text}".format(
+            raise RuntimeError("HTTP error code: {code}\n{text}".format(
                 code=req.status_code, text=req.content))
 
         # request OK, return result object or direct answer

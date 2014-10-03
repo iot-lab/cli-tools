@@ -2,8 +2,6 @@
 """Helpers methods"""
 
 import os
-from iotlabcli import Error
-
 DOMAIN_DNS = 'iot-lab.info'
 
 
@@ -141,11 +139,11 @@ def _check_experiments_running(experiments_dict):
 
     items = experiments_dict["items"]
     if len(items) == 0:
-        raise Error("You don't have an experiment with state Running")
+        raise RuntimeError("You don't have any `Running` experiment")
 
     experiments_id = [exp["id"] for exp in items]
     if len(experiments_id) > 1:
-        raise Error(
+        raise RuntimeError(
             "You have several experiments with state Running. "
             "Use option -i|--id and choose experiment id in this list : %s" %
             experiments_id)

@@ -5,7 +5,7 @@
 from __future__ import print_function
 import sys
 import argparse
-from iotlabcli import VERSION, Error, json_dumps
+from iotlabcli import VERSION, json_dumps
 from iotlabcli import rest
 
 
@@ -38,8 +38,11 @@ def main_cli(function, parser, args=None):
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
         print(json_dumps(result))
-    except (Error, IOError, ValueError) as err:
+    except (IOError, ValueError) as err:
         parser.error(str(err))
+    except RuntimeError as err:
+        print("RuntimeError:\n{}".format(str(err)), file=sys.stderr)
+        sys.exit()
     except KeyboardInterrupt:
         print("\nStopped.", file=sys.stderr)
         sys.exit()
