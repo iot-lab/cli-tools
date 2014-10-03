@@ -10,7 +10,6 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch
-import iotlabcli
 from iotlabcli import node
 from iotlabcli.tests import my_mock
 
@@ -55,5 +54,5 @@ class TestNode(unittest.TestCase):
         })
 
         # no firmware for update command
-        self.assertRaises(iotlabcli.Error, node.node_command,
+        self.assertRaises(AssertionError, node.node_command,
                           api, 'update', 123, nodes_list)

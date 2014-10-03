@@ -2,7 +2,6 @@
 
 """ Implement the 'node' requests """
 import json
-from iotlabcli import Error
 from iotlabcli import helpers
 
 NODE_FILENAME = 'nodes.json'
@@ -23,8 +22,7 @@ def node_command(api, command, exp_id, nodes_list=(), firmware_path=None):
 
     result = None
     if 'update' == command:
-        if firmware_path is None:
-            raise Error("Update cmd requires a firmware: %s" % firmware_path)
+        assert firmware_path is not None, '`firmware_path` required for update'
         files = helpers.FilesDict()
 
         files.add_firmware(firmware_path)
