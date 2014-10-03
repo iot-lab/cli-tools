@@ -164,7 +164,6 @@ class TestCliToolsExperiments(unittest.TestCase):
         Add firmwares path to allow checking later """
         LOGGER.info(cmd)
         self.firmwares = firmwares
-        self.exp_desc = call_cli(cmd + ' --print')
         self.exp_id = call_cli(cmd, "id")
         self.id_str = ' --id {} '.format(self.exp_id)
         LOGGER.info(self.exp_id)
@@ -178,14 +177,14 @@ class TestCliToolsExperiments(unittest.TestCase):
     def _get_exp_info(self):
         """ Get experiment info and check them """
         cmd = 'experiment-cli get --print' + self.id_str
-        exp_json = call_cli(cmd)
+        self.exp_desc = call_cli(cmd)
         try:
-            self.assertNotEquals([], exp_json['deploymentresults']['0'])
+            self.assertNotEquals([], self.exp_desc['deploymentresults']['0'])
         except KeyError:
-            LOGGER.warning("No Deploymentresults:%r", exp_json.keys())
+            LOGGER.warning("No Deploymentresults:%r", self.exp_desc.keys())
 
-        if type(exp_json["nodes"][0]) == dict:
-            LOGGER.warning("Nodes are not expanded: %r", exp_json["nodes"])
+        if type(self.exp_desc["nodes"][0]) == dict:
+            LOGGER.warning("Nodes not expanded: %r", self.exp_desc["nodes"])
 
         cmd = 'experiment-cli get --resources-id -i {}'.format(self.exp_id)
         call_cli(cmd)
@@ -370,6 +369,11 @@ class TestAnErrorCase(unittest.TestCase):
             SystemExit, call_cli,
             'experiment-cli submit -d 20 -l devgrenoble,m3,70-1,fw,prof,extra',
             print_err=False)
+
+    def test_rest_errors(self):
+        """ Test some rest error """
+        self.assertRaises(SystemExit, call_cli, 'experiment-cli get -p -i 0',
+                          print_err=False)
 
 
 def call_cli(cmd, field=None, print_err=True):
