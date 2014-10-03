@@ -47,6 +47,22 @@ except ImportError:  # pragma: no cover
 class TestCliToolsExperiments(unittest.TestCase):
     """ Test the cli tools experiments """
 
+    def test_an_experiment_alias_multi_same_node_firmware(self):
+        """ Exp alias multiple time same reservation firmware """
+        nodes = '5,site=devgrenoble+archi=m3:at86rf231'
+        nodes += ',integration/m3_autotest.elf'
+        cmd = ('experiment-cli submit -d 5 -n test_cli' +
+               ' -l {}'.format(nodes) +
+               ' -l {}'.format(nodes) +
+               ' -l {}'.format(nodes))
+
+        self._start_experiment(cmd)
+        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        time.sleep(1)
+        self._get_exp_info()
+        self._stop_experiment()
+        self._wait_state_or_finished()
+
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
         nodes = '5,site=devgrenoble+archi=m3:at86rf231'
@@ -57,7 +73,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
-        self._reset_nodes()
+        self._reset_nodes_no_expid()
         self._flash_nodes('m3', 'integration/m3_autotest.elf')
         self._stop_experiment()
         self._wait_state_or_finished()
@@ -77,7 +93,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
-        self._reset_nodes()
+        self._reset_nodes_no_expid()
         self._flash_nodes('m3', 'integration/m3_autotest.elf')
 
         self._stop_experiment()
@@ -103,15 +119,16 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
-        self._reset_nodes()
+        self._reset_nodes_no_expid()
         self._flash_nodes('m3', 'integration/m3_autotest.elf')
         self._stop_experiment()
         self._wait_state_or_finished()
 
     # helpers methods
-    def _reset_nodes(self):
+    @staticmethod
+    def _reset_nodes_no_expid():
         """ Flash all nodes of type archi """
-        cmd = 'node-cli --reset -i {}'.format(self.exp_id)
+        cmd = 'node-cli --reset'
         LOGGER.info(cmd)
         call_cli(cmd)
 
@@ -327,20 +344,56 @@ class TestCliToolsAProfile(unittest.TestCase):
             self.profile['wsn430_full']))
 
 
-def call_cli(cmd, field=None):
+class TestAnErrorCase(unittest.TestCase):
+    """ Test cli tools error cases """
+    def test_node_parser_errors(self):
+        """ Test some node parser errors """
+        self.assertRaises(
+            SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m3',
+            print_err=False)
+
+        self.assertRaises(
+            SystemExit, call_cli, 'node-cli --reset -l invalid_site,m3,1',
+            print_err=False)
+
+        self.assertRaises(
+            SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m4,1',
+            print_err=False)
+
+    def test_experiment_parser_errors(self):
+        """ Test some experiment parser errors """
+        self.assertRaises(SystemExit, call_cli,
+                          'experiment-cli submit -d 20 -l devgrenoble,m3,70-1',
+                          print_err=False)
+
+        self.assertRaises(
+            SystemExit, call_cli,
+            'experiment-cli submit -d 20 -l devgrenoble,m3,70-1,fw,prof,extra',
+            print_err=False)
+
+
+def call_cli(cmd, field=None, print_err=True):
     """ Call cli tool """
     argv = shlex.split(cmd)
     stdout = StringIO()
-    with patch('sys.stdout', stdout):
-        with patch('sys.argv', argv):
-            runpy.run_path(argv[0])
+    stderr = StringIO()
+    try:
+        with patch('sys.stderr', stderr):
+            with patch('sys.stdout', stdout):
+                with patch('sys.argv', argv):
+                    runpy.run_path(argv[0])
+    except SystemExit as err:
+        if print_err:
+            LOGGER.error('%r', stderr.getvalue())
+        raise err
+
     ret = json.loads(stdout.getvalue())
-    if field:
-        try:
+    try:
+        if field:
             ret = ret[field]
-        except KeyError as err:
-            print(ret, file=sys.stderr)
-            raise err
+    except KeyError as err:
+        LOGGER.error(ret)
+        raise err
 
     stdout.close()
     return ret
