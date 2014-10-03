@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 """ Integration tests for cli-tools """
 
 # pylint:disable=I0011,too-many-public-methods
@@ -26,7 +27,8 @@ import logging
 LOGGER = logging.getLogger(__file__)
 LOGGER.setLevel(logging.INFO)
 
-_FMT = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+# _FMT = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+_FMT = logging.Formatter('%(levelname)s :: %(message)s')
 _HANDLER = logging.StreamHandler()
 _HANDLER.setFormatter(_FMT)
 LOGGER.addHandler(_HANDLER)
@@ -46,7 +48,7 @@ class TestCliToolsExperiments(unittest.TestCase):
     """ Test the cli tools experiments """
 
     def test_an_experiment_alias_multi_same_node(self):
-        """ Run an experiment """
+        """ Run an experiment with alias and multiple time same reservation """
         nodes = '5,site=devgrenoble+archi=m3:at86rf231'
         cmd = ('experiment-cli submit -d 5 -n test_cli ' +
                '-l {} '.format(nodes) + '-l {}'.format(nodes))
@@ -55,6 +57,8 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
+        self._reset_nodes()
+        self._flash_nodes('m3', 'integration/m3_autotest.elf')
         self._stop_experiment()
         self._wait_state_or_finished()
 
@@ -66,17 +70,77 @@ class TestCliToolsExperiments(unittest.TestCase):
         cmd = ('experiment-cli submit -d 5 -n test_cli' +
                (' -l 5,site=devgrenoble+archi=m3:at86rf231,' +
                 'integration/m3_autotest.elf,test_m3') +
-               (' -l 2,site=devlille+archi=wsn430:cc2420,' +
+               (' -l 1,site=devlille+archi=wsn430:cc2420,' +
                 'integration/tp.hex,test_wsn430'))
 
         self._start_experiment(cmd)
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
+        self._reset_nodes()
+        self._flash_nodes('m3', 'integration/m3_autotest.elf')
+
+        self._stop_experiment()
+        self._wait_state_or_finished()
+
+    @staticmethod
+    def _find_working_nodes(site, archi, num):
+        """ Find working nodes, there should be at least num nodes """
+        cmd = 'experiment-cli info -li --site {}'.format(site)
+        nodes = call_cli(cmd)["items"][0][site][archi]["Alive"]
+        nodes_str = '+'.join(nodes.split('+')[0:num])
+        LOGGER.debug("nodes_str: %r", nodes_str)
+        return '{},{},{}'.format(site, archi, nodes_str)
+
+    def test_an_experiment_physical_one_site(self):
+        """ Run an experiment on m3 nodes simple"""
+
+        cmd = ('experiment-cli info -li --site devgrenoble')
+
+        nodes = self._find_working_nodes('devgrenoble', 'm3', 10)
+        cmd = 'experiment-cli submit -d 5 -n test_cli -l {} '.format(nodes)
+        self._start_experiment(cmd)
+        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        time.sleep(1)
+        self._get_exp_info()
+        self._reset_nodes()
+        self._flash_nodes('m3', 'integration/m3_autotest.elf')
         self._stop_experiment()
         self._wait_state_or_finished()
 
     # helpers methods
+    def _reset_nodes(self):
+        """ Flash all nodes of type archi """
+        cmd = 'node-cli --reset -i {}'.format(self.exp_id)
+        LOGGER.info(cmd)
+        call_cli(cmd)
+
+    def _flash_nodes(self, archi, firmware):
+        """ Flash all nodes of type archi """
+        cmd = 'node-cli -i {} --update {}'.format(self.exp_id, firmware)
+
+        _nodes = self.exp_desc["nodes"]
+        nodes = [node for node in _nodes if str(node).startswith(archi)]
+        if nodes == []:
+            LOGGER.warning("No nodes found for archi %r: %r", archi, _nodes)
+            return
+
+        nodes_dict = {}
+        for node in nodes:
+            n_id, site = node.split('.')[0:2]
+            num = n_id.split('-')[1]
+            nodes_dict.setdefault(site, []).append(num)
+
+        LOGGER.debug(nodes_dict)
+
+        for site, nodes in nodes_dict.items():
+            node_str = '{},{},{}'.format(site, archi, '+'.join(nodes))
+            LOGGER.debug("nodes: %s", node_str)
+            cmd += ' -l {}'.format(node_str)
+
+        LOGGER.info(cmd)
+        ret = call_cli(cmd)
+        LOGGER.debug(ret)
 
     def _start_experiment(self, cmd, firmwares=()):
         """ Start an experiment using 'cmd'.
