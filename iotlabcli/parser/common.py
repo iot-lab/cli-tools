@@ -31,8 +31,8 @@ def add_version(parser):
     parser.add_argument('-v', '--version', action='version', version=VERSION)
 
 
-def main_cli(function, parser, args=None):
-    """ Main command-line execution." """
+def main_cli(function, parser, args=None):  # flake8: noqa
+    """ Main command-line execution. """
     args = args or sys.argv[1:]
     try:
         parser_opts = parser.parse_args(args)

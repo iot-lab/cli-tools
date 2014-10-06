@@ -244,21 +244,18 @@ def mobile_from_mobile_str(mobile_str=None):
     Traceback (most recent call last):
     ValueError: Invalid 'mobile' property: %r. Should be in 'true|false|0|1'
     """
-    if mobile_str is None:
-        return False
+    mobile_str = mobile_str or 'False'
+    mobile_str = mobile_str.title()  # upper first letter
 
-    if mobile_str.lower() == 'true':
+    if mobile_str == 'True':
         return True
-
-    if mobile_str.lower() == 'false':
+    elif mobile_str == 'False':
         return False
-
     try:
         return bool(int(mobile_str))
     except ValueError:
-        pass
-    raise ValueError(
-        "Invalid 'mobile' property: %r. Should be in 'true|false|0|1'")
+        raise ValueError(
+            "Invalid 'mobile' property: %r. Should be in 'true|false|0|1'")
 
 
 def _extract_firmware_nodes_list(param_list):
