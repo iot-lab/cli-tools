@@ -27,8 +27,7 @@ import logging
 LOGGER = logging.getLogger(__file__)
 LOGGER.setLevel(logging.INFO)
 
-# _FMT = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
-_FMT = logging.Formatter('%(levelname)s :: %(message)s')
+_FMT = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 _HANDLER = logging.StreamHandler()
 _HANDLER.setFormatter(_FMT)
 LOGGER.addHandler(_HANDLER)
@@ -164,7 +163,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         Add firmwares path to allow checking later """
         LOGGER.info(cmd)
         self.firmwares = firmwares
-        self.exp_id = call_cli(cmd, "id")
+        self.exp_id = call_cli(cmd)["id"]
         self.id_str = ' --id {} '.format(self.exp_id)
         LOGGER.info(self.exp_id)
 
@@ -192,28 +191,38 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli(cmd)
         call_cli('experiment-cli get -a -i {}'.format(self.exp_id))
 
-    def _wait_state_or_finished(self, state=None):
+    def _wait_state_or_finished(self, state=()):
         """ Wait experiment get in state, or states error and terminated """
         cur_state = None
-        states_list = ['Error', 'Terminated']
+        states_list = ['Error', 'Terminated'] + state
         states_str = ''
-        if state is not None:
-            states_list.append(state)
+
         while True:
+            # wait requested states
             cmd = 'experiment-cli get --exp-state -i {}'.format(self.exp_id)
-            state = call_cli(cmd, "state").strip()
+            state = call_cli(cmd)["state"]
             if state != cur_state:
-                states_str += state
-                print(state, end='')
-            states_str += '.'
-            print('.', end='')
-            sys.stdout.flush()
-            cur_state = state
+                self._state_debug(states_str, state)
+            self._state_debug('.')
+
             if state in states_list:
-                print('')
-                LOGGER.debug(states_str)
+                self._state_debug(states_str, '\n')
                 return state
+            cur_state = state
             time.sleep(5)
+
+    def _state_debug(states_str, x=None):
+        """ Debug print state
+        Update are printed on each round on stdout and in one time on logger
+        """
+        if x != '\n':
+            states_str += x
+            print(x, end='')
+            sys.stdout.flush()
+        else:
+            # final
+            print('')
+            LOGGER.debug(states_str)
 
     # run whole tests only without experiments
 
@@ -235,7 +244,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         """ Cleanup currently running experiments """
         LOGGER.debug("cleanup")
         cmd = 'experiment-cli get --list --state Running,Waiting'
-        experiments = call_cli(cmd, "items")
+        experiments = call_cli(cmd)["items"]
 
         for exp in experiments:
             exp_id = exp["id"]
@@ -392,14 +401,9 @@ def call_cli(cmd, field=None, print_err=True):
         raise err
 
     ret = json.loads(stdout.getvalue())
-    try:
-        if field:
-            ret = ret[field]
-    except KeyError as err:
-        LOGGER.error(ret)
-        raise err
 
     stdout.close()
+    stderr.close()
     return ret
 
 
