@@ -161,9 +161,29 @@ class Api(object):
 
         return self._method(method_url, method, self.auth, data, raw)
 
-    @staticmethod
-    def _method(url, method='GET', auth=None, data=None, raw=False):
+    @classmethod
+    def _method(cls, url, method='GET',  # pylint:disable=too-many-arguments
+                auth=None, data=None, raw=False):
         """
+        :param url: url to request.
+        :param method: request method
+        :param auth: HTTPBasicAuth object
+        :param data: request data
+        :param raw: Should data be loaded as json or not
+        """
+        status, content = cls._request(url, method, auth, data)
+        if status != requests.codes.ok:  # we have HTTP error (code != 200)
+            raise RuntimeError("HTTP error: {}\n{}".format(status, content))
+        # return result json object or request content
+        if raw:
+            return content   # when getting archive or profile name
+        else:
+            return json.loads(content)
+
+    @staticmethod
+    def _request(url, method='GET', auth=None, data=None):
+        """
+        Call http `method` on url with `auth` and `data`
         :param url: url to request.
         :param method: request method
         :param auth: HTTPBasicAuth object
@@ -179,18 +199,7 @@ class Api(object):
             req = requests.delete(url, auth=auth, verify=False)
         else:
             req = requests.get(url, auth=auth, verify=False)
-
-        if req.status_code != requests.codes.ok:
-            # we have HTTP error (code != 200)
-            raise RuntimeError("HTTP error code: {code}\n{text}".format(
-                code=req.status_code, text=req.content))
-
-        # request OK, return result object or direct answer
-        if raw:
-            result = req.content   # when getting archive or profile name
-        else:
-            result = json.loads(req.content)
-        return result
+        return (req.status_code, req.content)
 
     @staticmethod
     def get_sites():
