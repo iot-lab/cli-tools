@@ -2,6 +2,7 @@
 """Helpers methods"""
 
 import os
+import itertools
 DOMAIN_DNS = 'iot-lab.info'
 
 
@@ -170,7 +171,27 @@ def _check_archi(archi):
     raise ValueError("Invalid node archi: %r not in %s" % (archi, archi_list))
 
 
-def _expand_short_nodes_list(short_nodes_list):
+def _expand_minus_str(minus_nodes_str):
+    """ Expand a '1-5' or '6' string to a list on integer
+    :raises: ValueError on invalid values
+    """
+    minus_node = minus_nodes_str.split('-')
+    if len(minus_node) == 1:
+        # ['6']
+        return [int(minus_node[0])]
+    else:
+        # ['1', '4'] or ['7', '8']
+        first, last = minus_node
+        nodes_range = range(int(first), int(last) + 1)
+        # first >= last
+        if len(nodes_range) <= 1:
+            raise ValueError
+
+        # Add nodes range
+        return nodes_range
+
+
+def _expand_short_nodes_list(nodes_str):
     """ Expand short nodes_list '1-5+6+8-12' to a regular nodes list
 
     >>> _expand_short_nodes_list('1-4+6+7-8')
@@ -193,33 +214,15 @@ def _expand_short_nodes_list(short_nodes_list):
     ValueError: Invalid nodes list: a-b ([0-9+-])
     """
 
-    nodes = []
     try:
         # '1-4+6+8-8'
-        for plus_nodes in short_nodes_list.split('+'):
-            # ['1-4', '6', '7-8']
-
-            minus_node = plus_nodes.split('-')
-            if len(minus_node) == 1:
-                # ['6']
-                nodes.append(int(minus_node[0]))
-            else:
-                # ['1', '4'] or ['7', '8']
-                first, last = minus_node
-                nodes_range = range(int(first), int(last) + 1)
-
-                # first >= last
-                if len(nodes_range) <= 1:
-                    raise ValueError
-
-                # Add nodes range
-                nodes.extend(nodes_range)
-
+        nodes_ll = [_expand_minus_str(minus_nodes_str) for minus_nodes_str in
+                    nodes_str.split('+')]
+        # [[1, 2, 3], [6], [12]]
+        return list(itertools.chain.from_iterable(nodes_ll))  # flatten
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
-        raise ValueError('Invalid nodes list: %s ([0-9+-])' % short_nodes_list)
-    else:
-        return nodes
+        raise ValueError('Invalid nodes list: %s ([0-9+-])' % nodes_str)
 
 
 def _get_nodes_list(site, archi, nodes_list):
