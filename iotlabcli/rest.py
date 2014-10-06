@@ -173,7 +173,7 @@ class Api(object):
         """
         status, content = cls._request(url, method, auth, data)
         if status != requests.codes.ok:  # we have HTTP error (code != 200)
-            raise RuntimeError("HTTP error: {}\n{}".format(status, content))
+            raise RuntimeError("HTTP error: {0}\n{1}".format(status, content))
         # return result json object or request content
         if raw:
             return content   # when getting archive or profile name

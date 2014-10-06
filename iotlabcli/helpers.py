@@ -129,8 +129,8 @@ def check_experiment_state(state_str=None):
     invalid = set(state_str.split(',')) - set(oar_states)
     if invalid:
         raise ValueError(
-            'Invalid experiment states: {} should be in {}.'.format(
-                sorted(list(invalid)), oar_states))
+            'Invalid experiment states: {state} should be in {states}.'.format(
+                state=sorted(list(invalid)), states=oar_states))
 
     return state_str
 

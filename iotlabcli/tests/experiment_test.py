@@ -171,7 +171,6 @@ class TestExperimentSubmit(CommandMock):
 
         def read_file(file_path, _=''):
             """ read_file mock """
-            print file_path
             if file_path == experiment.EXP_FILENAME:
                 return json.dumps(expected)
             else:
@@ -184,8 +183,8 @@ class TestExperimentSubmit(CommandMock):
         # read_file_calls
         _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
         self.assertEquals(_files,
-                          {experiment.EXP_FILENAME,
-                           'firmware.elf', 'firmware_2.elf'})
+                          set((experiment.EXP_FILENAME,
+                               'firmware.elf', 'firmware_2.elf')))
 
         self.assertRaises(
             ValueError,

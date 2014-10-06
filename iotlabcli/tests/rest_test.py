@@ -77,6 +77,4 @@ class TestRest(unittest.TestCase):
         # invalid status code
         ret_val = RequestRet(content='return_text', status_code=404)
         with patch('requests.get', return_value=ret_val):
-            self.assertRaisesRegexp(
-                RuntimeError, "HTTP error: 404\nreturn_text",
-                rest.Api._method, self._url)
+            self.assertRaises(RuntimeError, rest.Api._method, self._url)
