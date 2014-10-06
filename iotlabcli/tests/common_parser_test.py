@@ -4,6 +4,7 @@
 # pylint: disable=too-many-public-methods
 
 import unittest
+import sys
 try:
     # pylint: disable=import-error,no-name-in-module
     from mock import patch, Mock
@@ -38,8 +39,9 @@ class TestCommonParser(unittest.TestCase):
         function.side_effect = IOError()
         self.assertRaises(SystemExit, common.main_cli, function, parser)
 
-        function.side_effect = RuntimeError()
-        self.assertRaises(SystemExit, common.main_cli, function, parser)
+        with patch('sys.stderr', sys.stdout):
+            function.side_effect = RuntimeError()
+            self.assertRaises(SystemExit, common.main_cli, function, parser)
 
-        function.side_effect = KeyboardInterrupt()
-        self.assertRaises(SystemExit, common.main_cli, function, parser)
+            function.side_effect = KeyboardInterrupt()
+            self.assertRaises(SystemExit, common.main_cli, function, parser)
