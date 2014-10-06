@@ -112,23 +112,25 @@ def check_experiment_state(state_str=None):
     'Running'
     >>> check_experiment_state('Terminated,Running')
     'Terminated,Running'
-    >>> check_experiment_state(None)
-    'Terminated,Waiting,Launching,Finishing,Running,Error'
+    >>> check_experiment_state('')
+    'Waiting,Launching,Running,Finishing,Terminated,Error'
 
-    >>> check_experiment_state('invalid')
+    >>> check_experiment_state('invalid,Terminated')
     Traceback (most recent call last):
-    ValueError: Invalid experiment state 'invalid'.
+    ValueError: Invalid experiment states: ['invalid'] should be in \
+['Waiting', 'Launching', 'Running', 'Finishing', 'Terminated', 'Error'].
     """
-
     oar_states = [
-        "Terminated", "Waiting", "Launching", "Finishing", "Running", "Error"]
+        "Waiting", "Launching", "Running", "Finishing", "Terminated", "Error"]
+    state_str = state_str or ','.join(oar_states)  # default to all states
 
-    if state_str is None:
-        return ','.join(oar_states)
+    # Check states are all in oar_states
+    invalid = set(state_str.split(',')) - set(oar_states)
+    if invalid:
+        raise ValueError(
+            'Invalid experiment states: {} should be in {}.'.format(
+                sorted(list(invalid)), oar_states))
 
-    for state in state_str.split(','):
-        if state not in oar_states:
-            raise ValueError('Invalid experiment state %r.' % state)
     return state_str
 
 
