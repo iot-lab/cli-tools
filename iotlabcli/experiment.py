@@ -81,40 +81,39 @@ def get_experiment(api, exp_id, option=''):
 def load_experiment(api, exp_desc_path, firmware_list=()):
     """ Load and submit user experiment description with firmware(s)
 
+    Firmwares required for experiment will be loaded from current directory,
+    except if their path is given in firmware_list
+
     :param api: API Rest api object
     :param exp_desc_path: path to experiment json description file
     :param firmware_list: list of firmware path
     """
 
-    # exp desc json
+    # 1. load experiment description
     exp_dict = json.loads(helpers.read_file(exp_desc_path))
     exp_files = helpers.FilesDict()
-
-    fw_association = exp_dict['firmwareassociations'] or []
-
-    #
-    # Add firmwares to experiment_files dictionary
-    #
-
-    # Add firmwares from manual list, may be empty
-    for firmware_path in firmware_list:
-        exp_files.add_firmware(firmware_path)
-
-    # Add remaining firmware from current directory
-    for firmware_name in [fw['firmwarename'] for fw in fw_association]:
-        if firmware_name in exp_files:
-            continue
-        # was not already provided by manual list
-        exp_files.add_firmware(firmware_name)
-
-    #
-    # Sanity Check, no more firmware than required
-    #
-    if len(fw_association) != len(exp_files):
-        raise ValueError("Too many firmwares provided")
-
-    # Add experiment description
+    # 2. Add experiment description
     exp_files[EXP_FILENAME] = json_dumps(exp_dict)
+
+    # 3. Add firmwares files to the experiment files using
+    #    firmware_list and experiment firmwareassociations
+
+    # extract firmwares names
+    _fw_association = exp_dict['firmwareassociations'] or []
+    firmwares = set([assoc['firmwarename'] for assoc in _fw_association])
+
+    try:
+        # replace firwmare name by firmware_path from firmware_list
+        for _fw_path in firmware_list:
+            firmwares.remove(basename(_fw_path))
+            firmwares.add(_fw_path)
+    except KeyError as err:
+        raise ValueError("Firmware {!s} is not in experiment: {}".format(
+            err, exp_desc_path))
+    else:
+        # Add all firmwares to the experiment files
+        for _fw_path in firmwares:
+            exp_files.add_firmware(_fw_path)
     return api.submit_experiment(exp_files)
 
 

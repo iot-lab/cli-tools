@@ -171,22 +171,21 @@ class TestExperimentSubmit(CommandMock):
 
         def read_file(file_path, _=''):
             """ read_file mock """
+            print file_path
             if file_path == experiment.EXP_FILENAME:
                 return json.dumps(expected)
             else:
                 return "elf32arm"
         read_file_mock.side_effect = read_file
 
-        experiment.load_experiment(self.api, experiment.EXP_FILENAME,
-                                   ['firmware.elf'])
-        # check calls
-        _calls = read_file_mock.call_args_list
-        for fmw in [experiment.EXP_FILENAME, 'firmware.elf', 'firmware_2.elf']:
-            for _call in _calls:
-                if fmw in _call[0]:
-                    break
-            else:
-                self.assertTrue(fmw in _calls)
+        experiment.load_experiment(
+            self.api, experiment.EXP_FILENAME, ['firmware.elf'])
+
+        # read_file_calls
+        _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
+        self.assertEquals(_files,
+                          {experiment.EXP_FILENAME,
+                           'firmware.elf', 'firmware_2.elf'})
 
         self.assertRaises(
             ValueError,
