@@ -124,6 +124,11 @@ class TestMainInfoParser(MainMock):
             ['submit', '--duration', '20',
              '-l', 'grenoble,m3,1-5,firmware, profile,toomanyvalues'])
 
+        # Physical tests
+        self.assertRaises(
+            SystemExit, experiment_parser.main,
+            ['submit', '--duration', '20', '-l', 'grenoble,m3,100-1'])
+
     @patch('iotlabcli.experiment.load_experiment')
     def test_main_load_parser(self, load_exp):
         """ Run experiment_parser.main.load """

@@ -140,13 +140,13 @@ def exp_resources_from_str(exp_str):
         firmware_path = _extract_non_empty_val(param_list)
         profile_name = _extract_non_empty_val(param_list)
         if param_list:
-            raise ValueError  # two many values in list
+            raise ArgumentTypeError(
+                'Invalid number or arguments in experiment list %r' % exp_str)
 
         return experiment.exp_resources(nodes, firmware_path, profile_name)
-    except ValueError:
-        pass
-    raise ArgumentTypeError(
-        'Invalid number or arguments in experiment list %r' % exp_str)
+    except ValueError as err:
+        raise ArgumentTypeError(
+            'Invalid arguments in experiment list %r: %s' % (exp_str, err))
 
 
 def _extract_non_empty_val(param_list):
