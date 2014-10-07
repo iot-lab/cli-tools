@@ -43,7 +43,7 @@ def main_cli(function, parser, args=None):  # flake8: noqa
     except RuntimeError as err:
         print("RuntimeError:\n{err!s}".format(err=err), file=sys.stderr)
         sys.exit()
-    except KeyboardInterrupt:
+    except KeyboardInterrupt:  # pragma: no cover
         print("\nStopped.", file=sys.stderr)
         sys.exit()
 
