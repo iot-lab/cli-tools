@@ -31,7 +31,7 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    install_requires=['argparse', 'requests<=1.2.3'],
+    install_requires=['argparse', 'requests'],
     setup_requires=['setuptools-pep8', 'setuptools-lint',
                     'nose', 'nosexcover', 'mock'],
 )
