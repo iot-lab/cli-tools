@@ -66,14 +66,15 @@ class TestCliToolsExperiments(unittest.TestCase):
         """ Run an experiment with alias and multiple time same reservation """
         nodes = '5,site=devgrenoble+archi=m3:at86rf231'
         cmd = ('experiment-cli submit -d 5 -n test_cli ' +
-               '-l {} '.format(nodes) + '-l {}'.format(nodes))
+               ' -l {} '.format(nodes) + ' -l {}'.format(nodes))
 
         self._start_experiment(cmd)
         self.assertEquals('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
-        self._flash_nodes('m3', 'integration/m3_autotest.elf')
+        f_nodes = self.nodes_str_from_desc(archi='m3', n_type='-l')
+        self._flash_nodes('integration/m3_autotest.elf', f_nodes)
         self._stop_experiment()
         self._wait_state_or_finished()
 
@@ -93,7 +94,10 @@ class TestCliToolsExperiments(unittest.TestCase):
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
-        self._flash_nodes('m3', 'integration/m3_autotest.elf')
+
+        # flash all but wsn430 nodes
+        e_nodes = self.nodes_str_from_desc(archi='wsn430', n_type='-e')
+        self._flash_nodes('integration/m3_autotest.elf', e_nodes)
 
         self._stop_experiment()
         self._wait_state_or_finished()
@@ -119,7 +123,8 @@ class TestCliToolsExperiments(unittest.TestCase):
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
-        self._flash_nodes('m3', 'integration/m3_autotest.elf')
+        f_nodes = self.nodes_str_from_desc(archi='m3', n_type='-l')
+        self._flash_nodes('integration/m3_autotest.elf', f_nodes)
         self._stop_experiment()
         self._wait_state_or_finished()
 
@@ -131,29 +136,33 @@ class TestCliToolsExperiments(unittest.TestCase):
         LOGGER.info(cmd)
         call_cli(cmd)
 
-    def _flash_nodes(self, archi, firmware):
-        """ Flash all nodes of type archi """
-        cmd = 'node-cli -i {} --update {}'.format(self.exp_id, firmware)
-
+    def nodes_str_from_desc(self, site='', archi='', n_type='-l'):
+        """ extract nodes that match description """
         _nodes = self.exp_desc["nodes"]
-        nodes = [node for node in _nodes if str(node).startswith(archi)]
-        if nodes == []:
-            LOGGER.warning("No nodes found for archi %r: %r", archi, _nodes)
-            return
+        nodes = [n for n in _nodes if (archi in n) and (site in n)]
 
         nodes_dict = {}
         for node in nodes:
             n_id, site = node.split('.')[0:2]
-            num = n_id.split('-')[1]
-            nodes_dict.setdefault(site, []).append(num)
+            archi, num = n_id.split('-')[0:2]
+            nodes_dict.setdefault((site, archi), []).append(num)
 
         LOGGER.debug(nodes_dict)
 
-        for site, nodes in nodes_dict.items():
-            node_str = '{},{},{}'.format(site, archi, '+'.join(nodes))
+        nodes_list = []
+        for (_site, _archi), nums in nodes_dict.items():
+            node_str = '{},{},{}'.format(_site, _archi, '+'.join(nums))
             LOGGER.debug("nodes: %s", node_str)
-            cmd += ' -l {}'.format(node_str)
+            nodes_list.append(node_str)
 
+        # create the joined string
+        node_str = ''.join([' {} {}'.format(n_type, n) for n in nodes_list])
+        return node_str
+
+    def _flash_nodes(self, firmware, cmd_append=''):
+        """ Flash all nodes of type archi """
+        cmd = 'node-cli -i {id} --update {fw} {nodes}'.format(
+            id=self.exp_id, fw=firmware, nodes=cmd_append)
         LOGGER.info(cmd)
         ret = call_cli(cmd)
         LOGGER.debug(ret)
@@ -163,6 +172,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         Add firmwares path to allow checking later """
         LOGGER.info(cmd)
         self.firmwares = firmwares
+        call_cli(cmd + ' --print')
         self.exp_id = call_cli(cmd)["id"]
         self.id_str = ' --id {} '.format(self.exp_id)
         LOGGER.info(self.exp_id)
@@ -191,10 +201,10 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli(cmd)
         call_cli('experiment-cli get -a -i {}'.format(self.exp_id))
 
-    def _wait_state_or_finished(self, state=()):
+    def _wait_state_or_finished(self, state=None):
         """ Wait experiment get in state, or states error and terminated """
         cur_state = None
-        states_list = ['Error', 'Terminated'] + state
+        states_list = ['Error', 'Terminated', state]
         states_str = ''
 
         while True:
@@ -203,7 +213,7 @@ class TestCliToolsExperiments(unittest.TestCase):
             state = call_cli(cmd)["state"]
             if state != cur_state:
                 self._state_debug(states_str, state)
-            self._state_debug('.')
+            self._state_debug(states_str, '.')
 
             if state in states_list:
                 self._state_debug(states_str, '\n')
@@ -211,6 +221,7 @@ class TestCliToolsExperiments(unittest.TestCase):
             cur_state = state
             time.sleep(5)
 
+    @staticmethod
     def _state_debug(states_str, x=None):
         """ Debug print state
         Update are printed on each round on stdout and in one time on logger
@@ -354,18 +365,29 @@ class TestCliToolsAProfile(unittest.TestCase):
 
 class TestAnErrorCase(unittest.TestCase):
     """ Test cli tools error cases """
+
     def test_node_parser_errors(self):
         """ Test some node parser errors """
+        # invalid argument number
         self.assertRaises(
             SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m3',
             print_err=False)
 
+        # invalid site
         self.assertRaises(
             SystemExit, call_cli, 'node-cli --reset -l invalid_site,m3,1',
             print_err=False)
 
+        # invalid archi
         self.assertRaises(
             SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m4,1',
+            print_err=False)
+
+        # invalid state
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli --user test --password test get ' +
+             ' -l --state=Terminateded'),
             print_err=False)
 
     def test_experiment_parser_errors(self):
@@ -374,9 +396,54 @@ class TestAnErrorCase(unittest.TestCase):
                           'experiment-cli submit -d 20 -l devgrenoble,m3,70-1',
                           print_err=False)
 
+        # alias invalid archi
         self.assertRaises(
             SystemExit, call_cli,
-            'experiment-cli submit -d 20 -l devgrenoble,m3,70-1,fw,prof,extra',
+            ('experiment-cli submit -d 20' +
+             ' -l 3,site=devgrenoble+archi=inval+mobile=1'),
+            print_err=False)
+
+        # too many values
+        self.assertRaises(
+            SystemExit, call_cli,
+            'experiment-cli submit -d 20 -l devgrenoble,m3,1,fw,prof,extra',
+            print_err=False)
+
+        # alias and physical
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20 -l devgrenoble,m3,1' +
+             ' -l 3,site=devgrenoble+archi=m3:at86rf231+mobile=true'),
+            print_err=False)
+
+        # alias invalid values
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20' +
+             ' -l 3,site=devgrenoble+archi=m3:at86rf231+inval_prop=2'),
+            print_err=False)
+
+        # No site or archi
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20 -l 3,archi=m3:at86rf231'),
+            print_err=False)
+
+        # invalid properties
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20 -l 3,archi='),
+            print_err=False)
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20 -l 3,archi=val_1+archi=val_2'),
+            print_err=False)
+
+        # invalid mobile
+        self.assertRaises(
+            SystemExit, call_cli,
+            ('experiment-cli submit -d 20' +
+             ' -l 3,archi=m3:at86rf231+site=devgrenoble+mobile=turtlebot'),
             print_err=False)
 
     def test_rest_errors(self):
