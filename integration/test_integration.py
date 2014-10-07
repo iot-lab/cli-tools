@@ -7,10 +7,10 @@
 
 #
 # Test that may be added:
-#  * use node commands
-#  * Multi-wsn/m3-sites experiments and validate outputs
+#  * physical experiments
+#  * load experiment
 #  * Validates JSON outputs
-#
+#  * run commands without exp_id in error cases no exp or many exps running
 #
 
 from __future__ import print_function
