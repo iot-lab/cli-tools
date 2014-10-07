@@ -169,7 +169,7 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
 
     >>> AliasNodes(2, 'strasbourg', 'wsn430:cc1100', True)
     Traceback (most recent call last):
-    AssertionError: 'wsn430:cc1100' not in ['wsn430:cc1101', 'wsn430:cc2420', \
+    ValueError: 'wsn430:cc1100' not in ['wsn430:cc1101', 'wsn430:cc2420', \
 'm3:at86rf231', 'a8:at86rf231']
 
     """
@@ -189,7 +189,8 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
             }
         }
         """
-        assert archi in self._archis, "%r not in %r" % (archi, self._archis)
+        if archi not in self._archis:
+            raise ValueError("%r not in %r" % (archi, self._archis))
         if _alias is None:
             AliasNodes._alias += 1
             _alias = str(AliasNodes._alias)
