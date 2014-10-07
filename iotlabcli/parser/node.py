@@ -98,12 +98,11 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
 
     elif excl_nodes_ll is not None:
         # flatten lists into one
-        excl_nodes = list(itertools.chain.from_iterable(excl_nodes_ll))
+        excl_nodes = set(itertools.chain.from_iterable(excl_nodes_ll))
 
         # remove exclude nodes from experiment nodes
-        exp_nodes = _get_experiment_nodes_list(api, exp_id)
-        nodes = [node for node in exp_nodes if node not in excl_nodes]
-
+        exp_nodes = set(_get_experiment_nodes_list(api, exp_id))
+        nodes = list(exp_nodes - excl_nodes)
     else:
         nodes = []  # all the nodes
 
