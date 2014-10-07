@@ -201,12 +201,12 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
             "mobile": mobile,
         }
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
             self.nbnodes, self.properties['site'], self.properties['archi'],
             self.properties['mobile'], self.alias)
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__
 
 
@@ -229,10 +229,8 @@ class _FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
         self.nodes = nodes
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.firmwarename == other.firmwarename
-        else:
-            return False
+        return (isinstance(other, self.__class__) and
+                self.firmwarename == other.firmwarename)
 
 
 class _ProfileAssociations(object):  # pylint: disable=too-few-public-methods
@@ -251,10 +249,8 @@ class _ProfileAssociations(object):  # pylint: disable=too-few-public-methods
         self.nodes = nodes
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.profilename == other.profilename
-        else:
-            return False
+        return (isinstance(other, self.__class__) and
+                self.profilename == other.profilename)
 
 
 class _Experiment(object):
