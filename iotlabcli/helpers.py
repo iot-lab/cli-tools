@@ -44,6 +44,21 @@ def nodes_list_from_info(site, archi, nodes_str):
     return nodes_list
 
 
+def node_url_sort_key(node_url):
+    """
+    >>> node_url_sort_key("m3-2.grenoble.iot-lab.info")
+    ('grenoble', 'm3', 2)
+
+    >>> node_url_sort_key("3")  # for alias nodes
+    3
+    """
+    if node_url.isdigit():
+        return int(node_url)
+    _node, site = node_url.split('.')[0:2]
+    node_type, num_str = _node.split('-')[0:2]
+    return site, node_type, int(num_str)
+
+
 class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,

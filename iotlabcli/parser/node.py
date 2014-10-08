@@ -106,7 +106,7 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
     else:
         nodes = []  # all the nodes
 
-    return nodes
+    return sorted(nodes, key=helpers.node_url_sort_key)
 
 
 def node_parse_and_run(opts):

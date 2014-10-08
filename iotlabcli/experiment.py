@@ -288,7 +288,7 @@ class _Experiment(object):
             # Add nodes to the list, uniq
             nodes = list(set(cur_assoc.nodes + assoc.nodes))
             # keep sorted to ease tests and readability
-            assoc.nodes = sorted(nodes, key=_Experiment._node_url_key)
+            assoc.nodes = sorted(nodes, key=helpers.node_url_sort_key)
 
         l_l.append(assoc)
         return l_l
@@ -341,22 +341,8 @@ class _Experiment(object):
 
         self.nodes.extend(nodes_list)
         # Keep unique values and sorted
-        self.nodes = sorted(list(set(self.nodes)), key=self._node_url_key)
-
-    @staticmethod
-    def _node_url_key(node_url):
-        """
-        >>> _Experiment._node_url_key("m3-2.grenoble.iot-lab.info")
-        ('grenoble', 'm3', 2)
-
-        >>> _Experiment._node_url_key("3")  # for alias nodes
-        3
-        """
-        if node_url.isdigit():
-            return int(node_url)
-        _node, site = node_url.split('.')[0:2]
-        node_type, num_str = _node.split('-')[0:2]
-        return site, node_type, int(num_str)
+        self.nodes = sorted(list(set(self.nodes)),
+                            key=helpers.node_url_sort_key)
 
     def set_alias_nodes(self, alias_nodes):
         """Set alias nodes list """
