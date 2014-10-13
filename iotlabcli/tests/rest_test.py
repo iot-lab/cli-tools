@@ -38,29 +38,28 @@ class TestRest(unittest.TestCase):
 
         # call get
         ret = rest.Api._method(self._url)
-        get.assert_called_with(self._url, auth=None, verify=False)
+        get.assert_called_with(self._url, auth=None)
         self.assertEquals(ret, ret)
         ret = rest.Api._method(self._url, method='GET', auth=_auth)
-        get.assert_called_with(self._url, auth=_auth, verify=False)
+        get.assert_called_with(self._url, auth=_auth)
         self.assertEquals(ret, ret)
 
         # call delete
         ret = rest.Api._method(self._url, method='DELETE')
-        delete.assert_called_with(self._url, auth=None, verify=False)
+        delete.assert_called_with(self._url, auth=None)
         self.assertEquals(ret, ret)
 
         # call post
         ret = rest.Api._method(self._url, method='POST', data={})
         post.assert_called_with(
             self._url, data='{}', headers={'content-type': 'application/json'},
-            auth=None, verify=False)
+            auth=None)
         self.assertEquals(ret, ret)
 
         # call multipart
         _files = {'entry': '{}'}
         ret = rest.Api._method(self._url, method='MULTIPART', data=_files)
-        post.assert_called_with(self._url, files=_files, auth=None,
-                                verify=False)
+        post.assert_called_with(self._url, files=_files, auth=None)
         self.assertEquals(ret, ret)
         patch.stopall()
 

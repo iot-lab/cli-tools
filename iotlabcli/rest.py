@@ -192,13 +192,13 @@ class Api(object):
         if method == 'POST':
             headers = {'content-type': 'application/json'}
             req = requests.post(url, auth=auth, data=json_dumps(data),
-                                headers=headers, verify=False)
+                                headers=headers)
         elif method == 'MULTIPART':
-            req = requests.post(url, auth=auth, files=data, verify=False)
+            req = requests.post(url, auth=auth, files=data)
         elif method == 'DELETE':
-            req = requests.delete(url, auth=auth, verify=False)
+            req = requests.delete(url, auth=auth)
         else:
-            req = requests.get(url, auth=auth, verify=False)
+            req = requests.get(url, auth=auth)
         return (req.status_code, req.content)
 
     @staticmethod
