@@ -11,7 +11,7 @@ from iotlabcli import rest
 from iotlabcli import auth
 from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
-from iotlabcli.profile import ProfileWSN430, ProfileM3
+from iotlabcli.profile import ProfileWSN430, ProfileM3, ProfileA8
 
 
 def parse_options():
@@ -28,89 +28,31 @@ def parse_options():
 
     add_wsn430_parser = subparsers.add_parser(
         'addwsn430', help='add wsn430 user profile',
-        epilog=help_msgs.ADD_EPILOG,
-        formatter_class=RawTextHelpFormatter)
+        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
 
+    #
+    # m3 profile
+    #
     add_m3_parser = subparsers.add_parser(
         'addm3', help='add m3 user profile',
-        epilog=help_msgs.ADD_EPILOG,
-        formatter_class=RawTextHelpFormatter)
+        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
+    add_m3_a8_parser('M3', add_m3_parser)
 
-    del_parser = subparsers.add_parser(
-        'del',
-        help='delete user profile')
+    #
+    # a8 profile
+    #
+    add_a8_parser = subparsers.add_parser(
+        'adda8', help='add a8 user profile',
+        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
+    add_m3_a8_parser('A8', add_a8_parser)
 
-    get_parser = subparsers.add_parser(
-        'get', help='get user\'s profile')
-
-    load_parser = subparsers.add_parser(
-        'load', help='load user profile')
-
-    add_m3_parser.add_argument(
-        '-n', '--name', dest='name', required=True,
-        help='profile name')
-
-    add_m3_parser.add_argument(
-        '-p', '--power', dest='power_mode', default='dc',
-        help='power mode (dc by default)',
-        choices=ProfileM3.choices['power_mode'])
-
-    add_m3_parser.add_argument(
-        '-j', '--json', dest='json',
-        action='store_true',
-        help='print profile JSON representation without add it')
-
-    group_m3_consumption = add_m3_parser.add_argument_group(
-        'M3 consumption measure')
-
-    group_m3_consumption.add_argument(
-        '-current', action='store_true',
-        help='current measure')
-
-    group_m3_consumption.add_argument(
-        '-voltage', action='store_true',
-        help='voltage measure')
-
-    group_m3_consumption.add_argument(
-        '-power', action='store_true',
-        help='power measure')
-
-    group_m3_consumption.add_argument(
-        '-period', dest='period', type=int,
-        choices=ProfileM3.choices['consumption']['period'],
-        help='period measure (us)')
-
-    group_m3_consumption.add_argument(
-        '-avg', dest='average', type=int,
-        choices=ProfileM3.choices['consumption']['average'],
-        help='average measure')
-
-    group_m3_radio = add_m3_parser.add_argument_group(
-        'M3 radio measure')
-
-    group_m3_radio.add_argument(
-        '-rssi', dest='mode', action='store_const', const='rssi',
-        help='RSSI measure')
-
-    group_m3_radio.add_argument(
-        '-channels', dest='channels', nargs='+',
-        type=int, choices=ProfileM3.choices['radio']['channels'],
-        metavar='{11..26}', help='List of channels (11 to 26)')
-
-    group_m3_radio.add_argument(
-        '-num', dest='num_per_channel', default=0, type=int,
-        choices=ProfileM3.choices['radio']['num_per_channel'],
-        metavar='{0..255}', help='Number of measure by channel')
-
-    group_m3_radio.add_argument(
-        '-rperiod', dest='rperiod', type=int,
-        choices=ProfileM3.choices['radio']['period'],
-        metavar='{1..65535}', help='period measure')
+    del_parser = subparsers.add_parser('del', help='delete user profile')
+    get_parser = subparsers.add_parser('get', help='get user\'s profile')
+    load_parser = subparsers.add_parser('load', help='load user profile')
 
     #
     # WSN430 profile
     #
-
     add_wsn430_parser.add_argument('-n', '--name', required=True,
                                    help='profile name')
     add_wsn430_parser.add_argument(
@@ -125,7 +67,7 @@ def parse_options():
 
     # WSN430 Consumption
     group_wsn430_consumption = add_wsn430_parser.add_argument_group(
-        'WSN430 consumption measure')
+        'Consumption measure')
 
     group_wsn430_consumption.add_argument(
         '-cfreq', dest='cfreq', type=int,
@@ -144,7 +86,7 @@ def parse_options():
 
     # WSN430 Radio
     group_wsn430_radio = add_wsn430_parser.add_argument_group(
-        'WSN430 radio measure')
+        'Radio measure')
     group_wsn430_radio.add_argument(
         '-rfreq', dest='rfreq', type=int,
         choices=ProfileWSN430.choices['radio']['frequency'],
@@ -152,7 +94,7 @@ def parse_options():
 
     # WSN430 Sensor
     group_wsn430_sensor = add_wsn430_parser.add_argument_group(
-        'WSN430 sensor measure')
+        'Sensor measure')
     group_wsn430_sensor.add_argument(
         '-sfreq', dest='sfreq', type=int,
         choices=ProfileWSN430.choices['sensor']['frequency'],
@@ -185,6 +127,68 @@ def parse_options():
     return parser
 
 
+def add_m3_a8_parser(node_type, subparser):
+    """ Add options for m3 and a8 parsers as they are the same """
+    assert node_type in ('M3', 'A8')
+    node_class = {'M3': ProfileM3, 'A8': ProfileA8}[node_type]
+
+    subparser.add_argument('-n', '--name', dest='name', required=True,
+                           help='profile name')
+
+    subparser.add_argument('-p', '--power', dest='power_mode', default='dc',
+                           help='power mode (dc by default)',
+                           choices=node_class.choices['power_mode'])
+
+    subparser.add_argument(
+        '-j', '--json', dest='json',
+        action='store_true',
+        help='print profile JSON representation without add it')
+
+    # Radio configuration
+    consumption = subparser.add_argument_group('Consumption measure')
+
+    consumption.add_argument(
+        '-current', action='store_true', help='current measure')
+
+    consumption.add_argument(
+        '-voltage', action='store_true', help='voltage measure')
+
+    consumption.add_argument(
+        '-power', action='store_true', help='power measure')
+
+    consumption.add_argument(
+        '-period', dest='period', type=int,
+        choices=node_class.choices['consumption']['period'],
+        help='period measure (us)')
+
+    consumption.add_argument(
+        '-avg', dest='average', type=int,
+        choices=node_class.choices['consumption']['average'],
+        help='average measure')
+
+    # Radio configuration
+    radio = subparser.add_argument_group('Radio measure')
+
+    radio.add_argument(
+        '-rssi', dest='mode', action='store_const', const='rssi',
+        help='RSSI measure')
+
+    radio.add_argument(
+        '-channels', dest='channels', nargs='+',
+        type=int, choices=node_class.choices['radio']['channels'],
+        metavar='{11..26}', help='List of channels (11 to 26)')
+
+    radio.add_argument(
+        '-num', dest='num_per_channel', default=0, type=int,
+        choices=node_class.choices['radio']['num_per_channel'],
+        metavar='{0..255}', help='Number of measure by channel')
+
+    radio.add_argument(
+        '-rperiod', dest='rperiod', type=int,
+        choices=node_class.choices['radio']['period'],
+        metavar='{1..65535}', help='period measure')
+
+
 def _wsn430_profile(opts):
     """ Create a wsn430 profile from namespace object """
     profile = ProfileWSN430(profilename=opts.name, power=opts.power_mode)
@@ -196,9 +200,9 @@ def _wsn430_profile(opts):
     return profile
 
 
-def _m3_profile(opts):
-    """ Create a m3 profile from namespace object """
-    profile = ProfileM3(profilename=opts.name, power=opts.power_mode)
+def _m3_a8_profile(opts, node_class):
+    """ Create a node_class profile from namespace object """
+    profile = node_class(profilename=opts.name, power=opts.power_mode)
     profile.set_consumption(period=opts.period, average=opts.average,
                             power=opts.power, voltage=opts.voltage,
                             current=opts.current)
@@ -206,6 +210,16 @@ def _m3_profile(opts):
                       period=opts.rperiod,
                       num_per_channel=opts.num_per_channel)
     return profile
+
+
+def _m3_profile(opts):
+    """ Create a m3 profile from namespace object """
+    return _m3_a8_profile(opts, ProfileM3)
+
+
+def _a8_profile(opts):
+    """ Create a a8 profile from namespace object """
+    return _m3_a8_profile(opts, ProfileA8)
 
 
 def _add_profile(api, name, profile, json_out=False):
@@ -223,7 +237,9 @@ def add_profile_parser(api, opts):
     :param opts: command-line parser opts
     :type opts:  Namespace object with opts attribute
     """
-    profile_func_d = {'addwsn430': _wsn430_profile, 'addm3': _m3_profile}
+    profile_func_d = {'addwsn430': _wsn430_profile,
+                      'addm3': _m3_profile,
+                      'adda8': _a8_profile}
 
     try:
         profile = profile_func_d[opts.subparser_name](opts)
@@ -284,6 +300,7 @@ def profile_parse_and_run(opts):
     fct_parser = {
         'addwsn430': add_profile_parser,
         'addm3': add_profile_parser,
+        'adda8': add_profile_parser,
         'load': load_profile_parser,
         'get': get_profile_parser,
         'del': del_profile_parser,

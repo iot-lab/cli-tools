@@ -4,8 +4,8 @@
 # pylint:disable=too-few-public-methods
 
 
-class ProfileM3(object):
-    """A Profile measure class for M3 """
+class ProfileM3A8(object):
+    """A generic Profile for M3 and A8 """
     choices = {
         'power_mode': ['dc', 'battery'],
         'consumption': {'period': [140, 204, 332, 588, 1100, 2116, 4156, 8244],
@@ -13,10 +13,12 @@ class ProfileM3(object):
         'radio': {'channels': range(11, 27), 'num_per_channel': range(0, 256),
                   'period': range(1, 2**16)}
     }
+    arch = None
 
     def __init__(self, profilename, power):
-        assert power in ProfileM3.choices['power_mode']
-        self.nodearch = 'm3'
+        assert power in self.choices['power_mode']
+        assert self.arch is not None, "Using Generic class"
+        self.nodearch = self.arch
         self.profilename = profilename
         self.power = power
 
@@ -74,6 +76,16 @@ class ProfileM3(object):
 
     def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__
+
+
+class ProfileM3(ProfileM3A8):
+    """A Profile measure class for M3 """
+    arch = 'm3'
+
+
+class ProfileA8(ProfileM3A8):
+    """A Profile measure class for A8 """
+    arch = 'a8'
 
 
 class ProfileWSN430(object):
