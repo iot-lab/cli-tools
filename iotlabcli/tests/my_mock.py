@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
 from collections import namedtuple
 
 from iotlabcli.rest import Api
-from iotlabcli import json_dumps
+from iotlabcli.helpers import json_dumps
 
 API_RET = {"result": "test"}
 RequestRet = namedtuple('request_ret', ['status_code', 'content'])

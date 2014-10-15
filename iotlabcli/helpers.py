@@ -2,6 +2,7 @@
 """Helpers methods"""
 
 import os
+import json
 import itertools
 DOMAIN_DNS = 'iot-lab.info'
 
@@ -252,3 +253,12 @@ def _get_nodes_list(site, archi, nodes_list):
     nodes = [node_fmt % num for num in nodes_num_list]
 
     return nodes
+
+
+def json_dumps(obj):
+    """ Dumps data to json """
+    class _Encoder(json.JSONEncoder):
+        """ Encoder for serialization object python to JSON format """
+        def default(self, obj):  # pylint: disable=method-hidden
+            return obj.__dict__
+    return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)

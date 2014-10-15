@@ -5,7 +5,8 @@
 from __future__ import print_function
 import sys
 import argparse
-from iotlabcli import VERSION, json_dumps
+import iotlabcli
+from iotlabcli import helpers
 from iotlabcli import rest
 
 
@@ -28,7 +29,8 @@ def add_auth_arguments(parser, usr_required=False):
 
 def add_version(parser):
     """ Add 'version' argument """
-    parser.add_argument('-v', '--version', action='version', version=VERSION)
+    parser.add_argument(
+        '-v', '--version', action='version', version=iotlabcli.__version__)
 
 
 def main_cli(function, parser, args=None):  # flake8: noqa
@@ -37,7 +39,7 @@ def main_cli(function, parser, args=None):  # flake8: noqa
     try:
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
-        print(json_dumps(result))
+        print(helpers.json_dumps(result))
     except (IOError, ValueError) as err:
         parser.error(str(err))
     except RuntimeError as err:

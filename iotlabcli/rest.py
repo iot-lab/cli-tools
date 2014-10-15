@@ -17,7 +17,6 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from urlparse import urljoin
-from iotlabcli import json_dumps
 from iotlabcli import helpers
 
 
@@ -191,8 +190,8 @@ class Api(object):
         """
         if method == 'POST':
             headers = {'content-type': 'application/json'}
-            req = requests.post(url, auth=auth, data=json_dumps(data),
-                                headers=headers)
+            req = requests.post(url, auth=auth, headers=headers,
+                                data=helpers.json_dumps(data))
         elif method == 'MULTIPART':
             req = requests.post(url, auth=auth, files=data)
         elif method == 'DELETE':

@@ -11,7 +11,8 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch, Mock
-from iotlabcli import rest, json_dumps
+from iotlabcli import rest
+from iotlabcli.helpers import json_dumps
 from iotlabcli.tests.my_mock import RequestRet
 
 

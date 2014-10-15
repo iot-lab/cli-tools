@@ -3,7 +3,6 @@
 
 from os.path import basename
 import json
-from iotlabcli import json_dumps
 from iotlabcli import helpers
 
 # static name for experiment file : rename by server-rest
@@ -35,7 +34,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     if print_json:  # output experiment description
         return experiment
     # submit experiment
-    exp_files[EXP_FILENAME] = json_dumps(experiment)  # add exp description
+    exp_files[EXP_FILENAME] = helpers.json_dumps(experiment)  # exp description
     return api.submit_experiment(exp_files)
 
 
@@ -93,7 +92,7 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     exp_dict = json.loads(helpers.read_file(exp_desc_path))
     exp_files = helpers.FilesDict()
     # 2. Add experiment description
-    exp_files[EXP_FILENAME] = json_dumps(exp_dict)
+    exp_files[EXP_FILENAME] = helpers.json_dumps(exp_dict)
 
     # 3. Add firmwares files to the experiment files using
     #    firmware_list and experiment firmwareassociations
