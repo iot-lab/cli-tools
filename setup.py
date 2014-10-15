@@ -3,7 +3,7 @@
 
 import sys
 from setuptools import setup, find_packages
-from iotlabcli import VERSION
+import iotlabcli
 
 
 # unload 'iotlabcli' module
@@ -18,7 +18,7 @@ SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
 setup(
     name='iotlabcli',
-    version=VERSION,
+    version=iotlabcli.__version__,
     description='IoT-LAB testbed command-line client',
     author='IoT-LAB Team',
     author_email='admin@iot-lab.info',
