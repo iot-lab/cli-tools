@@ -1,24 +1,29 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import sys
 from setuptools import setup, find_packages
-import iotlabcli
 
 
-# unload 'iotlabcli' module
-# either it's not included in the coverage report...
-try:
-    del sys.modules['iotlabcli']
-except KeyError:
-    pass
+def get_version():
+    """ Extract module version without importing file
+    Importing cause issues with coverage,
+        (modules can be removed from sys.modules to prevent this)
+    Importing __init__.py triggers importing rest and then requests too
+
+    Inspired from pep8 setup.py
+    """
+    with open('iotlabcli/__init__.py') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                return eval(line.split('=')[-1])
+
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
 
 setup(
     name='iotlabcli',
-    version=iotlabcli.__version__,
+    version=get_version(),
     description='IoT-LAB testbed command-line client',
     author='IoT-LAB Team',
     author_email='admin@iot-lab.info',
