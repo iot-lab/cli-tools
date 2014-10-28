@@ -79,7 +79,7 @@ def nodes_list_from_str(nodes_list_str):
         raise ArgumentTypeError(
             'Invalid number of argument in nodes list: %r' % nodes_list_str)
     common.check_site_with_server(site)  # needs an external request
-    return helpers.nodes_list_from_info(site, archi, nodes_str)
+    return common.nodes_list_from_info(site, archi, nodes_str)
 
 
 def _get_experiment_nodes_list(api, exp_id):

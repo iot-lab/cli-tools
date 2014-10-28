@@ -284,7 +284,7 @@ def _extract_firmware_nodes_list(param_list):
         del param_list[0:3]
 
         # parse parameters
-        nodes = helpers.nodes_list_from_info(site, archi, nodes_str)
+        nodes = common.nodes_list_from_info(site, archi, nodes_str)
     common.check_site_with_server(site)
     return nodes
 

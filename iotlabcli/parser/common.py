@@ -5,9 +5,11 @@
 from __future__ import print_function
 import sys
 import argparse
+import itertools
 import iotlabcli
 from iotlabcli import helpers
 from iotlabcli import rest
+DOMAIN_DNS = 'iot-lab.info'
 
 
 def base_parser(user_required=False):
@@ -71,3 +73,115 @@ def check_site_with_server(site_name, _sites_list=None):
     if site_name in sites:
         return  # site_name is valid
     raise argparse.ArgumentTypeError("Unknown site name %r" % site_name)
+
+
+def nodes_list_from_info(site, archi, nodes_str):
+    """ Cheks archi, nodes_str format and return nodes list
+
+    >>> nodes_list_from_info('grenoble', 'm3', '1-4+6+7-8')
+    ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
+'m3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
+'m3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
+'m3-8.grenoble.iot-lab.info']
+
+    >>> nodes_list_from_info('grenoble', 'm3', '1-4-5')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: 1-4-5 ([0-9+-])
+
+    >>> nodes_list_from_info('grenoble', 'wsn430', 'a-b')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: a-b ([0-9+-])
+
+    >>> nodes_list_from_info('grenoble', 'inval_arch', '1-2')
+    Traceback (most recent call last):
+    ValueError: Invalid node archi: 'inval_arch' not in ['wsn430', 'm3', 'a8']
+    """
+
+    _check_archi(archi)
+    nodes_list = get_nodes_list(site, archi, nodes_str)
+    return nodes_list
+
+
+def _check_archi(archi):
+    """ Check that archi is valid
+    >>> [_check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
+    [None, None, None]
+
+    >>> _check_archi('msp430')
+    Traceback (most recent call last):
+    ValueError: Invalid node archi: 'msp430' not in ['wsn430', 'm3', 'a8']
+
+    """
+
+    archi_list = ['wsn430', 'm3', 'a8']
+    if archi in archi_list:
+        return  # valid archi
+    raise ValueError("Invalid node archi: %r not in %s" % (archi, archi_list))
+
+
+def get_nodes_list(site, archi, nodes_list):
+    """ Expand short nodes_list 'site', 'archi', '1-5+6+8-12'
+    to a regular nodes list
+    """
+
+    nodes_num_list = expand_short_nodes_list(nodes_list)
+
+    node_fmt = '{archi}-%u.{site}.{domain}'.format(
+        archi=archi, site=site, domain=DOMAIN_DNS)
+    nodes = [node_fmt % num for num in nodes_num_list]
+
+    return nodes
+
+
+def _expand_minus_str(minus_nodes_str):
+    """ Expand a '1-5' or '6' string to a list on integer
+    :raises: ValueError on invalid values
+    """
+    minus_node = minus_nodes_str.split('-')
+    if len(minus_node) == 1:
+        # ['6']
+        return [int(minus_node[0])]
+    else:
+        # ['1', '4'] or ['7', '8']
+        first, last = minus_node
+        nodes_range = range(int(first), int(last) + 1)
+        # first >= last
+        if len(nodes_range) <= 1:
+            raise ValueError
+
+        # Add nodes range
+        return nodes_range
+
+
+def expand_short_nodes_list(nodes_str):
+    """ Expand short nodes_list '1-5+6+8-12' to a regular nodes list
+
+    >>> expand_short_nodes_list('1-4+6+7-8')
+    [1, 2, 3, 4, 6, 7, 8]
+
+    >>> expand_short_nodes_list('1-4-5')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: 1-4-5 ([0-9+-])
+
+    >>> expand_short_nodes_list('3-3')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: 3-3 ([0-9+-])
+
+    >>> expand_short_nodes_list('3-2')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: 3-2 ([0-9+-])
+
+    >>> expand_short_nodes_list('a-b')
+    Traceback (most recent call last):
+    ValueError: Invalid nodes list: a-b ([0-9+-])
+    """
+
+    try:
+        # '1-4+6+8-8'
+        nodes_ll = [_expand_minus_str(minus_nodes_str) for minus_nodes_str in
+                    nodes_str.split('+')]
+        # [[1, 2, 3], [6], [12]]
+        return list(itertools.chain.from_iterable(nodes_ll))  # flatten
+    except ValueError:
+        # invalid: 6-3 or 6-7-8 or non int values
+        raise ValueError('Invalid nodes list: %s ([0-9+-])' % nodes_str)
