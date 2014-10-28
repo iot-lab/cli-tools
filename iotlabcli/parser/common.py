@@ -98,8 +98,10 @@ def nodes_list_from_info(site, archi, nodes_str):
     """
 
     _check_archi(archi)
-    nodes_list = get_nodes_list(site, archi, nodes_str)
-    return nodes_list
+    nodes_list = get_nodes_list(archi, nodes_str)
+    fmt = "%s.{site}.{domain}".format(site=site, domain=DOMAIN_DNS)
+    nodes_url_list = [fmt % node for node in nodes_list]
+    return nodes_url_list
 
 
 def _check_archi(archi):
@@ -119,15 +121,14 @@ def _check_archi(archi):
     raise ValueError("Invalid node archi: %r not in %s" % (archi, archi_list))
 
 
-def get_nodes_list(site, archi, nodes_list):
-    """ Expand short nodes_list 'site', 'archi', '1-5+6+8-12'
+def get_nodes_list(archi, nodes_list):
+    """ Expand short nodes_list 'archi', '1-5+6+8-12'
     to a regular nodes list
     """
 
     nodes_num_list = expand_short_nodes_list(nodes_list)
 
-    node_fmt = '{archi}-%u.{site}.{domain}'.format(
-        archi=archi, site=site, domain=DOMAIN_DNS)
+    node_fmt = '{archi}-%u'.format(archi=archi)
     nodes = [node_fmt % num for num in nodes_num_list]
 
     return nodes
