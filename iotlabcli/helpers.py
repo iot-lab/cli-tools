@@ -4,16 +4,91 @@
 import os
 import json
 
+OAR_STATES = ["Waiting", "toLaunch", "Launching",
+              "Running",
+              "Finishing",
+              "Terminated", "Error"]
+ACTIVE_STATES = OAR_STATES[OAR_STATES.index('Running')::-1]
 
-def get_current_experiment(api, experiment_id=None):
-    """ Return the given experiment or get the currently running one """
+
+def get_current_experiment(api, experiment_id=None, running_only=True):
+    """ Return the given experiment or get the currently running one.
+    If running_only is false, try to return the experiment the most advanced
+    Waiting < toLaunch < Launching < Running """
     if experiment_id is not None:
         return experiment_id
 
-    # no experiment given, try to find the currently running one
-    exps_dict = api.get_experiments(state='Running')
-    exp_id = _check_experiments_running(exps_dict)
+    if running_only:
+        # no experiment given, try to find the currently running one
+        states = ['Running']
+    else:
+        # or experiment that are starting (from waiting to Running')
+        states = ACTIVE_STATES
+
+    exp_by_states = exps_by_states_dict(api, states)
+
+    exp_id = get_current_exp(exp_by_states, states)
+
     return exp_id
+
+
+def exps_by_states_dict(api, states):
+    """ Return current experiment in `states` as a per state dict """
+
+    # exps == [{'state': 'Waiting', 'id': 10134, ...},
+    #          {'state': 'Waiting', 'id': 10135, ...},
+    #          {'state': 'Running', 'id': 10130, ...}]
+    exps = api.get_experiments(state=','.join(states))['items']
+
+    exp_states_d = {}
+    for exp in exps:
+        exp_states_d.setdefault(str(exp['state']), []).append(exp['id'])
+
+    return exp_states_d  # {'Waiting': [10134, 10135], 'Running': [10130]}
+
+
+def get_current_exp(exp_by_states, states):
+    """ Current experiment is the first state in `states` where there is only
+    one experiment in `exp_by_states`.
+    :raises: ValueError if there is no experiment or if there are multiple
+             experiments of the same state
+
+    >>> get_current_exp({'Running': [123]}, ['Running'])
+    123
+
+    >>> get_current_exp(\
+        {'Waiting': [10134, 10135], 'Launching': [10130]}, ACTIVE_STATES)
+    10130
+
+    >>> get_current_exp({'Running': [123, 234]}, ['Running'])
+    Traceback (most recent call last):
+    ValueError: You have several experiments with state 'Running'
+    Use option -i|--id and choose experiment id in: {'Running': [123, 234]}
+
+    >>> get_current_exp({'Waiting': [123], 'Launching': [121, 122]}, \
+        ACTIVE_STATES)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: You have several experiments with state 'Running, ..., Waiting'
+    Use option -i|--id and choose experiment id in: {...}
+
+    >>> get_current_exp({}, ACTIVE_STATES)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: You have no 'Running, ..., Waiting' experiment
+
+    """
+    states_str = ', '.join(states)
+
+    for state in states:  # keep order of states
+        exps = exp_by_states.get(state, [])
+        if len(exps) == 1:
+            return exps[0]
+        elif len(exps) == 0:
+            continue
+        raise ValueError(
+            "You have several experiments with state {0!r}\n"
+            "Use option -i|--id and choose experiment id in: {1}".format(
+                states_str, exp_by_states))
+    raise ValueError("You have no {0!r} experiment".format(states_str))
 
 
 def node_url_sort_key(node_url):
@@ -100,45 +175,23 @@ def check_experiment_state(state_str=None):
     'Running'
     >>> check_experiment_state('Terminated,Running')
     'Terminated,Running'
-    >>> check_experiment_state('')
-    'Waiting,Launching,Running,Finishing,Terminated,Error'
+    >>> check_experiment_state('')  # doctest: +ELLIPSIS
+    'Waiting,...,Error'
 
-    >>> check_experiment_state('invalid,Terminated')
+    >>> check_experiment_state('invalid,Terminated')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: Invalid experiment states: ['invalid'] should be in \
-['Waiting', 'Launching', 'Running', 'Finishing', 'Terminated', 'Error'].
+    ValueError: Invalid experiment states: ['invalid'] should be in [...].
     """
-    oar_states = [
-        "Waiting", "Launching", "Running", "Finishing", "Terminated", "Error"]
-    state_str = state_str or ','.join(oar_states)  # default to all states
+    state_str = state_str or ','.join(OAR_STATES)  # default to all states
 
-    # Check states are all in oar_states
-    invalid = set(state_str.split(',')) - set(oar_states)
+    # Check states are all in OAR_STATES
+    invalid = set(state_str.split(',')) - set(OAR_STATES)
     if invalid:
         raise ValueError(
             'Invalid experiment states: {state} should be in {states}.'.format(
-                state=sorted(list(invalid)), states=oar_states))
+                state=sorted(list(invalid)), states=OAR_STATES))
 
     return state_str
-
-
-def _check_experiments_running(experiments_dict):
-    """ Return currently running experiment from experiment dict.
-    If None or more than one are found, raise an Error.
-    """
-
-    items = experiments_dict["items"]
-    if len(items) == 0:
-        raise RuntimeError("You don't have any `Running` experiment")
-
-    experiments_id = [exp["id"] for exp in items]
-    if len(experiments_id) > 1:
-        raise RuntimeError(
-            "You have several experiments with state Running. "
-            "Use option -i|--id and choose experiment id in this list : %s" %
-            experiments_id)
-
-    return experiments_id[0]
 
 
 def json_dumps(obj):
