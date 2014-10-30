@@ -10,7 +10,7 @@ EXP_FILENAME = 'new_exp.json'
 
 
 def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
-                      nodes_list, start_time=None, print_json=False):
+                      resources, start_time=None, print_json=False):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
@@ -18,18 +18,18 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     :param api: API Rest api object
     :param name: experiment name
     :param duration: experiment duration in seconds
-    :param resources_list: list of 'exp_resources' which
+    :param resources: list of 'exp_resources' which
     :param print_json: select if experiment should be printed as json instead
         of submitted
     """
 
-    assert nodes_list, 'Empty nodes_list: %r' % nodes_list
+    assert resources, 'Empty resources: %r' % resources
     experiment = _Experiment(name, duration, start_time)
 
     exp_files = helpers.FilesDict()
-    for exp_dict in nodes_list:
-        experiment.add_exp_resources(exp_dict)
-        exp_files.add_firmware(exp_dict.get('firmware', None))  # firmware
+    for res_dict in resources:
+        experiment.add_exp_resources(res_dict)
+        exp_files.add_firmware(res_dict.get('firmware', None))  # firmware
 
     if print_json:  # output experiment description
         return experiment
