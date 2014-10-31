@@ -203,7 +203,7 @@ class TestExperimentStop(CommandMock):
 
 
 class TestExperimentGet(CommandMock):
-    """ Test iotlabcli.experiment.get_experiments """
+    """ Test iotlabcli.experiment.get_experiment """
 
     def test_get_experiments_list(self):
         """ Test experiment.get_experiments_list """
@@ -218,6 +218,41 @@ class TestExperimentGet(CommandMock):
 
         ret = experiment.get_experiment(self.api, 123, option='resources')
         self.assertEquals(ret, API_RET)
+
+
+@patch('iotlabcli.experiment.get_experiment')
+class TestExperimentWait(CommandMock):
+    """ Test iotlabcli.experiment.wait_experiment """
+    wait_ret = []
+
+    def _get_exp(self, *args, **kwargs):  # pylint: disable=unused-argument
+        """ Get experiment state
+        Return values from config list, or 'waiting' """
+        try:
+            state = self.wait_ret.pop(0)
+        except IndexError:
+            state = 'Waiting'
+        return {'state': state}
+
+    def test_wait_experiment(self, get_exp):
+        """ Test the wait_experiment function """
+        self.wait_ret = ['Waiting', 'Waiting', 'toLaunch', 'Launching',
+                         'Running']
+        get_exp.side_effect = self._get_exp
+
+        # simple
+        ret = experiment.wait_experiment(self.api, 123, step=0)
+        self.assertEquals('Running', ret)
+
+        # Error before Running
+        self.wait_ret = ['Waiting', 'toLaunch', 'Launching', 'Error']
+        self.assertRaises(RuntimeError, experiment.wait_experiment,
+                          self.api, 123, step=0)
+
+        # Timeout
+        self.wait_ret = []
+        self.assertRaises(RuntimeError, experiment.wait_experiment,
+                          self.api, 123, step=0.1, timeout=0.5)
 
 
 class TestExperimentGetWriteExpArchive(unittest.TestCase):

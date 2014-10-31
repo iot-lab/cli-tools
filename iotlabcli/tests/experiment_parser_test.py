@@ -129,6 +129,18 @@ class TestMainInfoParser(MainMock):
             SystemExit, experiment_parser.main,
             ['submit', '--duration', '20', '-l', 'grenoble,m3,100-1'])
 
+    @patch('iotlabcli.experiment.wait_experiment')
+    def test_main_wait_parser(self, wait_exp):
+        """ Run experiment_parser.main.info """
+        wait_exp.return_value = {}
+
+        experiment_parser.main(['wait'])
+        wait_exp.assert_called_with(self.api, 123, 'Running', 5, float('+inf'))
+        experiment_parser.main(['wait', '--id', '42',
+                                '--state', 'Launching,Running', '--step', '1',
+                                '--timeout', '60'])
+        wait_exp.assert_called_with(self.api, 42, 'Launching,Running', 1, 60)
+
     @patch('iotlabcli.experiment.load_experiment')
     def test_main_load_parser(self, load_exp):
         """ Run experiment_parser.main.load """

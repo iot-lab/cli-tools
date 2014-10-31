@@ -122,6 +122,25 @@ def parse_options():
                             action='store_true',
                             help=('resources id list by archi and state '
                                   '(EXP_LIST format : 1-34+72)'))
+
+    # ####### WAIT PARSER ###############
+    wait_parser = subparsers.add_parser(
+        'wait', help='wait user experiment started',
+        epilog=help_msgs.WAIT_EPILOG, formatter_class=RawTextHelpFormatter)
+
+    wait_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                             help='experiment id submission')
+
+    wait_parser.add_argument(
+        '--state', default='Running',
+        help="wait states `State1,State2` or Finished, default 'Running'")
+    wait_parser.add_argument(
+        '--step', default=5, type=int,
+        help="Wait time in seconds between each check")
+    wait_parser.add_argument(
+        '--timeout', default=float('+inf'), type=float,
+        help="Max time to wait in seconds")
+
     return parser
 
 
@@ -370,6 +389,22 @@ def info_experiment_parser(opts):
     return experiment.info_experiment(api, opts.list_id, opts.site)
 
 
+def wait_experiment_parser(opts):
+    """ Parse namespace 'opts' object and execute requested 'wait' command """
+
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+
+    exp_id = helpers.get_current_experiment(
+        api, opts.experiment_id, running_only=False)
+
+    sys.stderr.write("Waiting that experiment {0} gets in state {1}\n".format(
+        exp_id, opts.state))
+
+    return experiment.wait_experiment(api, exp_id, opts.state,
+                                      opts.step, opts.timeout)
+
+
 def experiment_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command
     Return result object
@@ -380,6 +415,7 @@ def experiment_parse_and_run(opts):
         'get': get_experiment_parser,
         'load': load_experiment_parser,
         'info': info_experiment_parser,
+        'wait': wait_experiment_parser,
     }[opts.command]
 
     return command(opts)

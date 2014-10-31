@@ -64,8 +64,8 @@ class MainMock(unittest.TestCase):
         patch('iotlabcli.auth.get_user_credentials',
               Mock(return_value=('username', 'password'))).start()
 
-        patch('iotlabcli.helpers.get_current_experiment',
-              (lambda a, x, _=False: 123 if x is None else x)).start()
+        get_exp = (lambda a, x, running_only=False: 123 if x is None else x)
+        patch('iotlabcli.helpers.get_current_experiment', get_exp).start()
 
     def tearDown(self):
         api_mock_stop()

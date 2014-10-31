@@ -3,6 +3,7 @@
 
 from os.path import basename
 import json
+import time
 from iotlabcli import helpers
 
 # static name for experiment file : rename by server-rest
@@ -127,6 +128,38 @@ def info_experiment(api, list_id=False, site=None):
     :param site: Restrict informations collection on site
     """
     return api.get_resources(list_id, site)
+
+
+def wait_experiment(api, exp_id, states='Running',
+                    step=5, timeout=float('+inf')):
+    """ Wait for the experiment to be in `states`
+    and also Terminated or Error
+
+    :param api: API Rest api object
+    :param exp_id: scheduler OAR id submission
+    :param states: Comma separated string of states to wait for
+    :param step: time to wait between each server check
+    :param timeout: timeout if wait takes too long
+
+    """
+
+    start_time = time.time()
+    end_time = start_time + timeout
+
+    full_states = helpers.check_experiment_state(states + ',Terminated,Error')
+
+    while time.time() < end_time:  # timeout
+        state = get_experiment(api, exp_id, 'state')['state']
+        if state not in full_states:
+            time.sleep(step)
+            continue
+        if state in states:  # state was awaited
+            return state
+        # non wanted state, usually 'Terminated or Error'
+        raise RuntimeError(
+            "Experiment {0} already in state {1!r}".format(exp_id, str(state)))
+
+    raise RuntimeError("Timeout reached")
 
 
 def exp_resources(nodes, firmware_path=None, profile_name=None):

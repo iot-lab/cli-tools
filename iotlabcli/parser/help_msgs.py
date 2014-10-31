@@ -64,6 +64,17 @@ Examples:
         + 5,archi=m3:at86rf231+site=strasbourg,stras.elf
 """
 
+WAIT_EPILOG = """
+Examples:
+    * wait that currently starting experiment becomes 'Running':
+        $ experiment-cli wait
+
+    * wait that given experiment gets in state Launching or Running by checking
+      every second and timeout after 60 seconds
+        $ experiment-cli -i 1234 --state Launching,Running --step 1 \
+--timeout 60
+"""
+
 LOAD_EPILOG = """
 
 Examples:
