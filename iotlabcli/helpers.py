@@ -98,11 +98,18 @@ def node_url_sort_key(node_url):
 
     >>> node_url_sort_key("3")  # for alias nodes
     3
+
+    >>> node_url_sort_key("a8-2.grenoble.iot-lab.info")
+    ('grenoble', 'a8', 2)
+    >>> node_url_sort_key("node-a8-2.grenoble.iot-lab.info")
+    ('grenoble', 'node-a8', 2)
+
     """
     if node_url.isdigit():
         return int(node_url)
     _node, site = node_url.split('.')[0:2]
-    node_type, num_str = _node.split('-')[0:2]
+
+    node_type, num_str = _node.rsplit('-', 1)
     return site, node_type, int(num_str)
 
 
