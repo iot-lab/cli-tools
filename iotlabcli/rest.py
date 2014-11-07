@@ -136,8 +136,10 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        return self.method('profiles/%s' % name, method='POST',
-                           data=profile, raw=True)
+        ret = self.method('profiles/%s' % name, method='POST',
+                          data=profile, raw=True)
+        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        return ret
 
     def del_profile(self, name):
         """ Delete user profile
@@ -145,8 +147,9 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
-        return self.method('profiles/%s' % name,
-                           method='DELETE', raw=True)
+        ret = self.method('profiles/%s' % name, method='DELETE', raw=True)
+        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        return ret
 
     # Common methods
 
@@ -177,7 +180,7 @@ class Api(object):
         if raw:
             return content   # when getting archive or profile name
         else:
-            return json.loads(content)
+            return json.loads(content.decode('utf-8'))
 
     @staticmethod
     def _request(url, method='GET', auth=None, data=None):
@@ -191,7 +194,7 @@ class Api(object):
         if method == 'POST':
             headers = {'content-type': 'application/json'}
             req = requests.post(url, auth=auth, headers=headers,
-                                data=helpers.json_dumps(data))
+                                data=helpers.json_dumps(data).encode('utf-8'))
         elif method == 'MULTIPART':
             req = requests.post(url, auth=auth, files=data)
         elif method == 'DELETE':

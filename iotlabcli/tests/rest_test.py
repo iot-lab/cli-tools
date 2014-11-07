@@ -29,7 +29,8 @@ class TestRest(unittest.TestCase):
     def test__method(self):
         """ Test Api._method rest submission """
         ret = {'test': 'val'}
-        ret_val = RequestRet(content=json_dumps(ret), status_code=200)
+        ret_val = RequestRet(content=json_dumps(ret).encode('utf-8'),
+                             status_code=200)
         post = patch('requests.post', return_value=ret_val).start()
         delete = patch('requests.delete', return_value=ret_val).start()
         get = patch('requests.get', return_value=ret_val).start()
@@ -53,7 +54,8 @@ class TestRest(unittest.TestCase):
         # call post
         ret = rest.Api._method(self._url, method='POST', data={})
         post.assert_called_with(
-            self._url, data='{}', headers={'content-type': 'application/json'},
+            self._url, data='{}'.encode('utf-8'),
+            headers={'content-type': 'application/json'},
             auth=None)
         self.assertEquals(ret, ret)
 
@@ -66,15 +68,17 @@ class TestRest(unittest.TestCase):
 
     def test__method_raw(self):
         """ Run as Raw mode """
-        ret_val = RequestRet(content='text_only', status_code=200)
+        ret_val = RequestRet(content='text_only'.encode('utf-8'),
+                             status_code=200)
         with patch('requests.get', return_value=ret_val):
             ret = rest.Api._method(self._url, raw=True)
-            self.assertEquals(ret, 'text_only')
+            self.assertEquals(ret, 'text_only'.encode('utf-8'))
 
     def test__method_errors(self):
         """ Test Api._method rest submission error cases """
 
         # invalid status code
-        ret_val = RequestRet(content='return_text', status_code=404)
+        ret_val = RequestRet(content='return_text'.encode('utf-8'),
+                             status_code=404)
         with patch('requests.get', return_value=ret_val):
             self.assertRaises(RuntimeError, rest.Api._method, self._url)

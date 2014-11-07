@@ -25,7 +25,8 @@ def api_mock(ret=None):
     returned value for api methods will be 'ret' parameter or API_RET
     """
     ret = ret or API_RET
-    ret_val = RequestRet(content=json_dumps(ret), status_code=200)  # HTTP OK
+    ret_val = RequestRet(content=json_dumps(ret).encode('utf-8'),
+                         status_code=200)  # HTTP OK
     patch('requests.post', return_value=ret_val).start()
     patch('requests.delete', return_value=ret_val).start()
     patch('requests.get', return_value=ret_val).start()
