@@ -53,7 +53,7 @@ Examples:
 
     * Physical experiment list:
         + <site_name,archi,resourceid_list,firmware_path,profile_name>
-        + grenoble,m3,1-20,/home/cc1101.hex -l rocquencourt,a8,1-5,,battery
+        + grenoble,m3,1-20,bin/tutorial.elf -l rocquencourt,a8,1-5,,battery
         + grenoble,wsn430,1-5+8+9-11,cc1101.hex,battery
         + grenoble,m3,1-20
 
