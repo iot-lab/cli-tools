@@ -48,7 +48,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node_firmware(self):
         """ Exp alias multiple time same reservation firmware """
-        nodes = '5,site=devgrenoble+archi=m3:at86rf231'
+        nodes = '5,site=grenoble+archi=m3:at86rf231'
         nodes += ',integration/m3_autotest.elf'
         cmd = ('experiment-cli submit -d 5 -n test_cli' +
                ' -l {}'.format(nodes) +
@@ -56,7 +56,7 @@ class TestCliToolsExperiments(unittest.TestCase):
                ' -l {}'.format(nodes))
 
         self._start_experiment(cmd)
-        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        self.assertEqual('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
         self._stop_experiment()
@@ -64,12 +64,12 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
-        nodes = '5,site=devgrenoble+archi=m3:at86rf231'
+        nodes = '5,site=grenoble+archi=m3:at86rf231'
         cmd = ('experiment-cli submit -d 5 -n test_cli ' +
                ' -l {} '.format(nodes) + ' -l {}'.format(nodes))
 
         self._start_experiment(cmd)
-        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        self.assertEqual('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
@@ -84,13 +84,13 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli('profile-cli addwsn430 -n {}'.format('test_wsn430'))
 
         cmd = ('experiment-cli submit -d 5 -n test_cli' +
-               (' -l 5,site=devgrenoble+archi=m3:at86rf231,' +
+               (' -l 5,site=grenoble+archi=m3:at86rf231,' +
                 'integration/m3_autotest.elf,test_m3') +
-               (' -l 1,site=devlille+archi=wsn430:cc2420,' +
+               (' -l 1,site=euratech+archi=wsn430:cc2420,' +
                 'integration/tp.hex,test_wsn430'))
 
         self._start_experiment(cmd)
-        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        self.assertEqual('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
@@ -114,12 +114,12 @@ class TestCliToolsExperiments(unittest.TestCase):
     def test_an_experiment_physical_one_site(self):
         """ Run an experiment on m3 nodes simple"""
 
-        cmd = ('experiment-cli info -li --site devgrenoble')
+        cmd = ('experiment-cli info -li --site grenoble')
 
-        nodes = self._find_working_nodes('devgrenoble', 'm3', 10)
+        nodes = self._find_working_nodes('grenoble', 'm3', 10)
         cmd = 'experiment-cli submit -d 5 -n test_cli -l {} '.format(nodes)
         self._start_experiment(cmd)
-        self.assertEquals('Running', self._wait_state_or_finished('Running'))
+        self.assertEqual('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
         self._get_exp_info()
         self._reset_nodes_no_expid()
@@ -188,7 +188,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         cmd = 'experiment-cli get --print' + self.id_str
         self.exp_desc = call_cli(cmd)
         try:
-            self.assertNotEquals([], self.exp_desc['deploymentresults']['0'])
+            self.assertNotEqual([], self.exp_desc['deploymentresults']['0'])
         except KeyError:
             LOGGER.warning("No Deploymentresults:%r", self.exp_desc.keys())
 
@@ -201,25 +201,12 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli(cmd)
         call_cli('experiment-cli get -a -i {}'.format(self.exp_id))
 
-    def _wait_state_or_finished(self, state=None):
+    def _wait_state_or_finished(self, states='Error,Terminated'):
         """ Wait experiment get in state, or states error and terminated """
-        cur_state = None
-        states_list = ['Error', 'Terminated', state]
-        states_str = ''
-
-        while True:
-            # wait requested states
-            cmd = 'experiment-cli get --exp-state -i {}'.format(self.exp_id)
-            state = call_cli(cmd)["state"]
-            if state != cur_state:
-                self._state_debug(states_str, state)
-            self._state_debug(states_str, '.')
-
-            if state in states_list:
-                self._state_debug(states_str, '\n')
-                return state
-            cur_state = state
-            time.sleep(5)
+        cmd = 'experiment-cli wait --state {0} --step 5 -i {1}'.format(
+            states, self.exp_id)
+        LOGGER.info(cmd)
+        return call_cli(cmd)
 
     @staticmethod
     def _state_debug(states_str, x=None):
@@ -285,11 +272,15 @@ class TestCliToolsAProfile(unittest.TestCase):
         profile_dict = call_cli(cmd + ' --json')
 
         # add profile return name
-        self.assertEquals(name, call_cli(cmd))
+        self.assertEqual(name, call_cli(cmd))
 
         get_profile_dict = call_cli('profile-cli get --name {}'.format(name))
-        # Don't break with new features
-        self.assertLessEqual(profile_dict, get_profile_dict)
+        # compare that initial dict is a subset of result dict
+        #     can't '<=' dict in python3, so update result dict with initial
+        #     values and see if it stays equals
+        cmp_prof_dict = get_profile_dict.copy()
+        cmp_prof_dict.update(profile_dict)
+        self.assertEqual(cmp_prof_dict, get_profile_dict)
 
     def _get_and_load(self, name):
         """ Get a profile and try loading it
@@ -302,10 +293,10 @@ class TestCliToolsAProfile(unittest.TestCase):
             prof.flush()
             l_name = call_cli('profile-cli load --file {}'.format(prof.name))
         # returned name are the same
-        self.assertEquals(l_name, name)
+        self.assertEqual(l_name, name)
         get_loaded_profile = call_cli('profile-cli get --name {}'.format(name))
         # returned profile are the same
-        self.assertEquals(get_profile_dict, get_loaded_profile)
+        self.assertEqual(get_profile_dict, get_loaded_profile)
 
     def _add_prof(self, cmd, name):
         """ Test adding and loading a user profile """
@@ -330,7 +321,7 @@ class TestCliToolsAProfile(unittest.TestCase):
         # check that profiles have been added
         profs = call_cli('profile-cli get -l')
         profiles_names_new = set([p['profilename'] for p in profs])
-        self.assertEquals(profiles_names, profiles_names_new)
+        self.assertEqual(profiles_names, profiles_names_new)
 
         # ret == ''
         call_cli('profile-cli del --name {}'.format(self.profile['m3']))
@@ -355,7 +346,7 @@ class TestCliToolsAProfile(unittest.TestCase):
         # check that profiles have been added
         profs = call_cli('profile-cli get -l')
         profiles_names_new = set([p['profilename'] for p in profs])
-        self.assertEquals(profiles_names, profiles_names_new)
+        self.assertEqual(profiles_names, profiles_names_new)
 
         # ret == ''
         call_cli('profile-cli del --name {}'.format(self.profile['wsn430']))
@@ -370,7 +361,7 @@ class TestAnErrorCase(unittest.TestCase):
         """ Test some node parser errors """
         # invalid argument number
         self.assertRaises(
-            SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m3',
+            SystemExit, call_cli, 'node-cli --reset -l grenoble,m3',
             print_err=False)
 
         # invalid site
@@ -380,7 +371,7 @@ class TestAnErrorCase(unittest.TestCase):
 
         # invalid archi
         self.assertRaises(
-            SystemExit, call_cli, 'node-cli --reset -l devgrenoble,m4,1',
+            SystemExit, call_cli, 'node-cli --reset -l grenoble,m4,1',
             print_err=False)
 
         # invalid state
@@ -393,34 +384,34 @@ class TestAnErrorCase(unittest.TestCase):
     def test_experiment_parser_errors(self):
         """ Test some experiment parser errors """
         self.assertRaises(SystemExit, call_cli,
-                          'experiment-cli submit -d 20 -l devgrenoble,m3,70-1',
+                          'experiment-cli submit -d 20 -l grenoble,m3,70-1',
                           print_err=False)
 
         # alias invalid archi
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,site=devgrenoble+archi=inval+mobile=1'),
+             ' -l 3,site=grenoble+archi=inval+mobile=1'),
             print_err=False)
 
         # too many values
         self.assertRaises(
             SystemExit, call_cli,
-            'experiment-cli submit -d 20 -l devgrenoble,m3,1,fw,prof,extra',
+            'experiment-cli submit -d 20 -l grenoble,m3,1,fw,prof,extra',
             print_err=False)
 
         # alias and physical
         self.assertRaises(
             SystemExit, call_cli,
-            ('experiment-cli submit -d 20 -l devgrenoble,m3,1' +
-             ' -l 3,site=devgrenoble+archi=m3:at86rf231+mobile=true'),
+            ('experiment-cli submit -d 20 -l grenoble,m3,1' +
+             ' -l 3,site=grenoble+archi=m3:at86rf231+mobile=true'),
             print_err=False)
 
         # alias invalid values
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,site=devgrenoble+archi=m3:at86rf231+inval_prop=2'),
+             ' -l 3,site=grenoble+archi=m3:at86rf231+inval_prop=2'),
             print_err=False)
 
         # No site or archi
@@ -443,7 +434,7 @@ class TestAnErrorCase(unittest.TestCase):
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,archi=m3:at86rf231+site=devgrenoble+mobile=turtlebot'),
+             ' -l 3,archi=m3:at86rf231+site=grenoble+mobile=turtlebot'),
             print_err=False)
 
     def test_rest_errors(self):
@@ -452,7 +443,7 @@ class TestAnErrorCase(unittest.TestCase):
                           print_err=False)
 
 
-def call_cli(cmd, field=None, print_err=True):
+def call_cli(cmd, print_err=True):
     """ Call cli tool """
     argv = shlex.split(cmd)
     stdout = StringIO()
