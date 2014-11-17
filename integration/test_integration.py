@@ -13,9 +13,7 @@
 #  * run commands without exp_id in error cases no exp or many exps running
 #
 
-from __future__ import print_function
 import os
-import sys
 import json
 import shlex
 import time
@@ -208,22 +206,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         LOGGER.info(cmd)
         return call_cli(cmd)
 
-    @staticmethod
-    def _state_debug(states_str, x=None):
-        """ Debug print state
-        Update are printed on each round on stdout and in one time on logger
-        """
-        if x != '\n':
-            states_str += x
-            print(x, end='')
-            sys.stdout.flush()
-        else:
-            # final
-            print('')
-            LOGGER.debug(states_str)
-
     # run whole tests only without experiments
-
     def setUp(self):
         self.cleanup()
 
@@ -465,17 +448,17 @@ def call_cli(cmd, print_err=True):
     return ret
 
 
-def setup_auth(username, password):
-    """ Setup the username password for test user """
-    call_cli('auth-cli --user {} --password {}'.format(username, password))
+def try_config_iotlab_test_account():
+    """ Try to configure tests to use 'iotlab' account """
+    try:
+        password = os.environ['IOTLAB_TEST_PASSWORD']
+        # use a fake auth_file
+        os.environ['IOTLAB_PASSWORD_FILE'] = 'test_auth_file'
+        call_cli('auth-cli --user {} --password {}'.format('iotlab', password))
+    except KeyError:
+        pass
 
 
 if __name__ == '__main__':
-    USERNAME = "iotlab"
-    PASSWORD = os.getenv('IOTLAB_TEST_PASSWORD')
-    assert os.getenv('IOTLAB_TEST_PASSWORD') is not None
-
-    os.environ['IOTLAB_PASSWORD_FILE'] = 'test_auth_file'
-
-    setup_auth(USERNAME, PASSWORD)
+    try_config_iotlab_test_account()
     unittest.main()
