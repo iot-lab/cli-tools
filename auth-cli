@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 
-from iotlabcli import auth_parser
-auth_parser.main()
+import iotlabcli.parser.auth
+iotlabcli.parser.auth.main()

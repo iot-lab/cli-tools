@@ -1,78 +1,155 @@
 # -*- coding:utf-8 -*-
 """Helpers methods"""
 
-import getpass
 import os
-import base64
 import json
-import argparse
 
-DOMAIN_DNS = 'iot-lab.info'
-
-
-def password_prompt():
-    """ password prompt when command-line option username (e.g. -u or --user)
-    is used without password
-
-    :returns password
-    """
-    pprompt = lambda: (getpass.getpass(),
-                       getpass.getpass('Retype password: '))
-    prompt1, prompt2 = pprompt()
-    while prompt1 != prompt2:
-        print 'Passwords do not match. Try again'
-        prompt1, prompt2 = pprompt()
-    return prompt1
+OAR_STATES = ["Waiting", "toLaunch", "Launching",
+              "Running",
+              "Finishing",
+              "Terminated", "Error"]
+ACTIVE_STATES = OAR_STATES[OAR_STATES.index('Running')::-1]
 
 
-def create_password_file(username, password, parser):
-    """ Create a password file for basic authentication http when
-    command-line option username and password are used We write .iotlabrc
-    file in user home directory with format username:base64(password)
+def get_current_experiment(api, experiment_id=None, running_only=True):
+    """ Return the given experiment or get the currently running one.
+    If running_only is false, try to return the experiment the most advanced
+    Waiting < toLaunch < Launching < Running """
+    if experiment_id is not None:
+        return experiment_id
 
-    :param username: basic http auth username
-    :type username: string
-    :param password: basic http auth password
-    :type password: string
-    :param parser: command-line parser
-    """
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    try:
-        password_file = open('%s/%s' % (home_directory, '.iotlabrc'), 'wb')
-    except IOError:
-        parser.error("Cannot create password file in home directory: %s"
-                     % home_directory)
+    if running_only:
+        # no experiment given, try to find the currently running one
+        states = ['Running']
     else:
-        password_file.write('%s:%s' % (username, base64.b64encode(password)))
-        password_file.close()
+        # or experiment that are starting (from waiting to Running')
+        states = ACTIVE_STATES
+
+    exp_by_states = exps_by_states_dict(api, states)
+
+    exp_id = get_current_exp(exp_by_states, states)
+
+    return exp_id
 
 
-def read_password_file(parser):
-    """ Try to read password file (.iotlabrc) in user home directory when
-    command-line option username and password are not used. If password
-    file exist whe return username and password for basic auth http
-    authentication
+def exps_by_states_dict(api, states):
+    """ Return current experiment in `states` as a per state dict """
 
-    :param parser: command-line parser
+    # exps == [{'state': 'Waiting', 'id': 10134, ...},
+    #          {'state': 'Waiting', 'id': 10135, ...},
+    #          {'state': 'Running', 'id': 10130, ...}]
+    exps = api.get_experiments(state=','.join(states))['items']
+
+    exp_states_d = {}
+    for exp in exps:
+        exp_states_d.setdefault(str(exp['state']), []).append(exp['id'])
+
+    return exp_states_d  # {'Waiting': [10134, 10135], 'Running': [10130]}
+
+
+def get_current_exp(exp_by_states, states):
+    """ Current experiment is the first state in `states` where there is only
+    one experiment in `exp_by_states`.
+    :raises: ValueError if there is no experiment or if there are multiple
+             experiments of the same state
+
+    >>> get_current_exp({'Running': [123]}, ['Running'])
+    123
+
+    >>> get_current_exp(\
+        {'Waiting': [10134, 10135], 'Launching': [10130]}, ACTIVE_STATES)
+    10130
+
+    >>> get_current_exp({'Running': [123, 234]}, ['Running'])
+    Traceback (most recent call last):
+    ValueError: You have several experiments with state 'Running'
+    Use option -i|--id and choose experiment id in: {'Running': [123, 234]}
+
+    >>> get_current_exp({'Waiting': [123], 'Launching': [121, 122]}, \
+        ACTIVE_STATES)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: You have several experiments with state 'Running, ..., Waiting'
+    Use option -i|--id and choose experiment id in: {...}
+
+    >>> get_current_exp({}, ACTIVE_STATES)  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: You have no 'Running, ..., Waiting' experiment
+
     """
+    states_str = ', '.join(states)
 
-    home_directory = os.getenv('USERPROFILE') or os.getenv('HOME')
-    path_file = '%s/%s' % (home_directory, '.iotlabrc')
-    if os.path.exists(path_file):
-        try:
-            password_file = open(path_file, 'r')
-        except IOError:
-            parser.error("Cannot open password file in $ome directory: "
-                         "%s." % home_directory)
-        else:
-            field = (password_file.readline()).split(':')
-            if not len(field) == 2:
-                parser.error("Bad password file format in home directory: "
-                             "%s." % home_directory)
-            password_file.close()
-            return field[0], base64.b64decode(field[1])
-    else:
-        return None, None
+    for state in states:  # keep order of states
+        exps = exp_by_states.get(state, [])
+        if len(exps) == 1:
+            return exps[0]
+        elif len(exps) == 0:
+            continue
+        raise ValueError(
+            "You have several experiments with state {0!r}\n"
+            "Use option -i|--id and choose experiment id in: {1}".format(
+                states_str, exp_by_states))
+    raise ValueError("You have no {0!r} experiment".format(states_str))
+
+
+def node_url_sort_key(node_url):
+    """
+    >>> node_url_sort_key("m3-2.grenoble.iot-lab.info")
+    ('grenoble', 'm3', 2)
+
+    >>> node_url_sort_key("3")  # for alias nodes
+    3
+
+    >>> node_url_sort_key("a8-2.grenoble.iot-lab.info")
+    ('grenoble', 'a8', 2)
+    >>> node_url_sort_key("node-a8-2.grenoble.iot-lab.info")
+    ('grenoble', 'node-a8', 2)
+
+    """
+    if node_url.isdigit():
+        return int(node_url)
+    _node, site = node_url.split('.')[0:2]
+
+    node_type, num_str = _node.rsplit('-', 1)
+    return site, node_type, int(num_str)
+
+
+class FilesDict(dict):
+    """ Dictionary to store experiment files.
+    We don't want adding two different values for the same key,
+    so __setitem__ is overriden to check that
+
+    >>> file_dict = FilesDict()
+
+    # can re-add same value
+    >>> file_dict['test'] = 'value'
+    >>> file_dict['test'] = 'value'
+
+    >>> file_dict['test2'] = 'value'
+    >>> file_dict['test3'] = 'value3'
+    >>> file_dict == {'test': 'value', 'test3': 'value3', 'test2': 'value'}
+    True
+
+    # cannot add a new value to an existing key
+
+    >>> file_dict['test'] = 'a_new_value'
+    Traceback (most recent call last):
+    ValueError: Has different values for same key 'test'
+    """
+    def __init__(self):
+        dict.__init__(self)
+
+    def __setitem__(self, key, val):
+        """ Prevent adding a new different value to an existing key """
+        if key not in self:
+            dict.__setitem__(self, key, val)
+        elif self[key] != val:
+            raise ValueError('Has different values for same key %r' % key)
+
+    def add_firmware(self, firmware_path):
+        """ Add a firmwware to the dictionary. If None, do nothing """
+        if firmware_path is None:
+            return
+        self[os.path.basename(firmware_path)] = read_file(firmware_path, 'b')
 
 
 def read_custom_api_url():
@@ -98,240 +175,36 @@ def read_file(file_path, opt=''):
         return _fd.read()
 
 
-def read_json_file(json_file_name, json_file_data, parser):
-    try:
-        json_data = json.loads(json_file_data)
-        return json_data
-    except ValueError:
-        parser.error("Unable to read JSON description file: %s." %
-                     json_file_name)
+def check_experiment_state(state_str=None):
+    """ Check that given states are valid if None given, return all states
 
+    >>> check_experiment_state('Running')
+    'Running'
+    >>> check_experiment_state('Terminated,Running')
+    'Terminated,Running'
+    >>> check_experiment_state('')  # doctest: +ELLIPSIS
+    'Waiting,...,Error'
 
-def write_experiment_archive(experiment_id, data, parser):
-    try:
-        archive_file = open('%s.tar.gz' % experiment_id, 'wb')
-    except IOError:
-        parser.error("Unable to save experiment archive file: \
-            %s.tar.gz." % experiment_id)
-    else:
-        archive_file.write(data)
-        archive_file.close()
-
-
-def get_user_credentials(username, password, parser):
-    if (password is None) and (username is not None):
-        password = getpass.getpass()
-    elif (password is not None) and (username is not None):
-        pass
-    else:
-        username, password = read_password_file(parser)
-    return username, password
-
-
-def check_radio_period(period):
-    value = int(period)
-    if not value in range(1, 65536):
-        raise argparse.ArgumentTypeError(
-            "invalid period choice : %s (choose from 1 .. 65535)" % (value,))
-    return value
-
-
-def check_radio_num_per_channel(num):
-    value = int(num)
-    if not value in range(1, 256):
-        raise argparse.ArgumentTypeError(
-            "invalid period choice : %s (choose from 1 .. 255)" % (value,))
-    return value
-
-
-def check_radio_channels(channel):
-    value = int(channel)
-    if value not in range(11, 27):
-        raise argparse.ArgumentTypeError(
-            "invalid channel choice : %s (choose from 11 .. 26)" % (value,))
-    return value
-
-
-def check_experiment_state(state, parser):
-    oar_state = ["Terminated", "Waiting", "Launching", "Finishing",
-                 "Running", "Error"]
-
-    if state is None:
-        return ','.join(oar_state)
-
-    for state in state.split(','):
-        if state not in oar_state:
-            parser.error('The experiment filter state %s is invalid.' % state)
-    return state
-
-
-def check_site(site_name, sites_json, parser):
-    for site in sites_json["items"]:
-        if site["site"] == site_name:
-            return site_name
-    parser.error("The site name %s doesn't exist" % site_name)
-
-
-def check_experiments_running(experiments_json, parser):
-    items = experiments_json["items"]
-    if len(items) == 0:
-        parser.error("You don't have an experiment with state Running")
-
-    #experiments_id = []
-    #for exp in items:
-    #    experiments_id.append(exp["id"])
-    experiments_id = [exp["id"] for exp in items]
-    if len(experiments_id) > 1:
-        parser.error(
-            "You have several experiments with state Running. "
-            "Use option -i|--id and choose experiment id in this list : %s" %
-            experiments_id)
-    else:
-        return experiments_id[0]
-
-
-def check_command_list(nodes_list, parser):
-    """
-    >>> check_command_list('grenoble,wsn430,0-5+6+8', None)
-    ['grenoble', 'wsn430', '0-5+6+8']
-
-    >>> check_command_list('grenoble;wsn430;0-6', None)
+    >>> check_experiment_state('invalid,Terminated')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    AttributeError: 'NoneType' object has no attribute 'error'
-
+    ValueError: Invalid experiment states: ['invalid'] should be in [...].
     """
-    param_list = nodes_list.split(',')
-    if len(param_list) == 3:
-        return param_list
-    parser.error('Invalid number of argument in nodes list %s' % nodes_list)
+    state_str = state_str or ','.join(OAR_STATES)  # default to all states
+
+    # Check states are all in OAR_STATES
+    invalid = set(state_str.split(',')) - set(OAR_STATES)
+    if invalid:
+        raise ValueError(
+            'Invalid experiment states: {state} should be in {states}.'.format(
+                state=sorted(list(invalid)), states=OAR_STATES))
+
+    return state_str
 
 
-def check_experiment_list(exp_list, parser):
-    param_list = exp_list.split(',')
-    valid_list = True
-    if param_list[0].isdigit():
-        if len(param_list) < 2 or len(param_list) > 4:
-            valid_list = False
-        experiment_type = 'alias'
-    else:
-        if len(param_list) < 3 or len(param_list) > 5:
-            valid_list = False
-        experiment_type = 'physical'
-
-    if not valid_list:
-        parser.error(
-            'The number of argument in experiment %s list %s is not valid.'
-            % (experiment_type, exp_list))
-    return experiment_type, param_list
-
-
-def check_archi(archi, parser):
-    """
-    >>> check_archi('wsn430', None)
-    'wsn430'
-    >>> check_archi('m3', None)
-    'm3'
-    >>> check_archi('a8', None)
-    'a8'
-
-    >>> check_archi('msp430', None)
-    Traceback (most recent call last):
-    AttributeError: 'NoneType' object has no attribute 'error'
-
-    """
-    archi_list = ['wsn430', 'm3', 'a8']
-    if archi in archi_list:
-        return archi
-    parser.error('Invalid archi in physical experiment list : %s' % archi_list)
-
-
-def check_nodes_list(site, archi, nodes_list, parser):
-    physical_nodes = []
-    for nodes in nodes_list.split('+'):
-        node = nodes.split('-')
-        if len(node) == 1 and node[0].isdigit():
-            # 42
-            physical_node = "%s-%s.%s.%s" % (archi,
-                                             node[0],
-                                             site,
-                                             DOMAIN_DNS)
-            physical_nodes.append(physical_node)
-        elif (len(node) == 2 and (node[0].isdigit() and node[1].isdigit())
-                and (int(node[0]) < int(node[1]))):
-            # 42-69
-            first = int(node[0])
-            last = int(node[1])
-            for node_id in range(first, last + 1):
-                physical_node = "%s-%s.%s.%s" % (archi,
-                                                 node_id,
-                                                 site,
-                                                 DOMAIN_DNS)
-                physical_nodes.append(physical_node)
-        else:
-            # invalid: 6-3 or 6-7-8
-            parser.error('You must specify a valid list node %s ([0-9+-]).'
-                         % nodes_list)
-    return physical_nodes
-
-
-def check_properties(properties_list, sites_json, parser):
-    properties = properties_list.split('+')
-    if len(properties) > 3:
-        parser.error('You must specify a valid list with "archi", '
-                     '"site" and "mobile" properties : '
-                     '%s.' % properties_list)
-    archi = [prop for prop in properties if prop.startswith('archi=')]
-    site = [prop for prop in properties if prop.startswith('site=')]
-    mobile = [prop for prop in properties if prop.startswith('mobile=')]
-
-    if len(archi) == 0 or len(site) == 0:
-        parser.error('Properties "archi" and "site" are mandatory.')
-
-    archi_prop = archi[0].split('=')[1]
-    site_prop = site[0].split('=')[1]
-    check_site(site_prop, sites_json, parser)
-
-    properties_dict = {'site': site_prop, 'archi': archi_prop}
-    if len(mobile) == 0:
-        properties_dict['mobile'] = False
-    else:
-        mobile_prop = mobile[0].split('=')[1]
-        properties_dict['mobile'] = mobile_prop
-    return properties_dict
-
-
-def open_file(file_path, parser):
-    """ Open and read a file
-    """
-    try:
-        # exanduser replace '~' with the correct path
-        file_d = open(os.path.expanduser(file_path), 'r')
-    except IOError as err:
-        parser.error(err)
-    else:
-        file_name = os.path.basename(file_d.name)
-        file_data = file_d.read()
-        file_d.close()
-    return file_name, file_data
-
-
-def check_experiment_firmwares(firmware_path, firmwares, parser):
-    """ Check a firmware in experiment list :
-        _ try to open/read firmware file
-        _ verify that firmwares file cannot have the same name with
-        different path
-
-    :param firmware_path: path of firmware file
-    :type firmware_path: string
-    :param firmwares: experiment firmwares (name and path)
-    :type firmwares: dictionnary
-    :param parser: command-line parser
-    """
-    name, body = open_file(firmware_path, parser)
-
-    if firmwares.get(name, firmware_path) != firmware_path:
-        parser.error('A firmware with same name %s and different path already '
-                     'present' % firmware_path)
-
-    firmwares[name] = firmware_path
-    return name, body, firmwares
+def json_dumps(obj):
+    """ Dumps data to json """
+    class _Encoder(json.JSONEncoder):
+        """ Encoder for serialization object python to JSON format """
+        def default(self, obj):  # pylint: disable=method-hidden
+            return obj.__dict__
+    return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)

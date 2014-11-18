@@ -4,3 +4,11 @@ dist
 build
 MANIFEST
 iotlabcli.egg-info
+.tox
+
+*.egg
+*.swp
+.coverage
+coverage.xml
+nosetests.xml
+cover/
