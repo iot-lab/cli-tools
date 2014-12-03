@@ -136,9 +136,7 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        ret = self.method('profiles/%s' % name, method='POST',
-                          data=profile, raw=True)
-        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        ret = self.method('profiles/%s' % name, method='POST', data=profile)
         return ret
 
     def del_profile(self, name):
@@ -147,8 +145,7 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
-        ret = self.method('profiles/%s' % name, method='DELETE', raw=True)
-        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        ret = self.method('profiles/%s' % name, method='DELETE')
         return ret
 
     # Common methods
