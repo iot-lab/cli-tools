@@ -15,6 +15,7 @@ import iotlabcli.parser.node as node_parser
 from iotlabcli.tests.my_mock import MainMock, api_mock, api_mock_stop
 
 # pylint: disable=missing-docstring,too-many-public-methods
+# pylint: disable=too-few-public-methods
 
 
 @patch('iotlabcli.node.node_command')

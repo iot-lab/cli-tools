@@ -113,7 +113,7 @@ def node_url_sort_key(node_url):
     return site, node_type, int(num_str)
 
 
-class FilesDict(dict):
+class FilesDict(dict):  # pylint: disable=too-few-public-methods
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
     so __setitem__ is overriden to check that
@@ -203,7 +203,7 @@ def check_experiment_state(state_str=None):
 
 def json_dumps(obj):
     """ Dumps data to json """
-    class _Encoder(json.JSONEncoder):
+    class _Encoder(json.JSONEncoder):  # pylint: disable=too-few-public-methods
         """ Encoder for serialization object python to JSON format """
         def default(self, obj):  # pylint: disable=method-hidden
             return obj.__dict__

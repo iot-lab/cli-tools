@@ -4,6 +4,8 @@
 
 # pylint:disable=too-many-public-methods
 # pylint:disable=protected-access
+# pylint >= 1.4
+# pylint:disable=too-few-public-methods
 
 import os.path
 import unittest
