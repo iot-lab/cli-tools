@@ -130,7 +130,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
         cmd = 'experiment-cli info -li --site {0}'.format(site)
 
-        nodes = self._find_working_nodes(site, 'm3', 10)
+        nodes = self._find_working_nodes(site, 'm3', 3)
         cmd = 'experiment-cli submit -d 5 -n test_cli -l {} '.format(nodes)
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
