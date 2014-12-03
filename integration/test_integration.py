@@ -499,7 +499,7 @@ if __name__ == '__main__':
     failfast = False
     opts = opts_parser().parse_args()
     if opts.dev:
-        os.environ['IOTLAB_API_URL'] = 'https://devgrenoble.senslab.info'
+        os.environ['IOTLAB_API_URL'] = 'https://devgrenoble.senslab.info/rest/'
         NODES = SITES['dev']
 
     try_config_iotlab_test_account()
