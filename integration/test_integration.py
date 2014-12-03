@@ -266,12 +266,18 @@ class TestCliToolsProfile(unittest.TestCase):
             if prof in profiles_names:
                 call_cli('profile-cli del --name {}'.format(prof))
 
+    def _del_prof(self, name):
+        """ Add a profile and get it to check it's the same """
+        cmd = 'profile-cli del --name ' + name
+        del_dict = call_cli(cmd)
+        self.assertEqual({u'delete': unicode(name)}, del_dict)
+
     def _add_profile_simple(self, cmd, name):
         """ Add a profile and get it to check it's the same """
         profile_dict = call_cli(cmd + ' --json')
 
         # add profile return name
-        self.assertEqual(name, call_cli(cmd))
+        self.assertEqual({u'create': unicode(name)}, call_cli(cmd))
 
         get_profile_dict = call_cli('profile-cli get --name {}'.format(name))
         # compare that initial dict is a subset of result dict
@@ -290,9 +296,9 @@ class TestCliToolsProfile(unittest.TestCase):
         with NamedTemporaryFile(mode='w+') as prof:
             prof.write(json.dumps(get_profile_dict))
             prof.flush()
-            l_name = call_cli('profile-cli load --file {}'.format(prof.name))
+            load_ret = call_cli('profile-cli load --file {}'.format(prof.name))
         # returned name are the same
-        self.assertEqual(l_name, name)
+        self.assertEqual({u'create': unicode(name)}, load_ret)
         get_loaded_profile = call_cli('profile-cli get --name {}'.format(name))
         # returned profile are the same
         self.assertEqual(get_profile_dict, get_loaded_profile)
@@ -322,9 +328,8 @@ class TestCliToolsProfile(unittest.TestCase):
         profiles_names_new = set([p['profilename'] for p in profs])
         self.assertEqual(profiles_names, profiles_names_new)
 
-        # ret == ''
-        call_cli('profile-cli del --name {}'.format(self.profile['m3']))
-        call_cli('profile-cli del --name {}'.format(self.profile['m3_full']))
+        self._del_prof(self.profile['m3'])
+        self._del_prof(self.profile['m3_full'])
 
     def test_wsn430_profile(self):
         """ Test creating wsn430 profiles and deleting them """
@@ -347,10 +352,8 @@ class TestCliToolsProfile(unittest.TestCase):
         profiles_names_new = set([p['profilename'] for p in profs])
         self.assertEqual(profiles_names, profiles_names_new)
 
-        # ret == ''
-        call_cli('profile-cli del --name {}'.format(self.profile['wsn430']))
-        call_cli('profile-cli del --name {}'.format(
-            self.profile['wsn430_full']))
+        self._del_prof(self.profile['wsn430'])
+        self._del_prof(self.profile['wsn430_full'])
 
 
 class TestAnErrorCase(unittest.TestCase):
