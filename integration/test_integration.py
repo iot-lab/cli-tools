@@ -13,6 +13,7 @@
 #  * run commands without exp_id in error cases no exp or many exps running
 #
 
+import argparse
 import os
 import json
 import shlex
@@ -30,6 +31,20 @@ _HANDLER = logging.StreamHandler()
 _HANDLER.setFormatter(_FMT)
 LOGGER.addHandler(_HANDLER)
 
+
+SITES = {
+    'prod': {
+        'm3': 'grenoble',
+        'cc2420': 'euratech',
+    },
+    'dev': {
+        'm3': 'devgrenoble',
+        'cc2420': 'devlille',
+    }
+}
+
+NODES = SITES['prod']
+
 from tempfile import NamedTemporaryFile
 
 try:
@@ -46,7 +61,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node_firmware(self):
         """ Exp alias multiple time same reservation firmware """
-        nodes = '5,site=grenoble+archi=m3:at86rf231'
+        nodes = '5,site={m3}+archi=m3:at86rf231'.format(**NODES)
         nodes += ',integration/m3_autotest.elf'
         cmd = ('experiment-cli submit -d 5 -n test_cli' +
                ' -l {}'.format(nodes) +
@@ -62,7 +77,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
-        nodes = '5,site=grenoble+archi=m3:at86rf231'
+        nodes = '5,site={m3}+archi=m3:at86rf231'.format(**NODES)
         cmd = ('experiment-cli submit -d 5 -n test_cli ' +
                ' -l {} '.format(nodes) + ' -l {}'.format(nodes))
 
@@ -82,10 +97,10 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli('profile-cli addwsn430 -n {}'.format('test_wsn430'))
 
         cmd = ('experiment-cli submit -d 5 -n test_cli' +
-               (' -l 5,site=grenoble+archi=m3:at86rf231,' +
+               (' -l 5,site={m3}+archi=m3:at86rf231,' +
                 'integration/m3_autotest.elf,test_m3') +
-               (' -l 1,site=euratech+archi=wsn430:cc2420,' +
-                'integration/tp.hex,test_wsn430'))
+               (' -l 1,site={cc2420}+archi=wsn430:cc2420,' +
+                'integration/tp.hex,test_wsn430')).format(**NODES)
 
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -111,10 +126,11 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_physical_one_site(self):
         """ Run an experiment on m3 nodes simple"""
+        site = NODES['m3']
 
-        cmd = ('experiment-cli info -li --site grenoble')
+        cmd = 'experiment-cli info -li --site {0}'.format(site)
 
-        nodes = self._find_working_nodes('grenoble', 'm3', 10)
+        nodes = self._find_working_nodes(site, 'm3', 10)
         cmd = 'experiment-cli submit -d 5 -n test_cli -l {} '.format(nodes)
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -232,7 +248,7 @@ class TestCliToolsExperiments(unittest.TestCase):
             call_cli('experiment-cli stop -i {}'.format(exp_id))
 
 
-class TestCliToolsAProfile(unittest.TestCase):
+class TestCliToolsProfile(unittest.TestCase):
     """ Test the cli tools profile """
     profile = {
         'm3': 'test_cli_profile_m3',
@@ -344,7 +360,8 @@ class TestAnErrorCase(unittest.TestCase):
         """ Test some node parser errors """
         # invalid argument number
         self.assertRaises(
-            SystemExit, call_cli, 'node-cli --reset -l grenoble,m3',
+            SystemExit, call_cli,
+            'node-cli --reset -l {m3},m3'.format(**NODES),
             print_err=False)
 
         # invalid site
@@ -354,7 +371,8 @@ class TestAnErrorCase(unittest.TestCase):
 
         # invalid archi
         self.assertRaises(
-            SystemExit, call_cli, 'node-cli --reset -l grenoble,m4,1',
+            SystemExit, call_cli,
+            'node-cli --reset -l {m3},m4,1'.format(**NODES),
             print_err=False)
 
         # invalid state
@@ -366,35 +384,39 @@ class TestAnErrorCase(unittest.TestCase):
 
     def test_experiment_parser_errors(self):
         """ Test some experiment parser errors """
-        self.assertRaises(SystemExit, call_cli,
-                          'experiment-cli submit -d 20 -l grenoble,m3,70-1',
-                          print_err=False)
+        self.assertRaises(
+            SystemExit, call_cli,
+            'experiment-cli submit -d 20 -l {m3},m3,70-1'.format(**NODES),
+            print_err=False)
 
         # alias invalid archi
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,site=grenoble+archi=inval+mobile=1'),
+             ' -l 3,site={m3}+archi=inval+mobile=1'.format(**NODES)),
             print_err=False)
 
         # too many values
         self.assertRaises(
             SystemExit, call_cli,
-            'experiment-cli submit -d 20 -l grenoble,m3,1,fw,prof,extra',
+            ('experiment-cli submit -d 20' +
+             '-l {m3},m3,1,fw,prof,extra'.format(**NODES)),
             print_err=False)
 
         # alias and physical
         self.assertRaises(
             SystemExit, call_cli,
-            ('experiment-cli submit -d 20 -l grenoble,m3,1' +
-             ' -l 3,site=grenoble+archi=m3:at86rf231+mobile=true'),
+            ('experiment-cli submit -d 20' +
+             ' -l {m3},m3,1' +
+             ' -l 3,site={m3}+archi=m3:at86rf231+mobile=true').format(**NODES),
             print_err=False)
 
         # alias invalid values
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,site=grenoble+archi=m3:at86rf231+inval_prop=2'),
+             ' -l 3,site={m3}+archi=m3:at86rf231+inval_prop=2'.format(**NODES)
+             ),
             print_err=False)
 
         # No site or archi
@@ -417,7 +439,8 @@ class TestAnErrorCase(unittest.TestCase):
         self.assertRaises(
             SystemExit, call_cli,
             ('experiment-cli submit -d 20' +
-             ' -l 3,archi=m3:at86rf231+site=grenoble+mobile=turtlebot'),
+             ' -l 3,archi=m3:at86rf231+site={m3}+mobile=turtlebot').format(
+                 **NODES),
             print_err=False)
 
     def test_rest_errors(self):
@@ -459,6 +482,25 @@ def try_config_iotlab_test_account():
         pass
 
 
+def opts_parser():
+    """ Argument parser """
+    parser = argparse.ArgumentParser('Integration tests')
+    parser.add_argument('--dev', action='store_true', default=False,
+                        help='Run againt dev platform, default to prod')
+    parser.add_argument('--stop', action='store_true', default=False,
+                        help='Stop tests after first error')
+    parser.add_argument('--verbose', action='store_const', default=1,
+                        const=4, help='Verbose output')
+    return parser
+
+
 if __name__ == '__main__':
+    import sys
+    failfast = False
+    opts = opts_parser().parse_args()
+    if opts.dev:
+        os.environ['IOTLAB_API_URL'] = 'https://devgrenoble.senslab.info'
+        NODES = SITES['dev']
+
     try_config_iotlab_test_account()
-    unittest.main()
+    unittest.main(argv=[__file__], verbosity=opts.verbose, failfast=opts.stop)
