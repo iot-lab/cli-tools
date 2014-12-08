@@ -27,6 +27,7 @@ SETUP_DEPS = [
 
 if (2, 6) == sys.version_info[0:2]:
     SETUP_DEPS.append('pylint<1.4.0')
+    SETUP_DEPS.append('astroid<1.3.0')
 
 
 setup(
