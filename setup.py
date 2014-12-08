@@ -40,7 +40,7 @@ setup(
     download_url='http://github.com/iot-lab/cli-tools/',
     packages=find_packages(),
     scripts=SCRIPTS,
-    classifiers=['Development Status :: 1 - Beta',
+    classifiers=['Development Status :: 5 - Production/Stable',
                  'Programming Language :: Python',
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
