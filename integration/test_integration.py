@@ -269,15 +269,14 @@ class TestCliToolsProfile(unittest.TestCase):
     def _del_prof(self, name):
         """ Add a profile and get it to check it's the same """
         cmd = 'profile-cli del --name ' + name
-        del_dict = call_cli(cmd)
-        self.assertEqual({u'delete': unicode(name)}, del_dict)
+        self.assertEqual({'delete': name}, call_cli(cmd))
 
     def _add_profile_simple(self, cmd, name):
         """ Add a profile and get it to check it's the same """
         profile_dict = call_cli(cmd + ' --json')
 
         # add profile return name
-        self.assertEqual({u'create': unicode(name)}, call_cli(cmd))
+        self.assertEqual({'create': name}, call_cli(cmd))
 
         get_profile_dict = call_cli('profile-cli get --name {}'.format(name))
         # compare that initial dict is a subset of result dict
@@ -298,7 +297,7 @@ class TestCliToolsProfile(unittest.TestCase):
             prof.flush()
             load_ret = call_cli('profile-cli load --file {}'.format(prof.name))
         # returned name are the same
-        self.assertEqual({u'create': unicode(name)}, load_ret)
+        self.assertEqual({'create': name}, load_ret)
         get_loaded_profile = call_cli('profile-cli get --name {}'.format(name))
         # returned profile are the same
         self.assertEqual(get_profile_dict, get_loaded_profile)
