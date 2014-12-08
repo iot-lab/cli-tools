@@ -495,7 +495,6 @@ def opts_parser():
 
 
 if __name__ == '__main__':
-    import sys
     failfast = False
     opts = opts_parser().parse_args()
     if opts.dev:

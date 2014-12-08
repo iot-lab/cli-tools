@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import sys
 from setuptools import setup, find_packages
 
 
@@ -20,6 +21,13 @@ def get_version():
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
+SETUP_DEPS = [
+    'setuptools-pep8', 'setuptools-lint', 'nose', 'nosexcover', 'mock'
+]
+
+if (2, 6) == sys.version_info[0:2]:
+    SETUP_DEPS.append('pylint<1.4.0')
+
 
 setup(
     name='iotlabcli',
@@ -37,6 +45,5 @@ setup(
                  'Environment :: Console',
                  'Topic :: Utilities', ],
     install_requires=['argparse', 'requests'],
-    setup_requires=['setuptools-pep8', 'setuptools-lint',
-                    'nose', 'nosexcover', 'mock'],
+    setup_requires=SETUP_DEPS,
 )
