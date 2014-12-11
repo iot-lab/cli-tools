@@ -104,10 +104,17 @@ def node_url_sort_key(node_url):
     >>> node_url_sort_key("node-a8-2.grenoble.iot-lab.info")
     ('grenoble', 'node-a8', 2)
 
+    # Also support incomplete urls
+    >>> node_url_sort_key("m3-2")
+    ('', 'm3', 2)
+    >>> node_url_sort_key("node-a8-2")
+    ('', 'node-a8', 2)
+
     """
     if node_url.isdigit():
         return int(node_url)
-    _node, site = node_url.split('.')[0:2]
+    _node, _, domain = node_url.partition('.')
+    site = domain.split('.')[0]
 
     node_type, num_str = _node.rsplit('-', 1)
     return site, node_type, int(num_str)
