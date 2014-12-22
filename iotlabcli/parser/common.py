@@ -10,6 +10,12 @@ import iotlabcli
 from iotlabcli import helpers
 from iotlabcli import rest
 DOMAIN_DNS = 'iot-lab.info'
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from urllib.error import HTTPError
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from urllib2 import HTTPError
 
 
 def base_parser(user_required=False):
@@ -42,14 +48,23 @@ def main_cli(function, parser, args=None):  # flake8: noqa
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
         print(helpers.json_dumps(result))
+        return
+
+    except HTTPError as err:  # should be first as it's an IOError
+        if 401 == err.code:
+            # print an info on how to get rid of the error
+            err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
+                   "\tRegister your login:password using `auth-cli`\n")
+        print(err, file=sys.stderr)
+
     except (IOError, ValueError) as err:
         parser.error(str(err))
     except RuntimeError as err:
         print("RuntimeError:\n{err!s}".format(err=err), file=sys.stderr)
-        sys.exit()
+
     except KeyboardInterrupt:  # pragma: no cover
         print("\nStopped.", file=sys.stderr)
-        sys.exit()
+    sys.exit(1)
 
 
 def sites_list():

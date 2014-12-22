@@ -266,12 +266,13 @@ class TestExperimentGetWriteExpArchive(unittest.TestCase):
         arch_content = '\x42\x69'
 
         ret_val = RequestRet(content=arch_content, status_code=200)
-        patch('requests.get', return_value=ret_val).start()
+        patch('requests.request', return_value=ret_val).start()
         api = rest.Api('user', 'password')
 
         ret = experiment.get_experiment(api, 123, option='data')
         self.assertEquals(ret, 'Written')
-        w_exp_archive.assert_called_with(123, arch_content)
+        # encode, not real but easier for tests
+        w_exp_archive.assert_called_with(123, arch_content.encode('utf-8'))
 
 
 class TestExperimentInfo(CommandMock):
