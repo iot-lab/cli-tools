@@ -146,6 +146,19 @@ class Api(object):
         ret = self.method('profiles/%s' % name, 'delete')
         return ret
 
+    def check_credential(self):
+        """ Check that the credentials are valid """
+        try:
+            # use get profiles for the moment as it's fast
+            # replace with something only check auth
+            self.get_profiles()
+            return True
+        except HTTPError as err:
+            if 401 == err.code:
+                return False
+            else:  # prama no cover
+                raise
+
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):
         """

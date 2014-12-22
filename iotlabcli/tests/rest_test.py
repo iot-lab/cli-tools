@@ -74,6 +74,22 @@ class TestRest(unittest.TestCase):
         self.assertEquals(ret, ret)
         patch.stopall()
 
+    def test_check_credentials(self):
+        """ Test Api.method rest submission """
+        ret_val = RequestRet(200, content='"OK"')
+        patch('requests.request', return_value=ret_val).start()
+
+        ret_val.status_code = 200
+        self.assertTrue(self.api.check_credential())
+
+        ret_val.status_code = 401
+        self.assertFalse(self.api.check_credential())
+
+        ret_val.status_code = 500
+        self.assertRaises(HTTPError, self.api.check_credential)
+
+        patch.stopall()
+
     def test_method_raw(self):
         """ Run as Raw mode """
         ret_val = RequestRet(200, content='text_only')
@@ -83,7 +99,6 @@ class TestRest(unittest.TestCase):
 
     def test_method_errors(self):
         """ Test Api.method rest submission error cases """
-
         # invalid status code
         ret_val = RequestRet(404, content='return_text')
         with patch('requests.request', return_value=ret_val):

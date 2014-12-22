@@ -73,3 +73,10 @@ class TestAuthModule(unittest.TestCase):
         open(TEST_RC_FILE, 'wb').close()
         with patch(open_name, m_open, create=True):
             self.assertRaises(ValueError, auth._read_password_file)
+
+    @patch('iotlabcli.auth.Api')
+    def test_check_user_credentials(self, m_api_class):
+        """ Check the check_user_credentials function """
+        api = m_api_class.return_value
+        api.check_credential.return_value = True
+        self.assertEqual(True, auth.check_user_credentials('user', 'password'))
