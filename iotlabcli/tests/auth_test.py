@@ -5,12 +5,7 @@
 
 import os
 import unittest
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch, mock_open
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, mock_open
+from iotlabcli.tests import patch, mock_open
 from iotlabcli import auth
 
 TEST_RC_FILE = 'test_iotlabrc_file'

@@ -3,13 +3,7 @@
 # pylint:disable=too-many-public-methods
 
 import unittest
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch
-
+from iotlabcli.tests import patch
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
 
