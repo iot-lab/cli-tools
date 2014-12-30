@@ -48,6 +48,7 @@ class ProfileM3A8(object):
         """ Configure radio measures """
         if not mode:
             return
+        assert len(channels)
         for channel in channels:
             assert channel in self.choices['radio']['channels']
 
