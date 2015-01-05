@@ -134,6 +134,9 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
+        # dict has no __dict__ and load_profile gives a dict
+        # requests wants a 'simple' type like dict
+        profile = profile if isinstance(profile, dict) else profile.__dict__
         ret = self.method('profiles/%s' % name, 'post', json=profile)
         return ret
 
