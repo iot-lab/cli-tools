@@ -51,6 +51,8 @@ class TestMainProfileParser(MainMock):
         profilem3.set_radio.assert_called_with(
             mode=None, channels=None, period=None, num_per_channel=0)
 
+        # Test for RSSI
+        args = ['addm3', '-n', 'name', '-p', 'dc']
         args += ['-period', '140', '-avg', '1',
                  '-power', '-voltage', '-current']
         args += ['-rssi', '-channels', '11', '12', '13',

@@ -21,8 +21,8 @@ def parse_options():
     parser = ArgumentParser(
         description=help_msgs.EXPERIMENT_PARSER,
         parents=[parent_parser],
-        epilog=help_msgs.PARSER_EPILOG %
-        {'cli': 'experiment', 'option': 'submit'},
+        epilog=help_msgs.PARSER_EPILOG.format(
+            cli='experiment', option='submit'),
         formatter_class=RawTextHelpFormatter)
 
     subparsers = parser.add_subparsers(dest='command')

@@ -20,22 +20,24 @@ def parse_options():
     # We create top level parser
     parser = argparse.ArgumentParser(
         description=help_msgs.PROFILE_PARSER,
-        parents=[parent_parser], epilog=help_msgs.PARSER_EPILOG
-        % {'cli': 'profile', 'option': 'add'},
+        parents=[parent_parser], epilog=help_msgs.PARSER_EPILOG.format(
+            cli='profile', option='add'),
         formatter_class=RawTextHelpFormatter)
 
     subparsers = parser.add_subparsers(dest='subparser_name')
 
     add_wsn430_parser = subparsers.add_parser(
         'addwsn430', help='add wsn430 user profile',
-        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
+        epilog=help_msgs.ADD_EPILOG_WSN430,
+        formatter_class=RawTextHelpFormatter)
 
     #
     # m3 profile
     #
     add_m3_parser = subparsers.add_parser(
         'addm3', help='add m3 user profile',
-        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
+        epilog=help_msgs.ADD_EPILOG_M3_A8.format(cmd='addm3', archi='m3'),
+        formatter_class=RawTextHelpFormatter)
     add_m3_a8_parser('M3', add_m3_parser)
 
     #
@@ -43,7 +45,8 @@ def parse_options():
     #
     add_a8_parser = subparsers.add_parser(
         'adda8', help='add a8 user profile',
-        epilog=help_msgs.ADD_EPILOG, formatter_class=RawTextHelpFormatter)
+        epilog=help_msgs.ADD_EPILOG_M3_A8.format(cmd='adda8', archi='a8'),
+        formatter_class=RawTextHelpFormatter)
     add_m3_a8_parser('A8', add_a8_parser)
 
     del_parser = subparsers.add_parser('del', help='delete user profile')
@@ -167,23 +170,25 @@ def add_m3_a8_parser(node_type, subparser):
         help='average measure')
 
     # Radio configuration
-    radio = subparser.add_argument_group('Radio measure')
+    radio = subparser.add_argument_group('Radio measure mode')
 
     radio.add_argument(
         '-rssi', dest='mode', action='store_const', const='rssi',
-        help='RSSI measure')
+        help='RSSI measure. Configure with `channels`, `num` and `rperiod`')
 
-    radio.add_argument(
+    radio_cfg = subparser.add_argument_group('Radio measure config')
+
+    radio_cfg.add_argument(
         '-channels', dest='channels', nargs='+',
         type=int, choices=node_class.choices['radio']['channels'],
         metavar='{11..26}', help='List of channels (11 to 26)')
 
-    radio.add_argument(
+    radio_cfg.add_argument(
         '-num', dest='num_per_channel', default=0, type=int,
         choices=node_class.choices['radio']['num_per_channel'],
         metavar='{0..255}', help='Number of measure by channel')
 
-    radio.add_argument(
+    radio_cfg.add_argument(
         '-rperiod', dest='rperiod', type=int,
         choices=node_class.choices['radio']['period'],
         metavar='{1..65535}', help='period measure')
