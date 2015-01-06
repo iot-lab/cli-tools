@@ -176,6 +176,10 @@ def add_m3_a8_parser(node_type, subparser):
         '-rssi', dest='mode', action='store_const', const='rssi',
         help='RSSI measure. Configure with `channels`, `num` and `rperiod`')
 
+    radio.add_argument(
+        '-sniffer', dest='mode', action='store_const', const='sniffer',
+        help='Radio Sniffer. Configure one channel with `channels`.')
+
     radio_cfg = subparser.add_argument_group('Radio measure config')
 
     radio_cfg.add_argument(
@@ -184,9 +188,9 @@ def add_m3_a8_parser(node_type, subparser):
         metavar='{11..26}', help='List of channels (11 to 26)')
 
     radio_cfg.add_argument(
-        '-num', dest='num_per_channel', default=0, type=int,
+        '-num', dest='num_per_channel', type=int, metavar='{0..255}',
         choices=node_class.choices['radio']['num_per_channel'],
-        metavar='{0..255}', help='Number of measure by channel')
+        help='Number of measure by channel, if multiple channels supplied')
 
     radio_cfg.add_argument(
         '-rperiod', dest='rperiod', type=int,

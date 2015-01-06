@@ -140,6 +140,9 @@ Examples :
     # Add a profile for {archi} nodes with multi-channel radio rssi measures
     $ profile-cli {cmd} -n prof_rssi -rssi -channels 11 12 -num 10 -rperiod 100
 
+    # Add a profile for {archi} nodes with radio sniffer
+    $ profile-cli {cmd} -n sniff_11 -sniffer -channels 11
+
 """
 
 

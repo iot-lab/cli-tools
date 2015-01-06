@@ -49,7 +49,7 @@ class TestMainProfileParser(MainMock):
             period=None, average=None, power=False,
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
-            mode=None, channels=None, period=None, num_per_channel=0)
+            mode=None, channels=None, period=None, num_per_channel=None)
 
         # Test for RSSI
         args = ['addm3', '-n', 'name', '-p', 'dc']
@@ -63,6 +63,17 @@ class TestMainProfileParser(MainMock):
             period=140, average=1, power=True, voltage=True, current=True)
         profilem3.set_radio.assert_called_with(
             mode='rssi', channels=[11, 12, 13], period=1, num_per_channel=1)
+
+        # Test for Radio Sniffer only
+        args = ['addm3', '-n', 'name', '-p', 'dc']
+        args += ['-sniffer', '-channels', '11']
+        opts = parser.parse_args(args)
+        profile_parser._m3_profile(opts)  # pylint: disable=protected-access
+        profilem3.set_consumption.assert_called_with(
+            period=None, average=None, power=False,
+            voltage=False, current=False)
+        profilem3.set_radio.assert_called_with(
+            mode='sniffer', channels=[11], period=None, num_per_channel=None)
 
     @staticmethod
     @patch('iotlabcli.parser.profile.ProfileWSN430')

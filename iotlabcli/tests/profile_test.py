@@ -9,7 +9,7 @@ from iotlabcli import profile
 
 class TestM3Profile(unittest.TestCase):
 
-    def test_valid_full_profile(self):
+    def test_valid_full_profile_rssi(self):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(140, 1, True, True, True)
         m3_prof.set_radio('rssi', (11, 12, 13), period=1, num_per_channel=1)
@@ -33,6 +33,47 @@ class TestM3Profile(unittest.TestCase):
                     'power': True,
                     'voltage': True,
                 },
+            }
+        )
+
+        # Test with default values for num_per_channel
+        m3_prof = profile.ProfileM3('name', 'dc')
+        m3_prof.set_consumption(None, None)
+        m3_prof.set_radio('rssi', (26,), period=42)
+        self.assertEquals(
+            m3_prof.__dict__,
+            {
+                'power': 'dc',
+                'profilename': 'name',
+                'nodearch': 'm3',
+                'radio': {
+                    'channels': (26,),
+                    'num_per_channel': 0,
+                    'mode': 'rssi',
+                    'period': 42,
+                },
+                'consumption': None,
+            }
+        )
+
+    def test_valid_sniffer_profile(self):
+        m3_prof = profile.ProfileM3('sniff_11', 'dc')
+        m3_prof.set_consumption(None, None)
+        m3_prof.set_radio('sniffer', (11,))
+
+        self.assertEquals(
+            m3_prof.__dict__,
+            {
+                'power': 'dc',
+                'profilename': 'sniff_11',
+                'nodearch': 'm3',
+                'radio': {
+                    'channels': (11,),
+                    'mode': 'sniffer',
+                    'num_per_channel': None,
+                    'period': None,
+                },
+                'consumption': None,
             }
         )
 

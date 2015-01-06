@@ -18,3 +18,5 @@ htmlcov/
 .python-version
 test_auth_file
 *log
+
+*json
