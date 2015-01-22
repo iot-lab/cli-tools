@@ -94,7 +94,7 @@ GET_EPILOG = """
 
 Examples:
     * Get an experiment submission
-        $ experiment-cli get -e
+        $ experiment-cli get -p
         Note : with one experiment in the state Running
     * Get an experiment archive with id 1637
         $ experiment-cli get -i 1637 -a
