@@ -75,6 +75,10 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._stop_experiment()
         self._wait_state_or_finished()
 
+        # Test get start-time
+        cmd = 'experiment-cli get --start-time -i {0}'.format(self.exp_id)
+        self.assertNotEqual(0, call_cli(cmd)['start_time'])
+
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
         nodes = '5,site={m3}+archi=m3:at86rf231'.format(**NODES)

@@ -69,6 +69,7 @@ def get_experiment(api, exp_id, option=''):
             * 'id':        resources id list: (1-34+72 format)
             * 'state':     experiment state
             * 'data':      experiment tar.gz with description and firmwares
+            * 'start':     expected start time
     """
     result = api.get_experiment_info(exp_id, option)
     if option == 'data':

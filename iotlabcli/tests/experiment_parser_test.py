@@ -47,6 +47,13 @@ class TestMainInfoParser(MainMock):
         get_exp.return_value = {}
         get_exp_list.return_value = {}
 
+        get_exp.return_value = {'start_time': 1423131729}
+        experiment_parser.main(['get', '--start-time'])
+        get_exp.assert_called_with(self.api, 234, 'start')
+
+        # No value is treated inside
+        get_exp.return_value = {}
+
         experiment_parser.main(['get', '--id', '18', '--print'])
         get_exp.assert_called_with(self.api, 18, '')
 
@@ -74,6 +81,24 @@ class TestMainInfoParser(MainMock):
         parser = experiment_parser.parse_options()
         # Python3 didn't raised error without subcommand
         self.assertRaises(SystemExit, parser.parse_args, [])
+
+    @patch('iotlabcli.experiment.get_experiment')
+    def test_experiment_get_start_time(self, get_exp):
+        """ Test the get-start-time parser """
+        cmd = ['-u', 'test', '-p', 'password', 'get', '--start-time']
+        args = experiment_parser.parse_options().parse_args(cmd)
+
+        get_exp.return_value = {'start_time': 1423131729}
+        ret = experiment_parser.get_experiment_parser(args)
+        get_exp.assert_called_with(self.api, 234, 'start')
+        # don't expect anything on local time
+        self.assertTrue('2015' in ret['local_date'])
+
+        # No start_time
+        get_exp.return_value = {'start_time': 0}
+        ret = experiment_parser.get_experiment_parser(args)
+        get_exp.assert_called_with(self.api, 234, 'start')
+        self.assertEqual('Unknown', ret['local_date'])
 
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser(self, submit_exp):
@@ -141,7 +166,7 @@ class TestMainInfoParser(MainMock):
         wait_exp.return_value = {}
 
         experiment_parser.main(['wait'])
-        wait_exp.assert_called_with(self.api, 123, 'Running', 5, float('+inf'))
+        wait_exp.assert_called_with(self.api, 234, 'Running', 5, float('+inf'))
         experiment_parser.main(['wait', '--id', '42',
                                 '--state', 'Launching,Running', '--step', '1',
                                 '--timeout', '60'])

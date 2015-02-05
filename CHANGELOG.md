@@ -1,6 +1,8 @@
 Changelog
 =========
 
+1.5.1: Add 'experiment-cli get --start-time' command
+
 1.5.0
 -----
 
@@ -17,8 +19,4 @@ Changelog
     * Help messages
     * Python3 crash without command for exp-cli
 
-1.4.1
------
-
- + Bugs
-    * Force pylint dependency for python2.6
+1.4.1: BUG Force pylint dependency for python2.6

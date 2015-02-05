@@ -3,6 +3,7 @@
 # pylint:disable=protected-access
 
 import sys
+import time
 
 from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
 
@@ -77,6 +78,9 @@ def parse_options():
     get_group.add_argument(
         '-s', '--exp-state', dest='get_cmd', action='store_const',
         const='state', help='get an experiment state')
+    get_group.add_argument(
+        '-st', '--start-time', dest='get_cmd', action='store_const',
+        const='start', help='get expected experiment start time')
     get_group.add_argument(
         '-p', '--print', dest='get_cmd', action='store_const',
         const='', help='get an experiment submission')
@@ -370,6 +374,15 @@ def get_experiment_parser(opts):
     if opts.get_cmd == 'experiment_list':
         return experiment.get_experiments_list(api, opts.state, opts.limit,
                                                opts.offset)
+    elif opts.get_cmd == 'start':
+        exp_id = helpers.get_current_experiment(api, opts.experiment_id,
+                                                running_only=False)
+        ret = experiment.get_experiment(api, exp_id, opts.get_cmd)
+
+        # Add a 'date' field
+        timestamp = ret['start_time']
+        ret['local_date'] = time.ctime(timestamp) if timestamp else 'Unknown'
+        return ret
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         return experiment.get_experiment(api, exp_id, opts.get_cmd)

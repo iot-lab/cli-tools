@@ -71,8 +71,9 @@ class Api(object):
             * 'id':        resources id list: (1-34+72 format)
             * 'state':     experiment state
             * 'data':      experiment tar.gz with description and firmwares
+            * 'start':     expected start time
         """
-        assert option in ('', 'resources', 'id', 'state', 'data')
+        assert option in ('', 'resources', 'id', 'state', 'data', 'start')
 
         url = 'experiments/%s' % expid
         if option:
