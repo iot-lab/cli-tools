@@ -253,6 +253,7 @@ class TestCliToolsProfile(unittest.TestCase):
     profile = {
         'm3': 'test_cli_profile_m3',
         'm3_full': 'test_cli_profile_m3_full',
+        'm3_sniffer': 'test_cli_profile_m3_sniffer',
         'wsn430': 'test_cli_profile_wsn430',
         'wsn430_full': 'test_cli_profile_wsn430_full',
     }
@@ -322,6 +323,11 @@ class TestCliToolsProfile(unittest.TestCase):
         self._add_prof(prof_cmd, self.profile['m3_full'])
         profiles_names.add(self.profile['m3_full'])
 
+        prof_cmd = 'profile-cli addm3 -n {}'
+        prof_cmd += ' -sniffer -channels 11'
+        self._add_prof(prof_cmd, self.profile['m3_sniffer'])
+        profiles_names.add(self.profile['m3_sniffer'])
+
         # check that profiles have been added
         profs = call_cli('profile-cli get -l')
         profiles_names_new = set([p['profilename'] for p in profs])
@@ -329,6 +335,7 @@ class TestCliToolsProfile(unittest.TestCase):
 
         self._del_prof(self.profile['m3'])
         self._del_prof(self.profile['m3_full'])
+        self._del_prof(self.profile['m3_sniffer'])
 
     def test_wsn430_profile(self):
         """ Test creating wsn430 profiles and deleting them """
