@@ -26,6 +26,7 @@ def parse_options():
         formatter_class=RawTextHelpFormatter)
 
     subparsers = parser.add_subparsers(dest='command')
+    subparsers.required = True  # not required by default in Python3
 
     submit_parser = subparsers.add_parser(
         'submit', help='submit user experiment',

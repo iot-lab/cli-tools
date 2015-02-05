@@ -24,7 +24,8 @@ def parse_options():
             cli='profile', option='add'),
         formatter_class=RawTextHelpFormatter)
 
-    subparsers = parser.add_subparsers(dest='subparser_name')
+    subparsers = parser.add_subparsers(dest='command')
+    subparsers.required = True  # not required by default in Python3
 
     add_wsn430_parser = subparsers.add_parser(
         'addwsn430', help='add wsn430 user profile',
@@ -251,7 +252,7 @@ def add_profile_parser(api, opts):
                       'adda8': _a8_profile}
 
     try:
-        profile = profile_func_d[opts.subparser_name](opts)
+        profile = profile_func_d[opts.command](opts)
         return _add_profile(api, opts.name, profile, opts.json)
     except AssertionError as err:   # pragma: no cover
         raise ValueError(str(err))
@@ -313,7 +314,7 @@ def profile_parse_and_run(opts):
         'load': load_profile_parser,
         'get': get_profile_parser,
         'del': del_profile_parser,
-    }[opts.subparser_name]
+    }[opts.command]
 
     return fct_parser(api, opts)
 

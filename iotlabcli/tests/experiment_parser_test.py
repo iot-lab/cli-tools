@@ -69,6 +69,12 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['get', '--list'])
         get_exp_list.assert_called_with(self.api, None, 0, 0)
 
+    def test_parser_error(self):
+        """ Test some parser errors directly """
+        parser = experiment_parser.parse_options()
+        # Python3 didn't raised error without subcommand
+        self.assertRaises(SystemExit, parser.parse_args, [])
+
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser(self, submit_exp):
         """ Run experiment_parser.main.submit """

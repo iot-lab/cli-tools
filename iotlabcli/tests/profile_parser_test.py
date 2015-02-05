@@ -135,3 +135,9 @@ class TestMainProfileParser(MainMock):
         read_file_mock.return_value = '{"not_profilename_field": null}'
         self.assertRaises(SystemExit, profile_parser.main,
                           ['load', '--file', 'prof.json'])
+
+    def test_parser_error(self):
+        """ Test some parser errors directly """
+        parser = profile_parser.parse_options()
+        # Python3 didn't raised error without subcommand
+        self.assertRaises(SystemExit, parser.parse_args, [])
