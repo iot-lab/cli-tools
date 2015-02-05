@@ -1,5 +1,5 @@
 """ iotlabcli package implementing a cli for iotlab REST API """
-__version__ = "1.5.2"
+__version__ = "1.5.3"
 
 # flake8: noqa
 

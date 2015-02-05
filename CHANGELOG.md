@@ -1,6 +1,7 @@
 Changelog
 =========
 
+1.5.3: Move test dependencies to 'tests_require'
 1.5.2: BUG: Add dependency on `request >= 2.4.2` for 'json' upload parameter
 1.5.1: Add 'experiment-cli get --start-time' command
 

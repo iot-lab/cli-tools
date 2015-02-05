@@ -21,13 +21,13 @@ def get_version():
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
 
-SETUP_DEPS = [
+TESTS_DEPS = [
     'setuptools-pep8', 'setuptools-lint', 'nose', 'nosexcover', 'mock'
 ]
 
 if (2, 6) == sys.version_info[0:2]:
-    SETUP_DEPS.append('pylint<1.4.0')
-    SETUP_DEPS.append('astroid<1.3.0')
+    TESTS_DEPS.append('pylint<1.4.0')
+    TESTS_DEPS.append('astroid<1.3.0')
 
 
 setup(
@@ -48,5 +48,5 @@ setup(
                  'Environment :: Console',
                  'Topic :: Utilities', ],
     install_requires=['argparse', 'requests>2.4.2'],
-    setup_requires=SETUP_DEPS,
+    tests_require=TESTS_DEPS,
 )
