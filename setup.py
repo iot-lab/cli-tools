@@ -47,6 +47,6 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    install_requires=['argparse', 'requests'],
+    install_requires=['argparse', 'requests>2.4.2'],
     setup_requires=SETUP_DEPS,
 )
