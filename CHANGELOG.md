@@ -1,4 +1,24 @@
 Changelog
 =========
 
-v1.4.1:  Force pylint dependency for python2.6
+1.5.0
+-----
+
++ Features
+
+ * 'sniffer' option in profile m3/a8
+ * 'profile-cli' commands now return a json dict
+ * Nicely catch rest HTTPError for Access Denied 401
+ * Check credentials for auth-cli with the server
+
+ + Bugs
+    * Fix load profile
+    * Unicode management in python3
+    * Help messages
+    * Python3 crash without command for exp-cli
+
+1.4.1
+-----
+
+ + Bugs
+    * Force pylint dependency for python2.6
