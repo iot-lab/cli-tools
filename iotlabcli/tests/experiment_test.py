@@ -61,9 +61,9 @@ class TestExperimentSubmit(CommandMock):
         """ Run experiment_submit physical """
 
         # Physical tests
-        nodes_list = [experiment.exp_resources(
+        resources = [experiment.exp_resources(
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)])]
-        experiment.submit_experiment(self.api, 'exp_name', 20, nodes_list,
+        experiment.submit_experiment(self.api, 'exp_name', 20, resources,
                                      start_time=314159)
 
         call_dict = self.api.submit_experiment.call_args[0][0]
@@ -82,14 +82,14 @@ class TestExperimentSubmit(CommandMock):
 
         # Try 'print', should return exp_dict
         ret = experiment.submit_experiment(self.api, 'exp_name', 20,
-                                           nodes_list, start_time=314159,
+                                           resources, start_time=314159,
                                            print_json=True)
         self.assertEquals(ret.__dict__, expected)
 
     def test_experiment_submit_alias(self):
         """ Run experiment_submit alias """
         # Alias tests
-        nodes_list = [
+        resources = [
             experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 CURRENT_DIR + '/firmware.elf', 'profile1'),
@@ -101,7 +101,7 @@ class TestExperimentSubmit(CommandMock):
                 CURRENT_DIR + '/firmware_2.elf', 'profile2'),
         ]
 
-        experiment.submit_experiment(self.api, None, 20, nodes_list)
+        experiment.submit_experiment(self.api, None, 20, resources)
         files_dict = self.api.submit_experiment.call_args[0][0]
         exp_desc = json.loads(files_dict['new_exp.json'])
         expected = {
@@ -138,15 +138,26 @@ class TestExperimentSubmit(CommandMock):
     def test_exp_submit_types_detect(self):
         """ Try experiment submit types detection"""
         # Physical tests and Alias Nodes
-        nodes_list = []
-        nodes_list.append(experiment.exp_resources(
+        resources = []
+        resources.append(experiment.exp_resources(
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
-        nodes_list.append(experiment.exp_resources(
+        resources.append(experiment.exp_resources(
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
             CURRENT_DIR + '/firmware.elf', 'profile1'))
 
         self.assertRaises(ValueError, experiment.submit_experiment,
-                          self.api, 'exp_name', 20, nodes_list)
+                          self.api, 'exp_name', 20, resources)
+
+    def test_exp_submit_multiple_nodes(self):
+        """ Experiment submit with nodes specified multiple times """
+
+        nodes = ['m3-1.grenoble.iot-lab.info']
+
+        resources = []
+        resources.append(experiment.exp_resources(nodes))
+        resources.append(experiment.exp_resources(nodes))
+        self.assertRaises(ValueError, experiment.submit_experiment,
+                          self.api, 'exp_name', 20, resources)
 
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load(self, read_file_mock):
@@ -266,12 +277,13 @@ class TestExperimentGetWriteExpArchive(unittest.TestCase):
         arch_content = '\x42\x69'
 
         ret_val = RequestRet(content=arch_content, status_code=200)
-        patch('requests.get', return_value=ret_val).start()
+        patch('requests.request', return_value=ret_val).start()
         api = rest.Api('user', 'password')
 
         ret = experiment.get_experiment(api, 123, option='data')
         self.assertEquals(ret, 'Written')
-        w_exp_archive.assert_called_with(123, arch_content)
+        # encode, not real but easier for tests
+        w_exp_archive.assert_called_with(123, arch_content.encode('utf-8'))
 
 
 class TestExperimentInfo(CommandMock):

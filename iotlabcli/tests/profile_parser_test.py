@@ -3,12 +3,7 @@
 """ Test the iotlabcli.parser.profile module """
 # pylint:disable=missing-docstring,too-many-public-methods
 
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch
+from iotlabcli.tests import patch
 
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.profile as profile_parser
@@ -54,8 +49,10 @@ class TestMainProfileParser(MainMock):
             period=None, average=None, power=False,
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
-            mode=None, channels=None, period=None, num_per_channel=0)
+            mode=None, channels=None, period=None, num_per_channel=None)
 
+        # Test for RSSI
+        args = ['addm3', '-n', 'name', '-p', 'dc']
         args += ['-period', '140', '-avg', '1',
                  '-power', '-voltage', '-current']
         args += ['-rssi', '-channels', '11', '12', '13',
@@ -66,6 +63,17 @@ class TestMainProfileParser(MainMock):
             period=140, average=1, power=True, voltage=True, current=True)
         profilem3.set_radio.assert_called_with(
             mode='rssi', channels=[11, 12, 13], period=1, num_per_channel=1)
+
+        # Test for Radio Sniffer only
+        args = ['addm3', '-n', 'name', '-p', 'dc']
+        args += ['-sniffer', '-channels', '11']
+        opts = parser.parse_args(args)
+        profile_parser._m3_profile(opts)  # pylint: disable=protected-access
+        profilem3.set_consumption.assert_called_with(
+            period=None, average=None, power=False,
+            voltage=False, current=False)
+        profilem3.set_radio.assert_called_with(
+            mode='sniffer', channels=[11], period=None, num_per_channel=None)
 
     @staticmethod
     @patch('iotlabcli.parser.profile.ProfileWSN430')
@@ -127,3 +135,9 @@ class TestMainProfileParser(MainMock):
         read_file_mock.return_value = '{"not_profilename_field": null}'
         self.assertRaises(SystemExit, profile_parser.main,
                           ['load', '--file', 'prof.json'])
+
+    def test_parser_error(self):
+        """ Test some parser errors directly """
+        parser = profile_parser.parse_options()
+        # Python3 didn't raised error without subcommand
+        self.assertRaises(SystemExit, parser.parse_args, [])

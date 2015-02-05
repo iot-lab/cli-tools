@@ -4,6 +4,7 @@
 import os
 import getpass
 from base64 import b64encode, b64decode
+from iotlabcli.rest import Api
 
 HOME_DIRECTORY = os.getenv('USERPROFILE') or os.getenv('HOME')
 RC_FILE = (os.getenv('IOTLAB_PASSWORD_FILE') or
@@ -22,6 +23,12 @@ def get_user_credentials(username=None, password=None):
     else:
         username, password = _read_password_file()
     return username, password
+
+
+def check_user_credentials(username, password):
+    """ Check that the given credentials are valid """
+    api = Api(username, password)
+    return api.check_credential()
 
 
 def write_password_file(username, password):

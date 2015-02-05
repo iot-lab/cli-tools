@@ -27,23 +27,12 @@ def auth_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command
     :returns: result object
     """
-    password = opts.password or password_prompt()
-    iotlabcli.auth.write_password_file(opts.username, password)
-    return 'Written'
-
-
-def password_prompt():
-    """ password prompt when command-line option username (e.g. -u or --user)
-    is used without password
-
-    :returns password
-    """
-    pprompt = lambda: (getpass.getpass(), getpass.getpass('Retype password: '))
-    prompt1, prompt2 = pprompt()
-    while prompt1 != prompt2:  # pragma: no cover
-        print('Passwords do not match. Try again')
-        prompt1, prompt2 = pprompt()
-    return prompt1
+    password = opts.password or getpass.getpass()
+    if iotlabcli.auth.check_user_credentials(opts.username, password):
+        iotlabcli.auth.write_password_file(opts.username, password)
+        return 'Written'
+    else:
+        raise RuntimeError('Wrong login:password')
 
 
 def main(args=None):

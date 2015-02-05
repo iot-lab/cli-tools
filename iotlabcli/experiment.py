@@ -371,6 +371,12 @@ class _Experiment(object):
         """Set physical nodes list """
         self._set_type('physical')
 
+        # Check that nodes are not already present
+        _intersect = list(set(self.nodes) & set(nodes_list))
+        if _intersect:
+            raise ValueError("Nodes specified multiple times {0}".format(
+                _intersect))
+
         self.nodes.extend(nodes_list)
         # Keep unique values and sorted
         self.nodes = sorted(list(set(self.nodes)),

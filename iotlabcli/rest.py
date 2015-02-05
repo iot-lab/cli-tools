@@ -9,32 +9,30 @@ first parameter to the function.
 """
 
 import requests
-import json
 from requests.auth import HTTPBasicAuth
-try:
-    # pylint: disable=import-error,no-name-in-module
+from iotlabcli import helpers
+# pylint: disable=import-error,no-name-in-module
+try:  # pragma: no cover
     from urllib.parse import urljoin
+    from urllib.error import HTTPError
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from urlparse import urljoin
-from iotlabcli import helpers
-
-
-API_URL = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
+    from urllib2 import HTTPError
 
 
 # pylint: disable=maybe-no-member,no-member
 class Api(object):
     """ IoT-Lab REST API """
     _cache = {}
+    url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
 
-    def __init__(self, username, password, url=API_URL):
+    def __init__(self, username, password):
         """
         :param username: username for Basic password auth
         :param password: password for Basic auth
         :param url: url of API.
         """
-        self.url = url
         self.auth = HTTPBasicAuth(username, password)
 
     def get_resources(self, list_id=False, site=None):
@@ -43,10 +41,10 @@ class Api(object):
         :param list_id: return result in 'exp_list' format '3-12+35'
         :param site: restrict to site
         """
-        query = 'experiments?%s' % ('id' if list_id else 'resources')
+        url = 'experiments?%s' % ('id' if list_id else 'resources')
         if site is not None:
-            query += '&site=%s' % site
-        return self.method(query)
+            url += '&site=%s' % site
+        return self.method(url)
 
     def submit_experiment(self, files):
         """ Submit user experiment
@@ -55,7 +53,7 @@ class Api(object):
         :type files: dictionnary
         :returns JSONObject
         """
-        return self.method('experiments', method='MULTIPART', data=files)
+        return self.method('experiments', 'post', files=files)
 
     def get_experiments(self, state='Running', limit=0, offset=0):
         """ Get user's experiment
@@ -76,17 +74,17 @@ class Api(object):
         """
         assert option in ('', 'resources', 'id', 'state', 'data')
 
-        query = 'experiments/%s' % expid
+        url = 'experiments/%s' % expid
         if option:
-            query += '?%s' % option
-        return self.method(query, raw=('data' == option))
+            url += '?%s' % option
+        return self.method(url, raw=('data' == option))
 
     def stop_experiment(self, expid):
         """ Stop user experiment.
 
         :param id: experiment id submission (e.g. OAR scheduler)
         """
-        return self.method('experiments/%s' % expid, method='DELETE')
+        return self.method('experiments/%s' % expid, 'delete')
 
     # Node commands
 
@@ -98,7 +96,7 @@ class Api(object):
         :returns: dict
         """
         return self.method('experiments/%s/nodes?%s' % (expid, command),
-                           method='POST', data=nodes)
+                           'post', json=nodes)
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user
@@ -110,7 +108,7 @@ class Api(object):
         :returns: dict
         """
         return self.method('experiments/%s/nodes?update' % expid,
-                           method='MULTIPART', data=files)
+                           'post', files=files)
 
     # Profile methods
 
@@ -136,9 +134,10 @@ class Api(object):
         :param profile: profile description
         :type profile: JSONObject.
         """
-        ret = self.method('profiles/%s' % name, method='POST',
-                          data=profile, raw=True)
-        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        # dict has no __dict__ and load_profile gives a dict
+        # requests wants a 'simple' type like dict
+        profile = profile if isinstance(profile, dict) else profile.__dict__
+        ret = self.method('profiles/%s' % name, 'post', json=profile)
         return ret
 
     def del_profile(self, name):
@@ -147,73 +146,56 @@ class Api(object):
         :param profile_name: name
         :type profile_name: string
         """
-        ret = self.method('profiles/%s' % name, method='DELETE', raw=True)
-        ret = ret.decode('utf-8')  # not a json, so raw=True, but not decoded
+        ret = self.method('profiles/%s' % name, 'delete')
         return ret
 
-    # Common methods
+    def check_credential(self):
+        """ Check that the credentials are valid """
+        try:
+            self.method('users/%s?login' % self.auth.username, raw=True)
+            return True
+        except HTTPError as err:
+            if 401 == err.code:
+                return False
+            raise  # pragma no cover
 
-    def method(self, url, method='GET', data=None, raw=False):
+    def method(self, url, method='get',  # pylint:disable=too-many-arguments
+               json=None, files=None, raw=False):
         """
+        Call http `method` on iot-lab-url/'url'
+
         :param url: url of API.
         :param method: request method
-        :param data: request data
-        """
-        method_url = urljoin(self.url, url)
-
-        return self._method(method_url, method, self.auth, data, raw)
-
-    @classmethod
-    def _method(cls, url, method='GET',  # pylint:disable=too-many-arguments
-                auth=None, data=None, raw=False):
-        """
-        :param url: url to request.
-        :param method: request method
-        :param auth: HTTPBasicAuth object
-        :param data: request data
+        :param json: send as 'post' json encoded data
+        :param files: send as 'post' multipart data
         :param raw: Should data be loaded as json or not
         """
-        status, content = cls._request(url, method, auth, data)
-        if status != requests.codes.ok:  # we have HTTP error (code != 200)
-            raise RuntimeError("HTTP error: {0}\n{1}".format(status, content))
-        # return result json object or request content
-        if raw:
-            return content   # when getting archive or profile name
-        else:
-            return json.loads(content.decode('utf-8'))
+        assert method in ('get', 'post', 'delete')
+        assert (method == 'post') or (files is None and json is None)
 
-    @staticmethod
-    def _request(url, method='GET', auth=None, data=None):
-        """
-        Call http `method` on url with `auth` and `data`
-        :param url: url to request.
-        :param method: request method
-        :param auth: HTTPBasicAuth object
-        :param data: request data
-        """
-        if method == 'POST':
-            headers = {'content-type': 'application/json'}
-            req = requests.post(url, auth=auth, headers=headers,
-                                data=helpers.json_dumps(data).encode('utf-8'))
-        elif method == 'MULTIPART':
-            req = requests.post(url, auth=auth, files=data)
-        elif method == 'DELETE':
-            req = requests.delete(url, auth=auth)
-        else:
-            req = requests.get(url, auth=auth)
-        return (req.status_code, req.content)
+        _url = urljoin(self.url, url)
+        req = requests.request(
+            method, _url, auth=self.auth, json=json, files=files)
 
-    @staticmethod
-    def get_sites():
+        if requests.codes.ok == req.status_code:
+            return req.content if raw else req.json()
+
+        # Indent req.text to pretty print it later
+        msg = '\n' + ''.join(['\t' + l for l in req.text.splitlines(True)])
+        raise HTTPError(_url, req.status_code, msg, req.headers, None)
+
+    @classmethod
+    def get_sites(cls):
         """ Get testbed sites description
         May be run unauthicated
 
         :returns JSONObject
         """
-        sites = Api._cache.get('sites', None)
+        sites = cls._cache.get('sites', None)
 
-        if 'sites' not in Api._cache:
+        if 'sites' not in cls._cache:
             # unauthenticated request
-            sites = Api._method(urljoin(API_URL, 'experiments?sites'))
-            Api._cache['sites'] = sites
-        return Api._cache['sites']
+            api = cls(username=None, password=None)
+            sites = api.method('experiments?sites')
+            cls._cache['sites'] = sites
+        return cls._cache['sites']

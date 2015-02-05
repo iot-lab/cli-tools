@@ -4,12 +4,7 @@
 
 import sys
 import unittest
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch
+from iotlabcli.tests import patch
 
 import iotlabcli.parser.auth as auth_parser
 
@@ -25,13 +20,22 @@ class TestMainAuthParser(unittest.TestCase):
         store_m.return_value = 'Written'
         getpass_m.return_value = 'password2'
 
-        auth_parser.main(['-u', 'super_user', '-p' 'password'])
-        store_m.assert_called_with('super_user', 'password')
-        self.assertFalse(getpass_m.called)
+        with patch('iotlabcli.auth.Api') as api_class:
+            api = api_class.return_value
 
-        auth_parser.main(['-u', 'super_user'])
-        store_m.assert_called_with('super_user', 'password2')
-        self.assertTrue(getpass_m.called)
+            api.check_credential.return_value = True
+
+            auth_parser.main(['-u', 'super_user', '-p' 'password'])
+            store_m.assert_called_with('super_user', 'password')
+            self.assertFalse(getpass_m.called)
+
+            getpass_m.reset_mock()
+            store_m.reset_mock()
+            api.check_credential.return_value = False
+            self.assertRaises(SystemExit, auth_parser.main,
+                              ['-u', 'super_user'])
+            self.assertTrue(getpass_m.called)
+            self.assertEqual(0, store_m.call_count)
 
     def test_main_exceptions(self, store_m):
         """ Test parser.auth.main error cases """

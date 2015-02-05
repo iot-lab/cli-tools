@@ -44,35 +44,57 @@ class ProfileM3A8(object):
             'current': current,
         }
 
-    def set_radio(self, mode, channels, period=None, num_per_channel=0):
+    def set_radio(self, mode, channels, period=None, num_per_channel=None):
         """ Configure radio measures """
         if not mode:
             return
+        assert len(channels)
         for channel in channels:
             assert channel in self.choices['radio']['channels']
 
-        assert mode in ['rssi']
-        self._check_radio_rssi(channels, period, num_per_channel)
-
+        assert mode in ['rssi', 'sniffer']
         self.radio = {
-            'mode': mode,
-            'period': period,
-            'channels': channels,
-            'num_per_channel': num_per_channel,
+            'mode': mode
         }
 
-    def _check_radio_rssi(self, channels, period, num_per_channel=0):
-        """ Check parameters for rssi measures """
+        config_radio = {
+            'rssi': self._cfg_radio_rssi,
+            'sniffer': self._cfg_radio_sniffer
+        }
+        config_radio[mode](channels, period, num_per_channel)
+
+    def _cfg_radio_rssi(self, channels, period, num_per_channel=None):
+        """ Check parameters for rssi measures and set config """
+        num_per_channel = num_per_channel or 0
 
         _err = "Required 'channels/period' for radio rssi measure"
         assert period is not None and channels is not None, _err
 
-        # num_per_channels is required when multiple channels are given
-        _err = "Required 'num_per_channels' as multiple channels provided"
+        # num_per_channel is required when multiple channels are given
+        _err = "Required 'num_per_channel' as multiple channels provided"
         assert len(channels) == 1 or num_per_channel != 0, _err
 
         assert period in self.choices['radio']['period']
         assert num_per_channel in self.choices['radio']['num_per_channel']
+
+        # Write usefull parameters
+        self.radio['channels'] = channels
+        self.radio['period'] = period
+        self.radio['num_per_channel'] = num_per_channel
+
+    def _cfg_radio_sniffer(self, channels, period=None, num_per_channel=None):
+        """ Check parameters for sniffer measures and set the configuration """
+
+        # 'Period' and multiple channels should be handled later when supported
+        _err = "`period` and `num_per_channel` not allowed for sniffer"
+        assert period is None and num_per_channel is None, _err
+
+        assert len(channels) == 1, "Only one channel is allowed"
+
+        # Write config
+        self.radio['channels'] = channels
+        self.radio['period'] = None
+        self.radio['num_per_channel'] = None
 
     def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__

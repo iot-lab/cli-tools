@@ -5,19 +5,24 @@
 
 import unittest
 import sys
+from iotlabcli.parser import common
+
+# pylint: disable=import-error,no-name-in-module
 try:
-    # pylint: disable=import-error,no-name-in-module
     from mock import patch, Mock
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from unittest.mock import patch, Mock
-from iotlabcli.parser import common
+try:
+    from urllib2 import HTTPError
+except ImportError:  # pragma: no cover
+    from urllib.error import HTTPError
 
 
 class TestCommonParser(unittest.TestCase):
     """ Test the iotlab.parser.common module """
 
-    @patch('iotlabcli.rest.Api._method')
+    @patch('iotlabcli.rest.Api.method')
     def test_sites_list(self, _method_get_sited):
         """ Run get_sites method """
         _method_get_sited.return_value = {
@@ -40,6 +45,15 @@ class TestCommonParser(unittest.TestCase):
         self.assertRaises(SystemExit, common.main_cli, function, parser)
 
         with patch('sys.stderr', sys.stdout):
+            # HTTPError, both cases
+            err = HTTPError(None, 401, 'msg', None, None)
+            function.side_effect = err
+            self.assertRaises(SystemExit, common.main_cli, function, parser)
+            err = HTTPError(None, 200, 'msg', None, None)
+            function.side_effect = err
+            self.assertRaises(SystemExit, common.main_cli, function, parser)
+
+            # Other exceptions
             function.side_effect = RuntimeError()
             self.assertRaises(SystemExit, common.main_cli, function, parser)
 

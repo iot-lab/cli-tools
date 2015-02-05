@@ -5,15 +5,20 @@
 # pylint: disable=protected-access
 
 import unittest
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch, Mock
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, Mock
+
 from iotlabcli import rest
 from iotlabcli.helpers import json_dumps
 from iotlabcli.tests.my_mock import RequestRet
+
+# pylint: disable=import-error,no-name-in-module
+try:  # pragma: no cover
+    from mock import patch
+except ImportError:  # pragma: no cover
+    from unittest.mock import patch
+try:  # pragma: no cover
+    from urllib2 import HTTPError
+except ImportError:  # pragma: no cover
+    from urllib.error import HTTPError
 
 
 class TestRest(unittest.TestCase):
@@ -24,61 +29,77 @@ class TestRest(unittest.TestCase):
     Also, most of the internal code execution has been done by the upper layers
     So I don't re-check every method that just does formatting.
     """
-    _url = 'http://url.test.org/rest/method/query'
+    _url = 'http://url.test.org/rest/'
 
-    def test__method(self):
-        """ Test Api._method rest submission """
+    def setUp(self):
+        self.api = rest.Api('user', 'password')
+        self.api.url = self._url
+
+    def test_method(self):
+        """ Test Api.method rest submission """
         ret = {'test': 'val'}
-        ret_val = RequestRet(content=json_dumps(ret).encode('utf-8'),
-                             status_code=200)
-        post = patch('requests.post', return_value=ret_val).start()
-        delete = patch('requests.delete', return_value=ret_val).start()
-        get = patch('requests.get', return_value=ret_val).start()
+        ret_val = RequestRet(200, content=json_dumps(ret))
+        m_req = patch('requests.request', return_value=ret_val).start()
 
         # pylint:disable=protected-access
-        _auth = Mock()
+        _auth = self.api.auth
 
         # call get
-        ret = rest.Api._method(self._url)
-        get.assert_called_with(self._url, auth=None)
+        ret = self.api.method('page')
+        m_req.assert_called_with('get', self._url + 'page',
+                                 files=None, json=None, auth=_auth)
         self.assertEquals(ret, ret)
-        ret = rest.Api._method(self._url, method='GET', auth=_auth)
-        get.assert_called_with(self._url, auth=_auth)
+        ret = self.api.method('page?1', 'get')
+        m_req.assert_called_with('get', self._url + 'page?1',
+                                 files=None, json=None, auth=_auth)
         self.assertEquals(ret, ret)
 
         # call delete
-        ret = rest.Api._method(self._url, method='DELETE')
-        delete.assert_called_with(self._url, auth=None)
+        ret = self.api.method('deeel', 'delete')
+        m_req.assert_called_with('delete', self._url + 'deeel',
+                                 files=None, json=None, auth=_auth)
         self.assertEquals(ret, ret)
 
         # call post
-        ret = rest.Api._method(self._url, method='POST', data={})
-        post.assert_called_with(
-            self._url, data='{}'.encode('utf-8'),
-            headers={'content-type': 'application/json'},
-            auth=None)
+        ret = self.api.method('post_page', 'post', json={})
+        m_req.assert_called_with('post', self._url + 'post_page',
+                                 files=None, json={}, auth=_auth)
         self.assertEquals(ret, ret)
 
         # call multipart
         _files = {'entry': '{}'}
-        ret = rest.Api._method(self._url, method='MULTIPART', data=_files)
-        post.assert_called_with(self._url, files=_files, auth=None)
+        ret = self.api.method('multip', 'post', files=_files)
+        m_req.assert_called_with('post', self._url + 'multip',
+                                 files=_files, json=None, auth=_auth)
         self.assertEquals(ret, ret)
         patch.stopall()
 
-    def test__method_raw(self):
+    def test_check_credentials(self):
+        """ Test Api.method rest submission """
+        ret_val = RequestRet(200, content='"OK"')
+        patch('requests.request', return_value=ret_val).start()
+
+        ret_val.status_code = 200
+        self.assertTrue(self.api.check_credential())
+
+        ret_val.status_code = 401
+        self.assertFalse(self.api.check_credential())
+
+        ret_val.status_code = 500
+        self.assertRaises(HTTPError, self.api.check_credential)
+
+        patch.stopall()
+
+    def test_method_raw(self):
         """ Run as Raw mode """
-        ret_val = RequestRet(content='text_only'.encode('utf-8'),
-                             status_code=200)
-        with patch('requests.get', return_value=ret_val):
-            ret = rest.Api._method(self._url, raw=True)
+        ret_val = RequestRet(200, content='text_only')
+        with patch('requests.request', return_value=ret_val):
+            ret = self.api.method(self._url, raw=True)
             self.assertEquals(ret, 'text_only'.encode('utf-8'))
 
-    def test__method_errors(self):
-        """ Test Api._method rest submission error cases """
-
+    def test_method_errors(self):
+        """ Test Api.method rest submission error cases """
         # invalid status code
-        ret_val = RequestRet(content='return_text'.encode('utf-8'),
-                             status_code=404)
-        with patch('requests.get', return_value=ret_val):
-            self.assertRaises(RuntimeError, rest.Api._method, self._url)
+        ret_val = RequestRet(404, content='return_text')
+        with patch('requests.request', return_value=ret_val):
+            self.assertRaises(HTTPError, self.api.method, self._url)

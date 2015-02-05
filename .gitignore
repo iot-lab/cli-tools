@@ -12,3 +12,11 @@ iotlabcli.egg-info
 coverage.xml
 nosetests.xml
 cover/
+htmlcov/
+
+.eggs/
+.python-version
+test_auth_file
+*log
+
+*json
