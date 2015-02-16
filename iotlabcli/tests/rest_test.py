@@ -103,3 +103,7 @@ class TestRest(unittest.TestCase):
         ret_val = RequestRet(404, content='return_text')
         with patch('requests.request', return_value=ret_val):
             self.assertRaises(HTTPError, self.api.method, self._url)
+
+        # using older requests version fail because of json argument
+        with patch('requests.request', side_effect=TypeError()):
+            self.assertRaises(RuntimeError, self.api.method, self._url)

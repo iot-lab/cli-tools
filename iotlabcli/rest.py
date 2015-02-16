@@ -8,6 +8,7 @@ first parameter to the function.
 
 """
 
+import sys
 import requests
 from requests.auth import HTTPBasicAuth
 from iotlabcli import helpers
@@ -173,17 +174,21 @@ class Api(object):
         """
         assert method in ('get', 'post', 'delete')
         assert (method == 'post') or (files is None and json is None)
-
         _url = urljoin(self.url, url)
-        req = requests.request(
-            method, _url, auth=self.auth, json=json, files=files)
 
-        if requests.codes.ok == req.status_code:
-            return req.content if raw else req.json()
+        try:
+            req = requests.request(
+                method, _url, auth=self.auth, json=json, files=files)
 
-        # Indent req.text to pretty print it later
-        msg = '\n' + ''.join(['\t' + l for l in req.text.splitlines(True)])
-        raise HTTPError(_url, req.status_code, msg, req.headers, None)
+            if requests.codes.ok == req.status_code:
+                return req.content if raw else req.json()
+        except:  # show issue with old requests versions
+            raise RuntimeError(sys.exc_info())
+        else:
+            # Indent req.text to pretty print it later
+            indented_lines = ['\t' + l for l in req.text.splitlines(True)]
+            msg = '\n' + ''.join(indented_lines)
+            raise HTTPError(_url, req.status_code, msg, req.headers, None)
 
     @classmethod
     def get_sites(cls):
