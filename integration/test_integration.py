@@ -21,6 +21,15 @@ import time
 import runpy
 import unittest
 import logging
+from tempfile import NamedTemporaryFile
+
+try:
+    # pylint:disable=I0011,F0401,E0611
+    from mock import patch
+    from cStringIO import StringIO
+except ImportError:  # pragma: no cover
+    from unittest.mock import patch  # pylint:disable=I0011,F0401,E0611
+    from io import StringIO
 
 
 LOGGER = logging.getLogger(__file__)
@@ -44,16 +53,6 @@ SITES = {
 }
 
 NODES = SITES['prod']
-
-from tempfile import NamedTemporaryFile
-
-try:
-    # pylint:disable=I0011,F0401,E0611
-    from mock import patch
-    from cStringIO import StringIO
-except ImportError:  # pragma: no cover
-    from unittest.mock import patch  # pylint:disable=I0011,F0401,E0611
-    from io import StringIO
 
 
 class TestCliToolsExperiments(unittest.TestCase):

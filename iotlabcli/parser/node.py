@@ -20,8 +20,8 @@ def parse_options():
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--update')
-                + help_msgs.COMMAND_EPILOG),
+        epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--update') +
+                help_msgs.COMMAND_EPILOG),
     )
 
     parser.add_argument(
