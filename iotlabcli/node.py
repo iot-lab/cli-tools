@@ -38,7 +38,8 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
                        Empty list runs on all nodes
     :param cmd_opt: Firmware path for update, profile name for profile
     """
-    assert command in ('update', 'profile', 'start', 'stop', 'reset')
+    assert command in ('update', 'profile', 'start', 'stop', 'reset',
+                       'debug-start', 'debug-stop')
 
     result = None
     if 'update' == command:

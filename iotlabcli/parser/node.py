@@ -90,6 +90,14 @@ def parse_options():
         '-r', '--reset', help='reset command', const='reset',
         dest='command', action='store_const')
 
+    cmd_group.add_argument(
+        '--debug-start', help='start debugger', const='debug-start',
+        dest='command', action='store_const')
+
+    cmd_group.add_argument(
+        '--debug-stop', help='stop debugger', const='debug-stop',
+        dest='command', action='store_const')
+
     cmd_group.add_argument('-up', '--update',
                            dest='firmware_path', default=None,
                            help='flash firmware command with path file')

@@ -167,6 +167,8 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._reset_nodes_no_expid()
         f_nodes = self.nodes_str_from_desc(archi='m3', n_type='-l')
         self._flash_nodes(FIRMWARE['m3'], f_nodes)
+        self._debug('start', f_nodes)
+        self._debug('stop', f_nodes)
         self._stop_experiment()
         self._wait_state_or_finished()
 
@@ -205,6 +207,14 @@ class TestCliToolsExperiments(unittest.TestCase):
         """ Flash all nodes of type archi """
         cmd = 'node-cli -i {id} --update {fw} {nodes}'.format(
             id=self.exp_id, fw=firmware, nodes=cmd_append)
+        LOGGER.info(cmd)
+        ret = call_cli(cmd)
+        LOGGER.debug(ret)
+
+    def _debug(self, mode, cmd_append=''):
+        """ Flash all nodes of type archi """
+        cmd = 'node-cli -i {id} --debug-{mode} {nodes}'.format(
+            id=self.exp_id, mode=mode, nodes=cmd_append)
         LOGGER.info(cmd)
         ret = call_cli(cmd)
         LOGGER.debug(ret)
