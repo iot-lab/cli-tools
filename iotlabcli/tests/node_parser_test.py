@@ -31,6 +31,12 @@ class TestMainNodeParser(MainMock):
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'stop', 123, [], None)
 
+        # profile update
+        args = ['--profile', 'profm3']
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
+
         # Reset command with many arguments
         args = ['--reset', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
         list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify

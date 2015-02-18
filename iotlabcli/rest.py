@@ -90,15 +90,18 @@ class Api(object):
 
     # Node commands
 
-    def node_command(self, command, expid, nodes=()):
+    def node_command(self, command, expid, nodes=(), option=None):
         """ Lanch 'command' on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
+        :param opt: additional string to pass as option in the query string
         :returns: dict
         """
-        return self.method('experiments/%s/nodes?%s' % (expid, command),
-                           'post', json=nodes)
+        option = option or ''  # case of None
+        return self.method(
+            'experiments/%s/nodes?%s%s' % (expid, command, option),
+            'post', json=nodes)
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user

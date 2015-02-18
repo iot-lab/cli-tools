@@ -39,6 +39,12 @@ class TestNode(unittest.TestCase):
         api.node_command.assert_called_with('reset', 123, nodes_list)
 
         api.reset_mock()
+        res = node.node_command(api, 'profile', 123, nodes_list, 'p_m3')
+        self.assertEquals(my_mock.API_RET, res)
+        api.node_command.assert_called_with('profile', 123, nodes_list,
+                                            '&name=p_m3')
+
+        api.reset_mock()
         res = node.node_command(api, 'update', 123, nodes_list,
                                 '~/../filename.elf')
         self.assertEquals(my_mock.API_RET, res)

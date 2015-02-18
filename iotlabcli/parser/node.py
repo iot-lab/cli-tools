@@ -53,8 +53,9 @@ def parse_options():
         help='experiment id submission')
 
     # command
-    # 'update' sets firmware name to firmware_path, so cannot set command
-    parser.set_defaults(command='update')
+    # argument with parameter can't both set 'command' and set argument value
+    # so save argument, and command will be left to 'with_arguments'
+    parser.set_defaults(command='with_argument')
     cmd_group = parser.add_mutually_exclusive_group(required=True)
 
     cmd_group.add_argument(
@@ -73,6 +74,10 @@ def parse_options():
                            dest='firmware_path', default=None,
                            help='flash firmware command with path file')
 
+    cmd_group.add_argument('--profile', '--update-profile',
+                           dest='profile_name', default=None,
+                           help='update node firmware with given profile')
+
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)
 
@@ -86,11 +91,24 @@ def node_parse_and_run(opts):
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     command = opts.command
-    firmware = opts.firmware_path  # None if command != 'update'
+    if 'with_argument' != opts.command:
+        # opts.command has a real value
+        command = opts.command
+        cmd_opt = None
+    elif opts.firmware_path is not None:
+        # opts.command has default value
+        command = 'update'
+        cmd_opt = opts.firmware_path
+    elif opts.profile_name is not None:
+        # opts.command has default value
+        command = 'profile'
+        cmd_opt = opts.profile_name
+    else:  # pragma: no cover
+        assert False, "Unknown command %r" % opts.command
 
     nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                               opts.exclude_nodes_list)
-    return iotlabcli.node.node_command(api, command, exp_id, nodes, firmware)
+    return iotlabcli.node.node_command(api, command, exp_id, nodes, cmd_opt)
 
 
 def main(args=None):

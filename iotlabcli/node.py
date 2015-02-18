@@ -7,7 +7,7 @@ from iotlabcli import helpers
 NODE_FILENAME = 'nodes.json'
 
 
-def node_command(api, command, exp_id, nodes_list=(), firmware_path=None):
+def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
     """ Launch commands (start, stop, reset, update)
     on resources (JSONArray) user experiment
 
@@ -16,18 +16,21 @@ def node_command(api, command, exp_id, nodes_list=(), firmware_path=None):
     :param exp_id: Target experiment id
     :param nodes_list: List of nodes where to run command.
                        Empty list runs on all nodes
-    :param firmware_path: Firmware path for update command
+    :param cmd_opt: Firmware path for update, profile name for profile
     """
-    assert command in ('update', 'start', 'stop', 'reset')
+    assert command in ('update', 'profile', 'start', 'stop', 'reset')
 
     result = None
     if 'update' == command:
-        assert firmware_path is not None, '`firmware_path` required for update'
+        assert cmd_opt is not None, '`cmd_opt` required for update'
         files = helpers.FilesDict()
 
-        files.add_firmware(firmware_path)
+        files.add_firmware(cmd_opt)
         files[NODE_FILENAME] = json.dumps(nodes_list)
         result = api.node_update(exp_id, files)
+    elif 'profile' == command:
+        cmd_opt = '&name={0}'.format(cmd_opt)
+        result = api.node_command(command, exp_id, nodes_list, cmd_opt)
     else:
         result = api.node_command(command, exp_id, nodes_list)
 
