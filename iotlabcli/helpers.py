@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 """Helpers methods"""
 
+import sys
 import os
 import json
 
@@ -161,19 +162,19 @@ class FilesDict(dict):  # pylint: disable=too-few-public-methods
 
 def read_custom_api_url():
     """ Return the customized api url from:
-     * environment variable IOTLAB_API_URL
      * config file in <HOME_DIR>/.iotlab.api-url
+     * or environment variable IOTLAB_API_URL
     """
-    # try getting url from environment variable
-    api_url = os.getenv('IOTLAB_API_URL')
-    if api_url is not None:
-        return api_url
-
-    # try getting url from config file
     try:
-        return read_file('~/.iotlab.api-url').strip()
+        # try getting url from config file
+        api_url = read_file('~/.iotlab.api-url').strip()
     except IOError:
-        return None
+        # try getting url from environment variable, None if undefined
+        api_url = os.getenv('IOTLAB_API_URL')
+
+    if api_url:
+        sys.stderr.write("Using custom api_url: {0}\n".format(api_url))
+    return api_url
 
 
 def read_file(file_path, opt=''):

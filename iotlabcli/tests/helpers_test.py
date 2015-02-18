@@ -3,6 +3,7 @@
 # pylint:disable=too-many-public-methods
 
 import unittest
+import sys
 from iotlabcli.tests import patch
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
@@ -35,18 +36,29 @@ class TestHelpers(unittest.TestCase):
             self.assertEquals(234, helpers.get_current_experiment(
                 api, None, running_only=False))
 
+    @patch('sys.stderr', sys.stdout)
     @patch('iotlabcli.helpers.read_file')
     def test_read_custom_api_url(self, read_file_mock):
         """ Test API URL reading """
 
+        # No config
         with patch('os.getenv', return_value=None):
             read_file_mock.side_effect = IOError()
             self.assertTrue(helpers.read_custom_api_url() is None)
 
+        # Only File
         with patch('os.getenv', return_value=None):
             read_file_mock.side_effect = None
             read_file_mock.return_value = 'API_URL_CUSTOM'
             self.assertEquals('API_URL_CUSTOM', helpers.read_custom_api_url())
 
+        # Only env variable
         with patch('os.getenv', return_value='API_URL_2'):
+            read_file_mock.side_effect = IOError()
             self.assertEquals('API_URL_2', helpers.read_custom_api_url())
+
+        # File priority over env variable
+        with patch('os.getenv', return_value='API_URL_2'):
+            read_file_mock.side_effect = None
+            read_file_mock.return_value = 'API_URL_CUSTOM'
+            self.assertEquals('API_URL_CUSTOM', helpers.read_custom_api_url())
