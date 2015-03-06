@@ -13,13 +13,22 @@ from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
 from iotlabcli.profile import ProfileWSN430, ProfileM3, ProfileA8
 
+PROFILE_PARSER = """
+
+profile-cli command-line manage profiles experimentation :
+store you favourite resources configuration with combination
+of a power supply mode and an automatic measure configuration
+(e.g. consumption, radio, ...)
+
+"""
+
 
 def parse_options():
     """ Handle profile-cli command-line opts with argparse """
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
-        description=help_msgs.PROFILE_PARSER,
+        description=PROFILE_PARSER,
         parents=[parent_parser], epilog=help_msgs.PARSER_EPILOG.format(
             cli='profile', option='add'),
         formatter_class=RawTextHelpFormatter)

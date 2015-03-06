@@ -1,38 +1,6 @@
 # -*- coding:utf-8 -*-
 """Help parser messages"""
 
-
-AUTH_PARSER = """
-
-auth-cli command-line store your credentials.
-It creates a file .iotlabrc in your home directory
-with username and password options.
-
-"""
-
-NODE_PARSER = """
-
-node-cli command-line manage interaction on resources.
-You can launch commands on your experiment's resources.
-
-"""
-
-EXPERIMENT_PARSER = """
-
-experiment-cli command-line manage experiments on testbed.
-
-"""
-
-PROFILE_PARSER = """
-
-profile-cli command-line manage profiles experimentation :
-store you favourite resources configuration with combination
-of a power supply mode and an automatic measure configuration
-(e.g. consumption, radio, ...)
-
-"""
-
-
 PARSER_EPILOG = """
 
 Authentication :
@@ -142,23 +110,5 @@ Examples :
 
     # Add a profile for {archi} nodes with radio sniffer
     $ profile-cli {cmd} -n sniff_11 -sniffer -channels 11
-
-"""
-
-
-COMMAND_EPILOG = """
-
-Examples:
-    * update firmware on all experiment resources
-        $ node-cli --update /home/tp.hex
-        Note : with one experiment in the state Running
-    * Launch command stop on experiment resources list
-        $ node-cli --sto -l grenoble,m3,1-5+10+12
-    * update firmware on all experiment resources except two
-        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2
-    * commmand list : site_name,archi,nodeid_list
-        $ node-cli --reset -l grenoble,wsn430,1-34+72
-    * command with several experiments with state Running
-        $ node-cli -i <expid> --reset
 
 """

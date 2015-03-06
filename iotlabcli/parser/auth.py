@@ -9,7 +9,14 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli.parser import common
 import iotlabcli.auth
-from iotlabcli.parser import help_msgs
+
+AUTH_PARSER = """
+
+auth-cli command-line store your credentials.
+It creates a file .iotlabrc in your home directory
+with username and password.
+
+"""
 
 
 def parse_options():
@@ -18,7 +25,7 @@ def parse_options():
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        description=help_msgs.AUTH_PARSER)
+        description=AUTH_PARSER)
 
     return parser
 

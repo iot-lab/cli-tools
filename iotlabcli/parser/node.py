@@ -3,14 +3,37 @@
 
 import argparse
 import sys
-import itertools
-from argparse import RawTextHelpFormatter, ArgumentTypeError
+from argparse import RawTextHelpFormatter
 from iotlabcli import rest
 from iotlabcli import helpers
 from iotlabcli import auth
 import iotlabcli.node
 from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
+
+NODE_PARSER = """
+
+node-cli manages interaction with resources.
+You can launch commands on your experiment's resources.
+
+"""
+
+NODE_EPILOG = """
+
+Examples:
+    * update firmware on all experiment resources
+        $ node-cli --update /home/tp.hex
+        Note : with one experiment in the state Running
+    * Launch command stop on experiment resources list
+        $ node-cli --sto -l grenoble,m3,1-5+10+12
+    * update firmware on all experiment resources except two
+        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2
+    * commmand list : site_name,archi,nodeid_list
+        $ node-cli --reset -l grenoble,wsn430,1-34+72
+    * command with several experiments with state Running
+        $ node-cli -i <expid> --reset
+
+"""
 
 
 def parse_options():
@@ -19,9 +42,10 @@ def parse_options():
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
+        description=NODE_PARSER,
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
         epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--update') +
-                help_msgs.COMMAND_EPILOG),
+                NODE_EPILOG),
     )
 
     parser.add_argument(
@@ -50,62 +74,9 @@ def parse_options():
                            help='flash firmware command with path file')
 
     # nodes list or exclude list
-    list_group = parser.add_mutually_exclusive_group()
-
-    list_group.add_argument(
-        '-e', '--exclude', action='append',
-        type=nodes_list_from_str,
-        dest='exclude_nodes_list', help='exclude nodes list')
-    list_group.add_argument(
-        '-l', '--list', action='append',
-        type=nodes_list_from_str,
-        dest='nodes_list', help='nodes list')
+    common.add_nodes_selection_list(parser)
 
     return parser
-
-
-def nodes_list_from_str(nodes_list_str):
-    """ Convert the nodes_list_str to a list of nodes hostname
-    Checks that given site exist
-    :param nodes_list_str: short nodes format: site_name,archi,node_id_list
-                           example: 'grenoble,m3,1-34+72'
-    :returns: ['m3-1.grenoble.iot-lab.info', ...]
-    """
-    try:
-        # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
-        site, archi, nodes_str = nodes_list_str.split(',')
-    except ValueError:
-        raise ArgumentTypeError(
-            'Invalid number of argument in nodes list: %r' % nodes_list_str)
-    common.check_site_with_server(site)  # needs an external request
-    return common.nodes_list_from_info(site, archi, nodes_str)
-
-
-def _get_experiment_nodes_list(api, exp_id):
-    """ Get the nodes_list for given experiment"""
-    exp_resources = api.get_experiment_info(exp_id, 'resources')
-    exp_nodes = [res["network_address"] for res in exp_resources["items"]]
-    return exp_nodes
-
-
-def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
-    """ Return the list of nodes where the command will apply """
-
-    if nodes_ll is not None:
-        # flatten lists into one
-        nodes = list(itertools.chain.from_iterable(nodes_ll))
-
-    elif excl_nodes_ll is not None:
-        # flatten lists into one
-        excl_nodes = set(itertools.chain.from_iterable(excl_nodes_ll))
-
-        # remove exclude nodes from experiment nodes
-        exp_nodes = set(_get_experiment_nodes_list(api, exp_id))
-        nodes = list(exp_nodes - excl_nodes)
-    else:
-        nodes = []  # all the nodes
-
-    return sorted(nodes, key=helpers.node_url_sort_key)
 
 
 def node_parse_and_run(opts):
@@ -117,8 +88,8 @@ def node_parse_and_run(opts):
     command = opts.command
     firmware = opts.firmware_path  # None if command != 'update'
 
-    nodes = list_nodes(api, exp_id, opts.nodes_list, opts.exclude_nodes_list)
-
+    nodes = common.list_nodes(api, exp_id, opts.nodes_list,
+                              opts.exclude_nodes_list)
     return iotlabcli.node.node_command(api, command, exp_id, nodes, firmware)
 
 

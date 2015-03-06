@@ -13,6 +13,12 @@ from iotlabcli import rest
 from iotlabcli import auth
 from iotlabcli.parser import common, help_msgs
 
+EXPERIMENT_PARSER = """
+
+experiment-cli command-line manages experiments on testbed.
+
+"""
+
 
 def parse_options():
     """ Handle experiment-cli command-line options with argparse """
@@ -20,7 +26,7 @@ def parse_options():
 
     # We create top level parser
     parser = ArgumentParser(
-        description=help_msgs.EXPERIMENT_PARSER,
+        description=EXPERIMENT_PARSER,
         parents=[parent_parser],
         epilog=help_msgs.PARSER_EPILOG.format(
             cli='experiment', option='submit'),
