@@ -54,18 +54,23 @@ SITES = {
 
 NODES = SITES['prod']
 
+CUR_DIR = os.path.dirname(__file__)
+
+FIRMWARE = {
+    'm3': os.path.join(CUR_DIR, 'firmwares', 'm3_autotest.elf'),
+    'cc2420': os.path.join(CUR_DIR, 'firmwares', 'wsn430.hex'),
+}
+
 
 class TestCliToolsExperiments(unittest.TestCase):
     """ Test the cli tools experiments """
 
     def test_an_experiment_alias_multi_same_node_firmware(self):
         """ Exp alias multiple time same reservation firmware """
-        nodes = '5,site={m3}+archi=m3:at86rf231'.format(**NODES)
-        nodes += ',integration/m3_autotest.elf'
-        cmd = ('experiment-cli submit -d 5 -n test_cli' +
-               ' -l {}'.format(nodes) +
-               ' -l {}'.format(nodes) +
-               ' -l {}'.format(nodes))
+        nodes = '5,site={site}+archi=m3:at86rf231,{fw}'.format(
+            site=NODES['m3'], fw=FIRMWARE['m3'])
+        cmd = ('experiment-cli submit -d 5 -n test_cli'
+               ' -l {0} -l {0} -l {0}'.format(nodes))
 
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -80,9 +85,9 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
-        nodes = '5,site={m3}+archi=m3:at86rf231'.format(**NODES)
-        cmd = ('experiment-cli submit -d 5 -n test_cli ' +
-               ' -l {} '.format(nodes) + ' -l {}'.format(nodes))
+        nodes = '5,site={site}+archi=m3:at86rf231'.format(site=NODES['m3'])
+        cmd = 'experiment-cli submit -d 5 -n test_cli -l {0} -l {0}'.format(
+            nodes)
 
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -90,7 +95,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._get_exp_info()
         self._reset_nodes_no_expid()
         f_nodes = self.nodes_str_from_desc(archi='m3', n_type='-l')
-        self._flash_nodes('integration/m3_autotest.elf', f_nodes)
+        self._flash_nodes(FIRMWARE['m3'], f_nodes)
         self._stop_experiment()
         self._wait_state_or_finished()
 
@@ -99,11 +104,11 @@ class TestCliToolsExperiments(unittest.TestCase):
         call_cli('profile-cli addm3 -n {}'.format('test_m3'))
         call_cli('profile-cli addwsn430 -n {}'.format('test_wsn430'))
 
-        cmd = ('experiment-cli submit -d 5 -n test_cli' +
-               (' -l 5,site={m3}+archi=m3:at86rf231,' +
-                'integration/m3_autotest.elf,test_m3') +
-               (' -l 1,site={cc2420}+archi=wsn430:cc2420,' +
-                'integration/tp.hex,test_wsn430')).format(**NODES)
+        cmd = 'experiment-cli submit -d 5 -n test_cli'
+        cmd += ' -l 5,site={site}+archi=m3:at86rf231,{fw},test_m3'.format(
+            site=NODES['m3'], fw=FIRMWARE['m3'])
+        cmd += ' -l 1,site={site}+archi=wsn430:cc2420,{fw},test_wsn430'.format(
+            site=NODES['cc2420'], fw=FIRMWARE['cc2420'])
 
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -112,8 +117,8 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._reset_nodes_no_expid()
 
         # flash all but wsn430 nodes
-        e_nodes = self.nodes_str_from_desc(archi='wsn430', n_type='-e')
-        self._flash_nodes('integration/m3_autotest.elf', e_nodes)
+        nodes = self.nodes_str_from_desc(archi='wsn430', n_type='-e')
+        self._flash_nodes(FIRMWARE['m3'], nodes)
 
         self._stop_experiment()
         self._wait_state_or_finished()
@@ -141,7 +146,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._get_exp_info()
         self._reset_nodes_no_expid()
         f_nodes = self.nodes_str_from_desc(archi='m3', n_type='-l')
-        self._flash_nodes('integration/m3_autotest.elf', f_nodes)
+        self._flash_nodes(FIRMWARE['m3'], f_nodes)
         self._stop_experiment()
         self._wait_state_or_finished()
 

@@ -20,3 +20,5 @@ test_auth_file
 *log
 
 *json
+
+*.tar.gz

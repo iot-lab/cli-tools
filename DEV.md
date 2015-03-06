@@ -3,28 +3,46 @@ Development notice
 
 These are advices on how to maintain iotlabcli as I do right now.
 
-Code validation
----------------
+Automatic multi version tests
+-----------------------------
 
-No errors are allowed, some warning may be disabled but not let unresolved.
+Python versions 2.6, 2.7, 3.2, 3.3 and 3.4 are unit-tested
+You can run all tests with:
+
+    tox
+
+Running test for one specific version
+
+    tox -e py26
+    tox -e py32
+
+Python 3.1 does not run due to external dependencies issues.
+
+
+Step by step validation
+-----------------------
+
+### Test dependencies ###
+
+Development depencencies can be installed with
+
+    pip install -r test-requirements
+
+For `python2.6` / `python3.2`
+
+    pip install -r tests_utils/pylint-python-2.6_3.2.txt
+    pip install -r tests_utils/test-requirements
+
+### Manually running tests ###
 
     python setup.py lint
     python setup.py pep8
     flake8  # it does not work from setup.py script
     python setup.py nosetests
 
-Multi-versions tests
---------------------
 
-Python versions 2.6, 2.7, 3.2, 3.3 and 3.4 are unit-tested
-
-    tox
-
-Python 3.1 does not run due to external dependencies issues.
-
-
-Multi python versions support
------------------------------
+Coding constraints
+------------------
 
 ### Python2.6 ###
 

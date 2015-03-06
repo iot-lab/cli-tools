@@ -1,0 +1,6 @@
+nose
+nosexcover
+mock
+setuptools-pep8
+setuptools-lint
+flake8
