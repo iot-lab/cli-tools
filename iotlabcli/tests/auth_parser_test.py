@@ -39,11 +39,14 @@ class TestMainAuthParser(unittest.TestCase):
 
     def test_main_exceptions(self, store_m):
         """ Test parser.auth.main error cases """
+        with patch('iotlabcli.auth.Api') as api_class:
+            api = api_class.return_value
+            api.check_credential.return_value = True
 
-        store_m.side_effect = IOError('message')
-        self.assertRaises(SystemExit, auth_parser.main,
-                          ['-u', 'error', '-p', 'password'])
+            store_m.side_effect = IOError('message')
+            self.assertRaises(SystemExit, auth_parser.main,
+                              ['-u', 'error', '-p', 'password'])
 
-        store_m.side_effect = KeyboardInterrupt()
-        self.assertRaises(SystemExit, auth_parser.main,
-                          ['-u', 'ctrl_c', '-p', 'password'])
+            store_m.side_effect = KeyboardInterrupt()
+            self.assertRaises(SystemExit, auth_parser.main,
+                              ['-u', 'ctrl_c', '-p', 'password'])
