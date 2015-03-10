@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+
+import iotlabcli.parser.robot
+iotlabcli.parser.robot.main()

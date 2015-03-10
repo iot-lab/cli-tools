@@ -161,6 +161,18 @@ class Api(object):
                 return False
             raise  # pragma no cover
 
+    # robot
+
+    def robot_command(self, command, expid, nodes=()):
+        """ Run command on user experiment list nodes
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :param nodes: list of nodes, if empty apply on all nodes
+        :returns: dict
+        """
+        assert command in ('status',)
+        return self.method('experiments/%s/robots' % expid,
+                           'post', json=nodes)
+
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):
         """
