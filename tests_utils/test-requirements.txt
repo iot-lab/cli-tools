@@ -3,4 +3,5 @@ nosexcover
 mock
 setuptools-pep8
 setuptools-lint
-flake8
+# issues with pep8 >= 1.6
+flake8==2.3.0
