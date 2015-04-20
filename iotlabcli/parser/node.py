@@ -76,7 +76,7 @@ def parse_options():
 
     cmd_group.add_argument('--profile', '--update-profile',
                            dest='profile_name', default=None,
-                           help='update node firmware with given profile')
+                           help='change nodes current monitoring profile')
 
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)
