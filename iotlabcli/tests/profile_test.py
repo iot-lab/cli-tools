@@ -112,7 +112,6 @@ class TestM3Profile(unittest.TestCase):
             }
         )
 
-
     def test_valid_empty_profile(self):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(None, None)
