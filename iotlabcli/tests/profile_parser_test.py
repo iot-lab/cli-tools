@@ -31,9 +31,9 @@ class TestMainProfileParser(MainMock):
             SystemExit, profile_parser.main,
             ['addm3', '-n', 'profile_name', '-p', 'dc', '-power'])
 
-    @staticmethod
+    @patch('iotlabcli.parser.common.get_circuit')
     @patch('iotlabcli.parser.profile.ProfileM3')
-    def test_opts_parsing_m3(prof_m3_class):
+    def test_opts_parsing_m3(self, prof_m3_class, circuit_mock):
         """ Test that M3profile parsing matches profile class
         Check that default values are ok and that values are correctly passed
         """
@@ -50,6 +50,7 @@ class TestMainProfileParser(MainMock):
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
             mode=None, channels=None, period=None, num_per_channel=None)
+        self.assertEquals(profilem3.mobility, None)
 
         # Test for RSSI
         args = ['addm3', '-n', 'name', '-p', 'dc']
@@ -63,6 +64,7 @@ class TestMainProfileParser(MainMock):
             period=140, average=1, power=True, voltage=True, current=True)
         profilem3.set_radio.assert_called_with(
             mode='rssi', channels=[11, 12, 13], period=1, num_per_channel=1)
+        self.assertEquals(profilem3.mobility, None)
 
         # Test for Radio Sniffer only
         args = ['addm3', '-n', 'name', '-p', 'dc']
@@ -74,6 +76,18 @@ class TestMainProfileParser(MainMock):
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
             mode='sniffer', channels=[11], period=None, num_per_channel=None)
+        self.assertEquals(profilem3.mobility, None)
+
+        # Test for mobility only
+        # required fields
+        circuit = {"site_name": "devgrenoble", "trajectory_name": "Jhall"}
+        circuit_mock.return_value = circuit
+        args = ['addm3', '-n', 'name', '-p', 'dc']
+        args += ['--circuit', 'grenoble,Jhall']
+        opts = parser.parse_args(args)
+
+        profile_parser._m3_profile(opts)  # pylint: disable=protected-access
+        self.assertEquals(profilem3.mobility, circuit)
 
     @staticmethod
     @patch('iotlabcli.parser.profile.ProfileWSN430')

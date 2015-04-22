@@ -25,15 +25,43 @@ class TestCommonParser(unittest.TestCase):
     """ Test the iotlab.parser.common module """
 
     @patch('iotlabcli.rest.Api.method')
-    def test_sites_list(self, _method_get_sited):
+    def test_sites_list(self, _method_get_sites):
         """ Run get_sites method """
-        _method_get_sited.return_value = {
+        _method_get_sites.return_value = {
             "items": [{'site': 'grenoble'}, {'site': 'strasbourg'}]
         }
 
         self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
         self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
-        self.assertEquals(1, _method_get_sited.call_count)
+        self.assertEquals(1, _method_get_sites.call_count)
+
+    @patch('iotlabcli.rest.Api.get_circuits')
+    @patch('iotlabcli.parser.common.sites_list')
+    def test_get_circuit(self, _sites_list, _get_circuits):
+        """ Run get_sites method """
+        _sites_list.return_value = ['grenoble', 'lille', 'strasbourg']
+        _get_circuits.return_value = {
+            "grenoble": [
+                {'site_name': 'grenoble', 'trajectory_name': 'Jhall'},
+                {'site_name': 'grenoble', 'trajectory_name': 'Jhall_e'},
+            ],
+            "lille": [
+                {'site_name': 'lille', 'trajectory_name': 'square'},
+            ],
+        }
+
+        self.assertEquals(
+            {'site_name': 'grenoble', 'trajectory_name': 'Jhall_e'},
+            common.get_circuit('grenoble,Jhall_e'))
+        # unkown site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          common.get_circuit, 'unknown_site,circuit')
+        # unkown circuit
+        self.assertRaises(argparse.ArgumentTypeError,
+                          common.get_circuit, 'grenoble,unknown_circuit')
+        # no circuit for site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          common.get_circuit, 'strasbourg,square')
 
     def test_main_cli(self):
         """ Run the main-cli function """

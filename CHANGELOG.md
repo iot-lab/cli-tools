@@ -40,6 +40,8 @@ Changelog
 + Add an `update-profile` command to node-cli to change monitoring profile
 + Add a `robot-cli` script to interract with the robot.
   Provides a `--status` to query the robot internal status.
++ Add `--circuit` option to `profile-cli` for registering a robot circuit on
+  mobile M3 nodes.
 + Move experiment node selection to `parser.common`..
   May break external softwares using internal api.
 

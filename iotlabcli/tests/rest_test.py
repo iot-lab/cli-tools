@@ -74,6 +74,32 @@ class TestRest(unittest.TestCase):
         self.assertEquals(ret, ret)
         patch.stopall()
 
+    @patch('iotlabcli.rest.Api.method')
+    def test__get_with_cach(self, api_method):
+        """ Test Api._get_with_cache """
+        ret = {'ret': 'my_url'}
+        api_method.return_value = ret
+
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(1, api_method.call_count)
+
+        ret = {'ret': 'my_url_2'}
+        api_method.return_value = ret
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(2, api_method.call_count)
+
+        ret = {'ret': 'circuits'}
+        api_method.return_value = ret
+        self.assertEquals(ret, rest.Api.get_circuits())
+        self.assertEquals(ret, rest.Api.get_circuits())
+        self.assertEquals(3, api_method.call_count)
+
     def test_check_credentials(self):
         """ Test Api.method rest submission """
         ret_val = RequestRet(200, content='"OK"')
