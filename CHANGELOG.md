@@ -35,6 +35,8 @@ Changelog
 1.6.0
 -----
 
+Setting the license to CeCILL v2.1
+
 ### Features ###
 
 + Add an `update-profile` command to node-cli to change monitoring profile
