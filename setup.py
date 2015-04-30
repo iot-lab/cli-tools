@@ -42,7 +42,8 @@ def get_version(package):
                 return eval(line.split('=')[-1])  # pylint:disable=eval-used
 
 
-SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli']
+SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
+           'robot-cli']
 
 
 setup(
