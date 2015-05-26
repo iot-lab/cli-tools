@@ -1,21 +1,39 @@
 # -*- coding: utf-8 -*-
 
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Test the iotlabcli.parser.node module """
 
-import unittest
 from iotlabcli.tests import patch
 
-from argparse import ArgumentTypeError
 import iotlabcli.parser.node as node_parser
-from iotlabcli.tests.my_mock import MainMock, api_mock, api_mock_stop
+from iotlabcli.tests.my_mock import MainMock
 
-# pylint: disable=missing-docstring,too-many-public-methods
+# pylint: disable=too-many-public-methods
 # pylint: disable=too-few-public-methods
 
 
 @patch('iotlabcli.node.node_command')
-@patch('iotlabcli.parser.node.list_nodes')
+@patch('iotlabcli.parser.common.list_nodes')
 class TestMainNodeParser(MainMock):
+    """ Test node-cli main parser """
     def test_main(self, list_nodes, node_command):
         """ Run the parser.node.main function """
         node_command.return_value = {'result': 'test'}
@@ -31,6 +49,12 @@ class TestMainNodeParser(MainMock):
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'stop', 123, [], None)
+
+        # profile update
+        args = ['--profile', 'profm3']
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
 
         # Reset command with many arguments
         args = ['--reset', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
@@ -52,66 +76,3 @@ class TestMainNodeParser(MainMock):
             [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info']])
         node_command.assert_called_with(
             self.api, 'update', 123, ['m3-3'], 'tp.elf')
-
-
-class TestNodeParser(unittest.TestCase):
-    def tearDown(self):
-        api_mock_stop()
-
-    @patch('iotlabcli.parser.node._get_experiment_nodes_list')
-    def test_list_nodes(self, g_nodes_list):
-        """ Run the different list_nodes cases """
-        api = api_mock()
-        g_nodes_list.return_value = [
-            "m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info",
-            "m3-3.grenoble.iot-lab.info",
-            "m3-1.strasbourg.iot-lab.info", "m3-2.strasbourg.iot-lab.info",
-            "m3-3.strasbourg.iot-lab.info"
-        ]
-
-        nodes_ll = [
-            ["m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info"],
-            ["m3-1.strasbourg.iot-lab.info", "m3-2.strasbourg.iot-lab.info"],
-        ]
-
-        # No nodes provided => all nodes, no external requests
-        res = node_parser.list_nodes(api, 123)
-        self.assertEquals(res, [])
-        self.assertFalse(g_nodes_list.called)
-
-        # Normal case, no external requests, only list of all provided nodes
-        res = node_parser.list_nodes(api, 123, nodes_ll=nodes_ll)
-        self.assertEquals(res, ["m3-1.grenoble.iot-lab.info",
-                                "m3-2.grenoble.iot-lab.info",
-                                "m3-1.strasbourg.iot-lab.info",
-                                "m3-2.strasbourg.iot-lab.info"])
-        self.assertFalse(g_nodes_list.called)
-
-        res = node_parser.list_nodes(api, 123, excl_nodes_ll=nodes_ll)
-        self.assertEquals(res, ["m3-3.grenoble.iot-lab.info",
-                                "m3-3.strasbourg.iot-lab.info"])
-        self.assertTrue(g_nodes_list.called)
-
-    def test__get_experiment_nodes_list(self):
-        """ Run get_experiment_nodes_list """
-        api = api_mock(
-            ret={
-                "items": [
-                    {"network_address": "m3-1.grenoble.iot-lab.info"},
-                    {"network_address": "m3-2.grenoble.iot-lab.info"},
-                    {"network_address": "m3-3.grenoble.iot-lab.info"},
-                ]
-            }
-        )
-        # pylint: disable=protected-access
-        self.assertEquals(node_parser._get_experiment_nodes_list(api, 3),
-                          ["m3-1.grenoble.iot-lab.info",
-                           "m3-2.grenoble.iot-lab.info",
-                           "m3-3.grenoble.iot-lab.info"])
-
-    @patch('iotlabcli.parser.common.check_site_with_server')
-    def test_nodes_list_from_str(self, _):
-        """ Run error case from test_nodes_list_from_str invalid string """
-
-        self.assertRaises(ArgumentTypeError, node_parser.nodes_list_from_str,
-                          'grenoble,m3_no_numbers')

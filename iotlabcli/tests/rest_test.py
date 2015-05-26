@@ -1,4 +1,24 @@
 # -*- coding:utf-8 -*-
+
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Test the iotlabcli.rest module """
 
 # pylint: disable=too-many-public-methods
@@ -73,6 +93,32 @@ class TestRest(unittest.TestCase):
                                  files=_files, json=None, auth=_auth)
         self.assertEquals(ret, ret)
         patch.stopall()
+
+    @patch('iotlabcli.rest.Api.method')
+    def test__get_with_cach(self, api_method):
+        """ Test Api._get_with_cache """
+        ret = {'ret': 'my_url'}
+        api_method.return_value = ret
+
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEquals(1, api_method.call_count)
+
+        ret = {'ret': 'my_url_2'}
+        api_method.return_value = ret
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEquals(2, api_method.call_count)
+
+        ret = {'ret': 'circuits'}
+        api_method.return_value = ret
+        self.assertEquals(ret, rest.Api.get_circuits())
+        self.assertEquals(ret, rest.Api.get_circuits())
+        self.assertEquals(3, api_method.call_count)
 
     def test_check_credentials(self):
         """ Test Api.method rest submission """

@@ -2,7 +2,13 @@ IoT-Lab cli-tools
 =================
 
 IoT-LAB cli-tools provide a basic set of operations for managing IoT-LAB
-experiments from the command-line.  The following commands are available:
+experiments from the command-line.
+
+IoT-LAB cli-tools, including all examples, code snippets and attached
+documentation is covered by the CeCILL v2.1 free software licence.
+
+
+The following commands are available:
 
 
     command          |  functions
@@ -11,6 +17,7 @@ experiments from the command-line.  The following commands are available:
     `experiment-cli` |  start, stop, query experiments
     `node-cli`       |  start, stop, reset nodes, update firmwares
     `profile-cli`    |  manage nodes configurations
+    `robot-cli`      |  manage robot nodes
 
 
 Commands are self-documented, and usually have sub-commands which are also

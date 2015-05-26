@@ -1,4 +1,24 @@
 # -*- coding:utf-8 -*-
+
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Rest API class
 
 Methods are meant to be used internally.
@@ -90,15 +110,18 @@ class Api(object):
 
     # Node commands
 
-    def node_command(self, command, expid, nodes=()):
+    def node_command(self, command, expid, nodes=(), option=None):
         """ Lanch 'command' on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
+        :param opt: additional string to pass as option in the query string
         :returns: dict
         """
-        return self.method('experiments/%s/nodes?%s' % (expid, command),
-                           'post', json=nodes)
+        option = option or ''  # case of None
+        return self.method(
+            'experiments/%s/nodes?%s%s' % (expid, command, option),
+            'post', json=nodes)
 
     def node_update(self, expid, files):
         """ Launch upadte command (flash firmware) on user
@@ -161,6 +184,18 @@ class Api(object):
                 return False
             raise  # pragma no cover
 
+    # robot
+
+    def robot_command(self, command, expid, nodes=()):
+        """ Run command on user experiment list nodes
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :param nodes: list of nodes, if empty apply on all nodes
+        :returns: dict
+        """
+        assert command in ('status',)
+        return self.method('experiments/%s/robots' % expid,
+                           'post', json=nodes)
+
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):
         """
@@ -197,11 +232,23 @@ class Api(object):
 
         :returns JSONObject
         """
-        sites = cls._cache.get('sites', None)
+        return cls._get_with_cache('experiments?sites')
 
-        if 'sites' not in cls._cache:
-            # unauthenticated request
-            api = cls(username=None, password=None)
-            sites = api.method('experiments?sites')
-            cls._cache['sites'] = sites
-        return cls._cache['sites']
+    @classmethod
+    def get_circuits(cls):
+        """ Get tested robot circuits
+
+        :returns JSONObject
+        """
+        return cls._get_with_cache('robots/circuits')
+
+    @classmethod
+    def _get_with_cache(cls, url):
+        """ Get resource from either cache or rest
+        :returns JSONObject
+        """
+        try:
+            return cls._cache[url]
+        except KeyError:
+            api = cls(None, None)  # unauthenticated request
+            return cls._cache.setdefault(url, api.method(url))

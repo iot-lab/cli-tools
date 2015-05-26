@@ -1,4 +1,24 @@
 # -*- coding:utf-8 -*-
+
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Profile parser"""
 
 import json
@@ -13,13 +33,22 @@ from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
 from iotlabcli.profile import ProfileWSN430, ProfileM3, ProfileA8
 
+PROFILE_PARSER = """
+
+profile-cli command-line manage profiles experimentation :
+store you favourite resources configuration with combination
+of a power supply mode and an automatic measure configuration
+(e.g. consumption, radio, ...)
+
+"""
+
 
 def parse_options():
     """ Handle profile-cli command-line opts with argparse """
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
-        description=help_msgs.PROFILE_PARSER,
+        description=PROFILE_PARSER,
         parents=[parent_parser], epilog=help_msgs.PARSER_EPILOG.format(
             cli='profile', option='add'),
         formatter_class=RawTextHelpFormatter)
@@ -198,6 +227,12 @@ def add_m3_a8_parser(node_type, subparser):
         choices=node_class.choices['radio']['period'],
         metavar='{1..65535}', help='period measure')
 
+    if node_type == 'M3':
+        # circuits configuration
+        circuit = subparser.add_argument_group('Robot circuit configuration')
+        circuit.add_argument('--circuit', type=common.get_circuit,
+                             help='Circuit selection: site,name')
+
 
 def _wsn430_profile(opts):
     """ Create a wsn430 profile from namespace object """
@@ -224,7 +259,9 @@ def _m3_a8_profile(opts, node_class):
 
 def _m3_profile(opts):
     """ Create a m3 profile from namespace object """
-    return _m3_a8_profile(opts, ProfileM3)
+    profile = _m3_a8_profile(opts, ProfileM3)
+    profile.mobility = opts.circuit
+    return profile
 
 
 def _a8_profile(opts):

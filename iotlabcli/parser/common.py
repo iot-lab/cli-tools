@@ -1,5 +1,24 @@
 # -*- coding:utf-8 -*-
 
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Common parsing methods """
 
 from __future__ import print_function
@@ -71,6 +90,28 @@ def sites_list():
     """ Return the list of sites """
     sites_dict = rest.Api.get_sites()
     return [site["site"] for site in sites_dict["items"]]
+
+
+def get_circuit(circuit_str):
+    """ Get the circuit represented by `circuit_str`
+    :param circuit_str: Circuit selection: site,circuit_name
+    :returns: Circuit dictionary
+    """
+    site, name = circuit_str.split(',')
+
+    check_site_with_server(site)  # check site for better error messages
+    circuits = rest.Api.get_circuits()
+    try:
+        trajectories = []
+        for circuit in circuits[site]:
+            traj = circuit['trajectory_name']
+            trajectories.append(str(traj))
+            if traj == name:
+                return circuit
+        raise argparse.ArgumentTypeError("Circuit %r not found in %r" % (
+            name, trajectories))
+    except KeyError:
+        raise argparse.ArgumentTypeError("No circuits for site %r" % site)
 
 
 def check_site_with_server(site_name, _sites_list=None):
@@ -201,3 +242,59 @@ def expand_short_nodes_list(nodes_str):
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
         raise ValueError('Invalid nodes list: %s ([0-9+-])' % nodes_str)
+
+
+def add_nodes_selection_list(parser):
+    """ Add '-l' and '-e' experiment nodes selection """
+    list_group = parser.add_mutually_exclusive_group()
+
+    list_group.add_argument(
+        '-e', '--exclude', action='append', type=nodes_list_from_str,
+        dest='exclude_nodes_list', help='exclude nodes list')
+    list_group.add_argument(
+        '-l', '--list', action='append', type=nodes_list_from_str,
+        dest='nodes_list', help='nodes list')
+
+
+def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
+    """ Return the list of nodes where the command will apply """
+
+    if nodes_ll is not None:
+        # flatten lists into one
+        nodes = list(itertools.chain.from_iterable(nodes_ll))
+
+    elif excl_nodes_ll is not None:
+        # flatten lists into one
+        excl_nodes = set(itertools.chain.from_iterable(excl_nodes_ll))
+
+        # remove exclude nodes from experiment nodes
+        exp_nodes = set(_get_experiment_nodes_list(api, exp_id))
+        nodes = list(exp_nodes - excl_nodes)
+    else:
+        nodes = []  # all the nodes
+
+    return sorted(nodes, key=helpers.node_url_sort_key)
+
+
+def _get_experiment_nodes_list(api, exp_id):
+    """ Get the nodes_list for given experiment"""
+    exp_resources = api.get_experiment_info(exp_id, 'resources')
+    exp_nodes = [res["network_address"] for res in exp_resources["items"]]
+    return exp_nodes
+
+
+def nodes_list_from_str(nodes_list_str):
+    """ Convert the nodes_list_str to a list of nodes hostname
+    Checks that given site exist
+    :param nodes_list_str: short nodes format: site_name,archi,node_id_list
+                           example: 'grenoble,m3,1-34+72'
+    :returns: ['m3-1.grenoble.iot-lab.info', ...]
+    """
+    try:
+        # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
+        site, archi, nodes_str = nodes_list_str.split(',')
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            'Invalid number of argument in nodes list: %r' % nodes_list_str)
+    check_site_with_server(site)  # needs an external request
+    return nodes_list_from_info(site, archi, nodes_str)

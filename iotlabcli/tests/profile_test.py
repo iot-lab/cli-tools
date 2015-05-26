@@ -1,5 +1,24 @@
 # -*- coding: utf-8 -*-
 
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """ Test the iotlabcli.module """
 # pylint:disable=missing-docstring,too-many-public-methods
 
@@ -13,6 +32,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(140, 1, True, True, True)
         m3_prof.set_radio('rssi', (11, 12, 13), period=1, num_per_channel=1)
+        m3_prof.mobility = None
 
         self.assertEquals(
             m3_prof.__dict__,
@@ -33,6 +53,7 @@ class TestM3Profile(unittest.TestCase):
                     'power': True,
                     'voltage': True,
                 },
+                'mobility': None,
             }
         )
 
@@ -53,6 +74,7 @@ class TestM3Profile(unittest.TestCase):
                     'period': 42,
                 },
                 'consumption': None,
+                'mobility': None,
             }
         )
 
@@ -60,6 +82,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('sniff_11', 'dc')
         m3_prof.set_consumption(None, None)
         m3_prof.set_radio('sniffer', (11,))
+        m3_prof.mobility = None
 
         self.assertEquals(
             m3_prof.__dict__,
@@ -74,13 +97,27 @@ class TestM3Profile(unittest.TestCase):
                     'period': None,
                 },
                 'consumption': None,
+                'mobility': None,
             }
         )
 
-    def test_valid_empty_profile(self):
+    def test_valid_mobility_profile(self):
+        circuit = {
+            "coordinates": [
+                {"name": "0", "w": 0.0, "x": 40.6, "y": 34.2, "z": 0.0},
+                {"name": "1", "w": 3.14, "x": 59.4, "y": 34.2, "z": 0.0},
+                {"name": "3", "w": 3.14, "x": 40.6, "y": 34.2, "z": 0.0},
+                {"name": "2", "w": 0.0, "x": 17.5, "y": 34.2, "z": 0.0},
+            ],
+            "points": ["0", "1", "3", "2"],
+            "site_name": "devgrenoble",
+            "trajectory_name": "Jhall",
+        }
+
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(None, None)
         m3_prof.set_radio(mode=None, channels=None)
+        m3_prof.mobility = circuit
 
         self.assertEquals(
             m3_prof.__dict__,
@@ -90,6 +127,25 @@ class TestM3Profile(unittest.TestCase):
                 'nodearch': 'm3',
                 'consumption': None,
                 'radio': None,
+                'mobility': circuit,
+            }
+        )
+
+    def test_valid_empty_profile(self):
+        m3_prof = profile.ProfileM3('name', 'dc')
+        m3_prof.set_consumption(None, None)
+        m3_prof.set_radio(mode=None, channels=None)
+        m3_prof.mobility = None
+
+        self.assertEquals(
+            m3_prof.__dict__,
+            {
+                'power': 'dc',
+                'profilename': 'name',
+                'nodearch': 'm3',
+                'consumption': None,
+                'radio': None,
+                'mobility': None,
             }
         )
 

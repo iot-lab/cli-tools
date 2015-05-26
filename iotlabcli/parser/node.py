@@ -1,16 +1,59 @@
 # -*- coding:utf-8 -*-
+
+# This file is a part of IoT-LAB cli-tools
+# Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
+# Contributor(s) : see AUTHORS file
+#
+# This software is governed by the CeCILL license under French law
+# and abiding by the rules of distribution of free software.  You can  use,
+# modify and/ or redistribute the software under the terms of the CeCILL
+# license as circulated by CEA, CNRS and INRIA at the following URL
+# http://www.cecill.info.
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL license and that you accept its terms.
+
 """Node parser"""
 
 import argparse
 import sys
-import itertools
-from argparse import RawTextHelpFormatter, ArgumentTypeError
+from argparse import RawTextHelpFormatter
 from iotlabcli import rest
 from iotlabcli import helpers
 from iotlabcli import auth
 import iotlabcli.node
 from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
+
+NODE_PARSER = """
+
+node-cli manages interaction with resources.
+You can launch commands on your experiment's resources.
+
+"""
+
+NODE_EPILOG = """
+
+Examples:
+    * update firmware on all experiment resources
+        $ node-cli --update /home/tp.hex
+        Note : with one experiment in the state Running
+    * Launch command stop on experiment resources list
+        $ node-cli --sto -l grenoble,m3,1-5+10+12
+    * update firmware on all experiment resources except two
+        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2
+    * commmand list : site_name,archi,nodeid_list
+        $ node-cli --reset -l grenoble,wsn430,1-34+72
+    * command with several experiments with state Running
+        $ node-cli -i <expid> --reset
+
+"""
 
 
 def parse_options():
@@ -19,9 +62,10 @@ def parse_options():
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
+        description=NODE_PARSER,
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
         epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--update') +
-                help_msgs.COMMAND_EPILOG),
+                NODE_EPILOG),
     )
 
     parser.add_argument(
@@ -29,8 +73,9 @@ def parse_options():
         help='experiment id submission')
 
     # command
-    # 'update' sets firmware name to firmware_path, so cannot set command
-    parser.set_defaults(command='update')
+    # argument with parameter can't both set 'command' and set argument value
+    # so save argument, and command will be left to 'with_arguments'
+    parser.set_defaults(command='with_argument')
     cmd_group = parser.add_mutually_exclusive_group(required=True)
 
     cmd_group.add_argument(
@@ -49,63 +94,14 @@ def parse_options():
                            dest='firmware_path', default=None,
                            help='flash firmware command with path file')
 
-    # nodes list or exclude list
-    list_group = parser.add_mutually_exclusive_group()
+    cmd_group.add_argument('--profile', '--update-profile',
+                           dest='profile_name', default=None,
+                           help='change nodes current monitoring profile')
 
-    list_group.add_argument(
-        '-e', '--exclude', action='append',
-        type=nodes_list_from_str,
-        dest='exclude_nodes_list', help='exclude nodes list')
-    list_group.add_argument(
-        '-l', '--list', action='append',
-        type=nodes_list_from_str,
-        dest='nodes_list', help='nodes list')
+    # nodes list or exclude list
+    common.add_nodes_selection_list(parser)
 
     return parser
-
-
-def nodes_list_from_str(nodes_list_str):
-    """ Convert the nodes_list_str to a list of nodes hostname
-    Checks that given site exist
-    :param nodes_list_str: short nodes format: site_name,archi,node_id_list
-                           example: 'grenoble,m3,1-34+72'
-    :returns: ['m3-1.grenoble.iot-lab.info', ...]
-    """
-    try:
-        # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
-        site, archi, nodes_str = nodes_list_str.split(',')
-    except ValueError:
-        raise ArgumentTypeError(
-            'Invalid number of argument in nodes list: %r' % nodes_list_str)
-    common.check_site_with_server(site)  # needs an external request
-    return common.nodes_list_from_info(site, archi, nodes_str)
-
-
-def _get_experiment_nodes_list(api, exp_id):
-    """ Get the nodes_list for given experiment"""
-    exp_resources = api.get_experiment_info(exp_id, 'resources')
-    exp_nodes = [res["network_address"] for res in exp_resources["items"]]
-    return exp_nodes
-
-
-def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
-    """ Return the list of nodes where the command will apply """
-
-    if nodes_ll is not None:
-        # flatten lists into one
-        nodes = list(itertools.chain.from_iterable(nodes_ll))
-
-    elif excl_nodes_ll is not None:
-        # flatten lists into one
-        excl_nodes = set(itertools.chain.from_iterable(excl_nodes_ll))
-
-        # remove exclude nodes from experiment nodes
-        exp_nodes = set(_get_experiment_nodes_list(api, exp_id))
-        nodes = list(exp_nodes - excl_nodes)
-    else:
-        nodes = []  # all the nodes
-
-    return sorted(nodes, key=helpers.node_url_sort_key)
 
 
 def node_parse_and_run(opts):
@@ -115,11 +111,24 @@ def node_parse_and_run(opts):
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     command = opts.command
-    firmware = opts.firmware_path  # None if command != 'update'
+    if 'with_argument' != opts.command:
+        # opts.command has a real value
+        command = opts.command
+        cmd_opt = None
+    elif opts.firmware_path is not None:
+        # opts.command has default value
+        command = 'update'
+        cmd_opt = opts.firmware_path
+    elif opts.profile_name is not None:
+        # opts.command has default value
+        command = 'profile'
+        cmd_opt = opts.profile_name
+    else:  # pragma: no cover
+        assert False, "Unknown command %r" % opts.command
 
-    nodes = list_nodes(api, exp_id, opts.nodes_list, opts.exclude_nodes_list)
-
-    return iotlabcli.node.node_command(api, command, exp_id, nodes, firmware)
+    nodes = common.list_nodes(api, exp_id, opts.nodes_list,
+                              opts.exclude_nodes_list)
+    return iotlabcli.node.node_command(api, command, exp_id, nodes, cmd_opt)
 
 
 def main(args=None):

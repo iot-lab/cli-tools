@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
 
 # This file is a part of IoT-LAB cli-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -19,12 +19,18 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Tests for iotlabcli package """
+""" Implement the 'robot' requests """
 
-# Python2/3 imports
-# pylint: disable=import-error,no-name-in-module
-# flake8: noqa
-try:
-    from mock import patch, mock_open
-except ImportError:  # pragma: no cover
-    from unittest.mock import patch, mock_open
+
+def robot_command(api, command, exp_id, nodes_list=()):
+    """ Launch commands ('status',) on nodes_list
+
+    :param api: API Rest api object
+    :param command: command that should be run
+    :param exp_id: Target experiment id
+    :param nodes_list: List of nodes where to run command.
+                       Empty list runs on all nodes
+    """
+    assert command in ('status',)
+    result = api.robot_command(command, exp_id, nodes_list)
+    return result
