@@ -22,13 +22,13 @@
 """ Authentication file management """
 
 import os
+import os.path
 import getpass
 from base64 import b64encode, b64decode
 from iotlabcli.rest import Api
 
-HOME_DIRECTORY = os.getenv('USERPROFILE') or os.getenv('HOME')
 RC_FILE = (os.getenv('IOTLAB_PASSWORD_FILE') or
-           os.path.join(HOME_DIRECTORY, '.iotlabrc'))
+           os.path.expanduser('~/.iotlabrc'))
 
 
 def get_user_credentials(username=None, password=None):
