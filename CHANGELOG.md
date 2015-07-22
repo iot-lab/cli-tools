@@ -52,3 +52,15 @@ Setting the license to CeCILL v2.1
 - Restrict flake8 version due to pep8 incompatibility
 - Correct `auth_parser` test that tried external connections
 
+1.7.0
+-----
+
+### Features ###
+
++ Add 'debug-start' and 'debug-stop' commands
+
+### Bugs ###
+
+- Fix how home directory is found.
+- Force 'mock' version to stay compatible with python2.6
+- Fix integration 'tox' command to have a correct coverage output.
