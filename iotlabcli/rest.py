@@ -42,6 +42,26 @@ except ImportError:  # pragma: no cover
     from urllib2 import HTTPError
 
 
+try:  # pragma: no cover
+
+    # With newer versions of requests, old python version may
+    # raise an InsecurePlatformWarning
+    #   https://urllib3.readthedocs.org/en/latest/\
+    #       security.html#insecureplatformwarning
+
+    # It can be fixed by installing pyopenssl support as described here
+    #   https://urllib3.readthedocs.org/en/latest/\
+    #       security.html#openssl-pyopenssl
+    #
+    # Dependencies can be installed with
+    #     pip install iotlabcli[secure]
+
+    import urllib3.contrib.pyopenssl
+    urllib3.contrib.pyopenssl.inject_into_urllib3()
+except ImportError:
+    pass
+
+
 # pylint: disable=maybe-no-member,no-member
 class Api(object):
     """ IoT-Lab REST API """

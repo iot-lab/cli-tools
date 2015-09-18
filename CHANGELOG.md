@@ -64,3 +64,5 @@ Setting the license to CeCILL v2.1
 - Fix how home directory is found.
 - Force 'mock' version to stay compatible with python2.6
 - Fix integration 'tox' command to have a correct coverage output.
+
++ 1.7.1: Add dependency on 'urllib3[secure]' to fix ssl connections security

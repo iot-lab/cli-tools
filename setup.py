@@ -65,5 +65,10 @@ setup(
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
-    install_requires=['argparse', 'requests>2.4.2']
+    extras_require={
+        # https://urllib3.readthedocs.org/en/latest/\
+        #     security.html#openssl-pyopenssl
+        'secure': ['pyOpenSSL', 'ndg-httpsclient', 'pyasn1'],
+    },
+    install_requires=['argparse', 'requests>2.4.2'],
 )
