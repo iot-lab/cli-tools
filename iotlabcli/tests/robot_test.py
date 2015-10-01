@@ -72,3 +72,9 @@ class TestRobot(unittest.TestCase):
         self.assertEqual(my_mock.API_RET, ret)
         self.api.mobility_user_get.assert_called_with('m_name', 'm_site')
         self.api.reset_mock()
+
+    def test_robot_get_map(self):
+        """Test robot_get_map."""
+        ret = robot.robot_get_map('grenoble')
+        self.assertEqual(sorted(ret.keys()), ['config', 'dock', 'image'])
+        # Lazy to check calls to Api.method should use proxy to call it...

@@ -252,21 +252,49 @@ class Api(object):  # pylint:disable=too-many-public-methods
         """
         assert method in ('get', 'post', 'delete')
         assert (method == 'post') or (files is None and json is None)
+
         _url = urljoin(self.url, url)
 
-        try:
-            req = requests.request(
-                method, _url, auth=self.auth, json=json, files=files)
+        req = self._request(_url, method, auth=self.auth,
+                            json=json, files=files)
+        if requests.codes.ok == req.status_code:
+            return req.content if raw else req.json()
+        self._raise_http_error(_url, req)
 
-            if requests.codes.ok == req.status_code:
-                return req.content if raw else req.json()
+    @staticmethod
+    def _request(url, method, **kwargs):
+        """ Call http `method` on 'url'
+
+        :param url: url of API.
+        :param method: request method
+        :param **kwargs: requests.request additional arguments """
+        try:
+            return requests.request(method, url, **kwargs)
         except:  # show issue with old requests versions
             raise RuntimeError(sys.exc_info())
-        else:
-            # Indent req.text to pretty print it later
-            indented_lines = ['\t' + l for l in req.text.splitlines(True)]
-            msg = '\n' + ''.join(indented_lines)
-            raise HTTPError(_url, req.status_code, msg, req.headers, None)
+
+    @staticmethod
+    def _raise_http_error(url, req):
+        """ Raises HTTP error for 'url' and 'req' """
+        # Indent req.text to pretty print it later
+        indented_lines = ['\t' + l for l in req.text.splitlines(True)]
+        msg = '\n' + ''.join(indented_lines)
+        raise HTTPError(url, req.status_code, msg, req.headers, None)
+
+    @classmethod
+    def get_robot_mapfile(cls, site, mapfile):
+        """ Download robot mapfile.
+
+        :params site: Map info for site
+        :params mapfile: select type in ('mapconfig', 'mapimage', 'dockconfig')
+        :returns: Image content or json loaded structure
+        """
+        assert mapfile in ('mapconfig', 'mapimage', 'dockconfig')
+        raw = mapfile in ('mapimage',)
+
+        api = cls(None, None)
+        url = 'robots/mobility/map/%s?%s' % (site, mapfile)
+        return api.method(url, raw=raw)
 
     @classmethod
     def get_sites(cls):

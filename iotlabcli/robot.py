@@ -21,6 +21,8 @@
 
 """ Implement the 'robot' requests """
 
+from iotlabcli.rest import Api
+
 
 def robot_command(api, command, exp_id, nodes_list=()):
     """ Launch commands ('status',) on nodes_list
@@ -73,3 +75,16 @@ def mobility_command(api, command, arg=None):
         raise ValueError('Unknown command %r' % command)
 
     return result
+
+
+def robot_get_map(site):
+    """ Download all robot map files
+
+    Download robot site config, map and docks list """
+    map_cfg = {}
+
+    map_cfg['config'] = Api.get_robot_mapfile(site, 'mapconfig')
+    map_cfg['image'] = Api.get_robot_mapfile(site, 'mapimage')
+    map_cfg['dock'] = Api.get_robot_mapfile(site, 'dockconfig')
+
+    return map_cfg
