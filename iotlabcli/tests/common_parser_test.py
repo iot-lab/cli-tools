@@ -39,6 +39,8 @@ try:
 except ImportError:  # pragma: no cover
     from urllib.error import HTTPError
 
+BUILTIN = 'builtins' if sys.version_info[0] == 3 else '__builtin__'
+
 
 class TestCommonParser(unittest.TestCase):
     """ Test the iotlab.parser.common module """
@@ -108,6 +110,22 @@ class TestCommonParser(unittest.TestCase):
 
             function.side_effect = KeyboardInterrupt()
             self.assertRaises(SystemExit, common.main_cli, function, parser)
+
+    def test_print_result_sigpipe(self):
+        """ Test BrokenPipe silent handling
+
+        When executing 'cli_cmd | grep -m1' code may raise a BrokenPipe error
+        message. We just want it to be silent """
+
+        result = {'ret': 0}
+        with patch('%s.print' % BUILTIN) as mock_print:
+            # Silent BrokenPipe
+            mock_print.side_effect = IOError(32, 'Broken pipe')
+            common.print_result(result)
+
+            # Should raise other errors
+            mock_print.side_effect = IOError(28, 'No space left on device')
+            self.assertRaises(IOError, common.print_result, result)
 
 
 class TestNodeSelectionParser(unittest.TestCase):

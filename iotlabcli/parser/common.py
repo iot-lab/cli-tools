@@ -23,6 +23,7 @@
 
 from __future__ import print_function
 import sys
+import errno
 import argparse
 import itertools
 import iotlabcli
@@ -60,15 +61,24 @@ def add_version(parser):
         '-v', '--version', action='version', version=iotlabcli.__version__)
 
 
+def print_result(result):
+    """ Print result vule """
+    format_function = helpers.json_dumps
+
+    try:
+        print(format_function(result))
+    except IOError as err:
+        # Ignore BrokenPipe
+        if err.errno != errno.EPIPE:
+            raise err
+
+
 def main_cli(function, parser, args=None):  # flake8: noqa
     """ Main command-line execution. """
     args = args or sys.argv[1:]
     try:
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
-        print(helpers.json_dumps(result))
-        return
-
     except HTTPError as err:  # should be first as it's an IOError
         if 401 == err.code:
             # print an info on how to get rid of the error
@@ -83,6 +93,9 @@ def main_cli(function, parser, args=None):  # flake8: noqa
 
     except KeyboardInterrupt:  # pragma: no cover
         print("\nStopped.", file=sys.stderr)
+    else:
+        print_result(result)
+        return
     sys.exit(1)
 
 
