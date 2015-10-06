@@ -26,6 +26,7 @@ import sys
 import errno
 import argparse
 import itertools
+import jmespath
 import iotlabcli
 from iotlabcli import helpers
 from iotlabcli import rest
@@ -36,6 +37,12 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from urllib2 import HTTPError
+try:
+    # pylint: disable=import-error,no-name-in-module
+    from collections import OrderedDict
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    from ordereddict import OrderedDict
 
 
 def base_parser(user_required=False):
@@ -44,6 +51,7 @@ def base_parser(user_required=False):
     parser = argparse.ArgumentParser(add_help=False)
     add_auth_arguments(parser, user_required)
     add_version(parser)
+    add_output_formatter(parser)
 
     return parser
 
@@ -61,12 +69,29 @@ def add_version(parser):
         '-v', '--version', action='version', version=iotlabcli.__version__)
 
 
-def print_result(result):
+def add_output_formatter(parser):
+    """ Add '--jmespath' argument """
+    group = parser.add_argument_group("Output Format")
+    group.add_argument('--jmespath', '--jp', type=jmespath.compile,
+                       help="Query output using `jmespath` syntax")
+    group.add_argument('--format', '--fmt', type=eval,
+                       help="Format function, default `helpers.json_dumps`")
+
+
+def print_result(result, jmespath_expr=None, format_function=None):
     """ Print result vule """
-    format_function = helpers.json_dumps
+    format_function = format_function or helpers.json_dumps
+
+    # Query using jmespath
+    if jmespath_expr is not None:
+        keep_dict_order = jmespath.Options(dict_cls=OrderedDict)
+        result = jmespath_expr.search(result, keep_dict_order)
+
+    # Format output
+    formatted = format_function(result)
 
     try:
-        print(format_function(result))
+        print(formatted)
     except IOError as err:
         # Ignore BrokenPipe
         if err.errno != errno.EPIPE:
@@ -94,7 +119,7 @@ def main_cli(function, parser, args=None):  # flake8: noqa
     except KeyboardInterrupt:  # pragma: no cover
         print("\nStopped.", file=sys.stderr)
     else:
-        print_result(result)
+        print_result(result, parser_opts.jmespath, parser_opts.format)
         return
     sys.exit(1)
 

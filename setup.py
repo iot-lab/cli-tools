@@ -21,6 +21,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import os
+import sys
 from setuptools import setup, find_packages
 
 PACKAGE = 'iotlabcli'
@@ -44,6 +45,11 @@ def get_version(package):
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
            'robot-cli']
+
+INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
+if sys.version_info[0:2] == (2, 6):
+    # OrderedDict added in python2.7
+    INSTALL_REQUIRES.append('ordereddict')
 
 
 setup(
@@ -70,5 +76,5 @@ setup(
         #     security.html#openssl-pyopenssl
         'secure': ['pyOpenSSL', 'ndg-httpsclient', 'pyasn1'],
     },
-    install_requires=['argparse', 'requests>2.4.2'],
+    install_requires=INSTALL_REQUIRES,
 )

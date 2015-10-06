@@ -127,6 +127,53 @@ class TestCommonParser(unittest.TestCase):
             mock_print.side_effect = IOError(28, 'No space left on device')
             self.assertRaises(IOError, common.print_result, result)
 
+    @staticmethod
+    def test_main_cli_jmespath_fmt():
+        """ Run main_cli with --jmespath and --format options
+
+        Test getting deployed nodes from 'experiment-cli get -p'"""
+        function = Mock(return_value={
+            "deploymentresults": {
+                "0": [
+                    "a8-5.grenoble.iot-lab.info",
+                    "a8-6.grenoble.iot-lab.info",
+                    "a8-7.grenoble.iot-lab.info",
+                    "a8-8.grenoble.iot-lab.info",
+                    "a8-9.grenoble.iot-lab.info"
+                ]
+            },
+            "duration": 60,
+            "firmwareassociations": None,
+            "name": None,
+            "nodes": [
+                "a8-5.grenoble.iot-lab.info",
+                "a8-6.grenoble.iot-lab.info",
+                "a8-7.grenoble.iot-lab.info",
+                "a8-8.grenoble.iot-lab.info",
+                "a8-9.grenoble.iot-lab.info"
+            ],
+            "profileassociations": None,
+            "profiles": None,
+            "reservation": None,
+            "state": "Running",
+            "type": "physical"
+        })
+
+        nodes_list_ret = ('a8-5.grenoble.iot-lab.info'
+                          ' a8-6.grenoble.iot-lab.info'
+                          ' a8-7.grenoble.iot-lab.info'
+                          ' a8-8.grenoble.iot-lab.info'
+                          ' a8-9.grenoble.iot-lab.info')
+
+        # like experiment-cli get --print
+        parser = common.base_parser()
+        args = ['--jmespath', 'deploymentresults."0"', '--format', '" ".join']
+        # No need to add 'exp-cli get -p' function is mocked
+
+        with patch('%s.print' % BUILTIN) as mock_print:
+            common.main_cli(function, parser, args)
+            mock_print.assert_called_with(nodes_list_ret)
+
 
 class TestNodeSelectionParser(unittest.TestCase):
     """ Test the common '-l' '-e' options node selection parser """

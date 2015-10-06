@@ -67,3 +67,11 @@ Setting the license to CeCILL v2.1
 
 + 1.7.1: Add dependency on 'urllib3[secure]' to fix ssl connections security
 + 1.7.2: Catch BrokenPipe errors when printing results
+
+
+1.8.0
+-----
+
+### Features ###
+
++ Add `--jmespath` and `--format` options to handle json output
