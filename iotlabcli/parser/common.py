@@ -143,7 +143,7 @@ def sites_list():
 
 def archis_list():
     """Return the list of architectures."""
-    return ['wsn430', 'm3', 'a8']
+    return ['m3', 'a8', 'wsn430', 'custom', 'des']
 
 
 def get_circuit(circuit_str):
