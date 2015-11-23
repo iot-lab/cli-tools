@@ -141,6 +141,11 @@ def sites_list():
     return [site["site"] for site in sites_dict["items"]]
 
 
+def archis_list():
+    """Return the list of architectures."""
+    return ['m3', 'a8', 'wsn430', 'custom', 'des']
+
+
 def get_circuit(circuit_str):
     """ Get the circuit represented by `circuit_str`
     :param circuit_str: Circuit selection: site,circuit_name
@@ -215,18 +220,18 @@ def nodes_list_from_info(site, archi, nodes_str):
 def _check_archi(archi):
     """ Check that archi is valid
     >>> [_check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
-    [None, None, None]
+    ['wsn430', 'm3', 'a8']
 
     >>> _check_archi('msp430')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ValueError: Invalid node archi: 'msp430' not in [...]
 
     """
+    archis = archis_list()
 
-    archi_list = ['wsn430', 'm3', 'a8']
-    if archi in archi_list:
-        return  # valid archi
-    raise ValueError("Invalid node archi: %r not in %s" % (archi, archi_list))
+    if archi in archis:
+        return archi  # valid archi
+    raise ValueError("Invalid node archi: %r not in %s" % (archi, archis))
 
 
 def nodes_id_list(archi, nodes_list):

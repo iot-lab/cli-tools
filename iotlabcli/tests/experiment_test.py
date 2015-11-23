@@ -153,6 +153,26 @@ class TestExperimentSubmit(CommandMock):
         self.assertEqual(expected, exp_desc)
         self.assertTrue('firmware.elf' in files_dict)
 
+    def test_exp_alias_new_types(self):
+        """Test submiting alias experiments with 'new' nodes types."""
+        resources = [
+            experiment.exp_resources(
+                experiment.AliasNodes(1, 'berlin', 'des:wifi-cc1100')),
+            experiment.exp_resources(
+                experiment.AliasNodes(1, 'grenoble', 'custom:leonardo:')),
+        ]
+        experiment.submit_experiment(self.api, None, 20, resources)
+        self.assertEqual(1, self.api.submit_experiment.call_count)
+
+    def test_exp_physical_new_types(self):
+        """Test submiting physical experiments with 'new' nodes types."""
+        resources = [
+            experiment.exp_resources(['custom-1.grenoble.iot-lab.info']),
+            experiment.exp_resources(['berlin-1.berlin.iot-lab.info']),
+        ]
+        experiment.submit_experiment(self.api, None, 20, resources)
+        self.assertEqual(1, self.api.submit_experiment.call_count)
+
     def test_exp_submit_types_detect(self):
         """ Try experiment submit types detection"""
         # Physical tests and Alias Nodes

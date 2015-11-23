@@ -22,6 +22,7 @@
 """ Implement the 'experiment' requests """
 
 from os.path import basename
+import re
 import json
 import time
 from iotlabcli import helpers
@@ -227,8 +228,10 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
 
     """
     _alias = 0  # static count of current alias number
-    _archis = ['wsn430:cc1101', 'wsn430:cc2420',
-               'm3:at86rf231', 'a8:at86rf231']
+    ARCHIS = ['wsn430:cc1101', 'wsn430:cc2420',
+              'm3:at86rf231', 'a8:at86rf231',
+              'des:wifi-cc1100', 'custom:.*']
+    ARCHI_RE = re.compile(r'|'.join(('(%s)' % archi for archi in ARCHIS)))
 
     def __init__(self, nbnodes, site, archi, mobile=False, _alias=None):
         """
@@ -242,8 +245,8 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
             }
         }
         """
-        if archi not in self._archis:
-            raise ValueError("%r not in %r" % (archi, self._archis))
+        if not self._valid_archi(archi):
+            raise ValueError("%r not in %r" % (archi, self.ARCHIS))
 
         self.alias = self._alias_uid(_alias)
         self.nbnodes = nbnodes
@@ -263,6 +266,30 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
             cls._alias += 1
             alias = cls._alias
         return str(alias)
+
+    @classmethod
+    def _valid_archi(cls, archi):
+        """Tests if archi is valid.
+
+        >>> AliasNodes._valid_archi('wsn430:cc1101')
+        True
+
+        >>> AliasNodes._valid_archi('des:wifi-cc1100')
+        True
+
+        >>> AliasNodes._valid_archi('custom:m3:cc1101')
+        True
+
+        >>> AliasNodes._valid_archi('custom:leonardo:')
+        True
+
+        >>> AliasNodes._valid_archi('wsn430:cc1100')
+        False
+
+        >>> AliasNodes._valid_archi('des')
+        False
+        """
+        return bool(cls.ARCHI_RE.match(archi))
 
     def __repr__(self):  # pragma: no cover
         return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
