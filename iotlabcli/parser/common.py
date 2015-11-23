@@ -163,8 +163,8 @@ def check_site_with_server(site_name, _sites_list=None):
 
     >>> sites = ["strasbourg", "grenoble"]
     >>> check_site_with_server("grenoble", sites)
-    >>> check_site_with_server("unknown", sites)  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> check_site_with_server("unknown", sites)
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ArgumentTypeError: Unknown site name 'unknown'
     """
@@ -178,10 +178,11 @@ def nodes_list_from_info(site, archi, nodes_str):
     """ Cheks archi, nodes_str format and return nodes list
 
     >>> nodes_list_from_info('grenoble', 'm3', '1-4+6+7-8')
+    ...  # doctest: +NORMALIZE_WHITESPACE
     ['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info', \
-'m3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
-'m3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
-'m3-8.grenoble.iot-lab.info']
+     'm3-3.grenoble.iot-lab.info', 'm3-4.grenoble.iot-lab.info', \
+     'm3-6.grenoble.iot-lab.info', 'm3-7.grenoble.iot-lab.info', \
+     'm3-8.grenoble.iot-lab.info']
 
     >>> nodes_list_from_info('grenoble', 'm3', '1-4-5')
     Traceback (most recent call last):
@@ -192,8 +193,10 @@ def nodes_list_from_info(site, archi, nodes_str):
     ValueError: Invalid nodes list: a-b ([0-9+-])
 
     >>> nodes_list_from_info('grenoble', 'inval_arch', '1-2')
+    ...  # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: Invalid node archi: 'inval_arch' not in ['wsn430', 'm3', 'a8']
+        ...
+    ValueError: Invalid node archi: 'inval_arch' not in [...]
     """
 
     _check_archi(archi)
@@ -208,9 +211,9 @@ def _check_archi(archi):
     >>> [_check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
     [None, None, None]
 
-    >>> _check_archi('msp430')
+    >>> _check_archi('msp430')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: Invalid node archi: 'msp430' not in ['wsn430', 'm3', 'a8']
+    ValueError: Invalid node archi: 'msp430' not in [...]
 
     """
 

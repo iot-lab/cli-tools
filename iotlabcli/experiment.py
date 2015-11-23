@@ -184,14 +184,13 @@ def wait_experiment(api, exp_id, states='Running',
 
 
 def exp_resources(nodes, firmware_path=None, profile_name=None):
-    """ Create an experiment dict
+    """Create an experiment resources dict.
 
     :param nodes: a list of nodes url or a AliasNodes object
         * ['m3-1.grenoble.iot-lab.info', 'wsn430-2.strasbourg.iot-lab.info']
         * AliasNodes(5, 'grenoble', 'm3:at86rf321', mobile=False)
     :param firmware_path: Firmware associated
     :param profile_name: Name of the profile associated
-
     """
 
     if isinstance(nodes, AliasNodes):
@@ -205,6 +204,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None):
         'firmware': firmware_path,
         'profile': profile_name,
     }
+
     return exp_dict
 
 
@@ -221,9 +221,9 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
     True
 
     >>> AliasNodes(2, 'strasbourg', 'wsn430:cc1100', True)
+    ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: 'wsn430:cc1100' not in ['wsn430:cc1101', 'wsn430:cc2420', \
-'m3:at86rf231', 'a8:at86rf231']
+    ValueError: 'wsn430:cc1100' not in [...]
 
     """
     _alias = 0  # static count of current alias number

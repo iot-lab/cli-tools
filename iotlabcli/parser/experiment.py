@@ -230,25 +230,23 @@ def get_alias_properties(properties_str):
     >>> get_alias_properties("site=strasbourg+archi=m3:at86rf231")
     ('strasbourg', 'm3:at86rf231', None)
 
-    >>> get_alias_properties("site=strasbourg")  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> get_alias_properties("site=strasbourg")
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ArgumentTypeError: Properties "archi" and "site" are mandatory.
 
-
     >>> inval_prop = "site=strasbourg+archi=val+uknown=test"
-    >>> get_alias_properties(inval_prop)  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> get_alias_properties(inval_prop)
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
+    ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ArgumentTypeError: \
-Invalid property in 'site=strasbourg+archi=val+uknown=test'
+    ArgumentTypeError: Invalid property in '...'
     Allowed values are ['archi', 'site', 'mobile']
 
-    >>> get_alias_properties("site=")  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> get_alias_properties("site=")
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: \
-Invalid empty value for property 'site' in ['site=']
+    ArgumentTypeError: Invalid empty value for property 'site' in ['site=']
     """
     properties = properties_str.split('+')
     try:
@@ -272,7 +270,7 @@ Invalid empty value for property 'site' in ['site=']
 
 
 def mobile_from_mobile_str(mobile_str=None):
-    """ Return the value to put in experiment json from mobile_str
+    """Return the value to put in experiment json from mobile_str.
 
     >>> mobile_from_mobile_str(None)
     False
@@ -347,14 +345,15 @@ def _get_property(properties, key):
     >>> _get_property(['archi=val_1'], 'site')  # None when absent
 
     # value should appear only once
-    >>> _get_property(['archi=1', 'archi=2'], 'archi')  \
-        # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> _get_property(['archi=1', 'archi=2'], 'archi')
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
+    ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: Property 'archi' should appear only once in \
-['archi=1', 'archi=2']
+    ValueError: Property 'archi' should appear only once in [...]
 
     # invalid format
-    >>> _get_property(['archi='], 'archi')  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> _get_property(['archi='], 'archi')
+    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ValueError: Invalid empty value for property 'archi' in ['archi=']
     """
