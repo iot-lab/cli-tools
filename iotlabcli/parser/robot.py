@@ -32,6 +32,26 @@ import iotlabcli.robot
 ROBOT_PARSER = """robot-cli manages interaction with nodes on a turtlebot."""
 
 
+def name_site(name_site_str):
+    """Extract name site string.
+
+    >>> name_site('name,site')
+    ('name', 'site')
+
+    >>> name_site('name')
+    ... # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: need more than 1 value to unpack...
+
+    >>> name_site('name,site,extra')
+    ... # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ValueError: too many values to unpack...
+    """
+    name, site = name_site_str.split(',')
+    return name, site
+
+
 def parse_options():
     """ Handle node-cli command-line options with argparse """
 
@@ -47,10 +67,19 @@ def parse_options():
     common.add_nodes_selection_list(status_parser)
     common.add_expid_arg(status_parser)
 
+    # 'get' command
+    get_parser = subparsers.add_parser('get', help='Get robot mobilities')
+    get_group = get_parser.add_mutually_exclusive_group(required=True)
+    get_group.add_argument('-l', '--list', dest='get_list',
+                           action='store_true', help='Get mobilities list')
+    get_group.add_argument('-n', '--name', dest='get_name_site',
+                           type=name_site, metavar='NAME,SITE',
+                           help='Get given mobility')
+
     return parser
 
 
-def robot_parse_and_run(opts):
+def robot_parse_and_run(opts):  # noqa  # Too complex but straightforward
     """ Parse namespace 'opts' object and execute requested command """
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -62,6 +91,11 @@ def robot_parse_and_run(opts):
         nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                                   opts.exclude_nodes_list)
         ret = iotlabcli.robot.robot_command(api, 'status', exp_id, nodes)
+    elif command == 'get' and opts.get_list:
+        ret = iotlabcli.robot.mobility_command(api, 'list')
+    elif command == 'get' and opts.get_name_site is not None:
+        ret = iotlabcli.robot.mobility_command(api, 'get', opts.get_name_site)
+
     else:  # pragma: no cover
         raise ValueError('Unknown command')
 

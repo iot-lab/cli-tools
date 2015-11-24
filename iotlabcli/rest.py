@@ -64,7 +64,7 @@ except ImportError:
 
 
 # pylint: disable=maybe-no-member,no-member
-class Api(object):
+class Api(object):  # pylint:disable=too-many-public-methods
     """ IoT-Lab REST API """
     _cache = {}
     url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
@@ -215,6 +215,20 @@ class Api(object):
         """
         assert command in ('status',)
         return self.method('experiments/%s/robots' % expid, 'post', json=nodes)
+
+    @classmethod
+    def mobility_predefined_list(cls):
+        """List predefined mobilities."""
+        return cls._get_with_cache('robots/mobility')
+
+    def mobility_user_list(self):
+        """List user mobilities."""
+        return self.method('robots/mobility?user')
+
+    def mobility_user_get(self, name, site):
+        """Get user mobilities."""
+        return self.method('robots/mobility/{site}/{name}'.format(name=name,
+                                                                  site=site))
 
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):

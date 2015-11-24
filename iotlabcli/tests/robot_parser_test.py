@@ -31,13 +31,13 @@ from iotlabcli.tests.my_mock import MainMock
 # pylint: disable=too-few-public-methods
 
 
-@patch('iotlabcli.robot.robot_command')
-@patch('iotlabcli.parser.common.list_nodes')
 class TestMainRobotParser(MainMock):
-    """ Test the robot-cli main parser """
+    """Test the robot-cli main parser."""
 
-    def test_main(self, list_nodes, robot_command):
-        """ Run the parser.robot.main function """
+    @patch('iotlabcli.robot.robot_command')
+    @patch('iotlabcli.parser.common.list_nodes')
+    def test_main_status(self, list_nodes, robot_command):
+        """Run the parser.robot.main function for status commands."""
         robot_command.return_value = {'result': 'test'}
 
         list_nodes.return_value = []
@@ -51,3 +51,19 @@ class TestMainRobotParser(MainMock):
         robot_parser.main(args)
         robot_command.assert_called_with(self.api, 'status', 123,
                                          ['m3-1', 'm3-2', 'm3-3'])
+
+    @patch('iotlabcli.robot.mobility_command')
+    def test_main_mobility(self, mobility_command):
+        """Run the parser.robot.main function for mobility commands."""
+        mobility_command.return_value = {'result': 'test'}
+
+        # List mobility
+        args = ['get', '--list']
+        robot_parser.main(args)
+        mobility_command.assert_called_with(self.api, 'list')
+
+        # Get mobility
+        args = ['get', '-n', 'traj_name,site_name']
+        robot_parser.main(args)
+        mobility_command.assert_called_with(self.api, 'get',
+                                            ('traj_name', 'site_name'))
