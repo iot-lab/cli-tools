@@ -172,28 +172,32 @@ def parse_options():
     return parser
 
 
-def exp_resources_from_str(exp_str):
-    """ Extract an 'experiment.exp_resources' from parameter string
-    Accepted formats:
-        + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
-
-        * grenoble,m3,1-20,/home/cc1101.hex
-        * rocquencourt,a8,1-5,,battery
-
-    """
+def exp_infos_from_str(exp_str):
+    """Extract nodes and associations."""
     try:
-        param_list = exp_str.split(',')
-        nodes = _extract_firmware_nodes_list(param_list)
-        firmware_path = _extract_non_empty_val(param_list)
-        profile_name = _extract_non_empty_val(param_list)
-        if param_list:
-            raise ArgumentTypeError(
-                'Invalid number or arguments in experiment list %r' % exp_str)
-
-        return experiment.exp_resources(nodes, firmware_path, profile_name)
+        params = exp_str.split(',')
+        nodes, params = _extract_firmware_nodes_list(params)
+        associations = _extract_associations(params)
     except ValueError as err:
         raise ArgumentTypeError(
             'Invalid arguments in experiment list %r: %s' % (exp_str, err))
+
+    return nodes, associations
+
+
+def exp_resources_from_str(exp_str):
+    """Extract an 'experiment.exp_resources' from parameter string.
+
+    Accepted formats:
+        + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery,mobility=JHall
+
+        + grenoble,m3,1-20,/home/cc1101.hex
+        + rocquencourt,a8,1-5,,battery,firmware=a8.elf
+    """
+    nodes, associations = exp_infos_from_str(exp_str)
+    firmware_path = associations.pop('firmware', None)
+    profile_name = associations.pop('profile', None)
+    return experiment.exp_resources(nodes, firmware_path, profile_name)
 
 
 def _valid_param(param):
@@ -296,28 +300,6 @@ def _extract_associations(params):
     return assocs
 
 
-def _extract_non_empty_val(param_list):
-    """ Safe extract value from param_list.
-    It removes item from param_list.
-
-    :returns: value or None if value was '' or not present
-
-    >>> param = ['value', '', 'other_stuff']
-    >>> _extract_non_empty_val(param)  # valid value
-    'value'
-    >>> _extract_non_empty_val(param)  # empty string
-    >>> _extract_non_empty_val([])     # empty list
-
-    >>> print(param)  # values have been removed
-    ['other_stuff']
-    """
-    if param_list:
-        value = param_list.pop(0)
-        if value != '':
-            return value
-    return None
-
-
 def get_alias_properties(properties_str):
     """ Extract nodes selection properties from given properties_str
 
@@ -413,11 +395,10 @@ def _extract_firmware_nodes_list(param_list):
     """
 
     # list in experiment-cli (alias or physical)
-
     if param_list[0].isdigit():  # alias selection
         # extract parameters
         nb_nodes, properties_str = param_list[0:2]
-        del param_list[0:2]
+        param_list = param_list[2:]
 
         # parse parameters
         site, archi, _mobile = get_alias_properties(properties_str)
@@ -426,12 +407,12 @@ def _extract_firmware_nodes_list(param_list):
     else:  # physical selection
         # extract parameters
         site, archi, nodes_str = param_list[0:3]
-        del param_list[0:3]
+        param_list = param_list[3:]
 
         # parse parameters
         nodes = common.nodes_list_from_info(site, archi, nodes_str)
     common.check_site_with_server(site)
-    return nodes
+    return nodes, param_list
 
 
 def _get_property(properties, key):
