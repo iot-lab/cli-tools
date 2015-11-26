@@ -196,6 +196,106 @@ def exp_resources_from_str(exp_str):
             'Invalid arguments in experiment list %r: %s' % (exp_str, err))
 
 
+def _valid_param(param):
+    """Check parameter are valid for _args_kwargs.
+
+    * no space
+    * a name before '='
+    """
+    if ' ' in param:
+        raise ValueError('no space allowed')
+    if param.startswith('='):
+        raise ValueError("name required for kwarg '%s'" % param)
+
+
+def _args_kwargs(params):
+    """Separate args and kwargs from params.
+
+    `args` must all be at first and `kwargs` at the end
+    Space are forbidden as well as incomplete kwargs without name.
+
+    >>> expected = (['a', 'b', 'c'], {'e': 'f', 'g': 'h'})
+    >>> _args_kwargs(['a', 'b', 'c', 'e=f', 'g=h']) == expected
+    True
+
+    >>> _args_kwargs(['a', 'b', 'c']) ==  (['a', 'b', 'c'], {})
+    True
+    >>> _args_kwargs(['e=f', 'g=h']) == ([], {'e': 'f', 'g': 'h'})
+    True
+
+    # no value ignored
+    >>> _args_kwargs(['e=']) == ([], {})
+    True
+
+    >>> _args_kwargs(['a==b']) == ([], {'a': '=b'})
+    True
+
+    # Space in value
+    >>> _args_kwargs(['val ue'])
+    Traceback (most recent call last):
+    ValueError: no space allowed
+
+    >>> _args_kwargs(['=f'])
+    Traceback (most recent call last):
+    ValueError: name required for kwarg '=f'
+
+    # Order not respected
+    >>> _args_kwargs(['e=f', 'a'])
+    Traceback (most recent call last):
+    ValueError: got argument after keyword argument
+    >>> _args_kwargs(['a', 'e=f', 'b'])
+    Traceback (most recent call last):
+    ValueError: got argument after keyword argument
+
+    :returns: (`args`, `kwargs`)
+    """
+    args, kwargs = [], {}
+
+    parse_kwargs = False
+    for param in params:
+        _valid_param(param)
+
+        if '=' in param:
+            parse_kwargs = True  # kwargs after args
+
+            # Parsing kwargs
+            key, value = param.split('=', 1)
+            if value:
+                kwargs[key] = value
+        elif parse_kwargs:
+            # Should be kwargs but no '='
+            raise ValueError('got argument after keyword argument')
+        else:  # not parse_kwargs
+            args.append(param)
+
+    return args, kwargs
+
+
+def _extract_associations(params):
+    """Extract 'associations'.
+
+    Firmware, profile at positional args then keyword arguments.
+    """
+    assocs = {}
+    args, kwargs = _args_kwargs(params)
+
+    # Get positional arguments 'firmware' and 'profile
+    for key, value in zip(('firmware', 'profile'), args):
+        if value:  # not None or empty
+            assocs[key] = value
+    if len(args) > 2:
+        raise ValueError('Wrong number of arguments')
+
+    # Get keyword arguments
+    for key, value in kwargs.items():
+        if key in assocs:
+            raise ValueError("got multiple values for keyword argument "
+                             "'%s'" % key)
+        assocs[key] = value
+
+    return assocs
+
+
 def _extract_non_empty_val(param_list):
     """ Safe extract value from param_list.
     It removes item from param_list.
