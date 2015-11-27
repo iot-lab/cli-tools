@@ -244,16 +244,25 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
         """
         if archi not in self._archis:
             raise ValueError("%r not in %r" % (archi, self._archis))
-        if _alias is None:
-            AliasNodes._alias += 1
-            _alias = str(AliasNodes._alias)
-        self.alias = _alias
+
+        self.alias = self._alias_uid(_alias)
         self.nbnodes = nbnodes
         self.properties = {
             "archi": archi,
             "site": site,
             "mobile": mobile,
         }
+
+    @classmethod
+    def _alias_uid(cls, alias=None):
+        """Return an unique uid string.
+
+        if alias is given, return it as a String
+        """
+        if alias is None:
+            cls._alias += 1
+            alias = cls._alias
+        return str(alias)
 
     def __repr__(self):  # pragma: no cover
         return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
