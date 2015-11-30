@@ -126,12 +126,12 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['submit', '--name', 'exp_name',
                                 '--duration', '20', '--reservation', '314159',
                                 '--list', 'grenoble,m3,1-5'])
-        nodes_list = [
+        resources = [
             experiment.exp_resources(
                 ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)],
                 None, None)
         ]
-        submit_exp.assert_called_with(self.api, 'exp_name', 20, nodes_list,
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
                                       314159, False)
 
         # print with simple options
@@ -149,7 +149,7 @@ class TestMainInfoParser(MainMock):
             '-l', '3,archi=m3:at86rf231+site=grenoble,firmware_2.elf,profile2',
         ])
         experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
-        nodes_list = [
+        resources = [
             experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
@@ -161,7 +161,27 @@ class TestMainInfoParser(MainMock):
                 'firmware_2.elf', 'profile2'),
         ]
 
-        submit_exp.assert_called_with(self.api, None, 20, nodes_list,
+        submit_exp.assert_called_with(self.api, None, 20, resources,
+                                      None, False)
+
+    @patch('iotlabcli.experiment.submit_experiment')
+    def test_main_submit_parser_assocs(self, submit_exp):
+        """Run experiment_parser.main.submit mobility."""
+        submit_exp.return_value = {}
+
+        # Physical tests
+        experiment_parser.main(
+            ['submit', '--name', 'exp_name', '--duration', '20',
+             '--list',
+             ('grenoble,m3,1,'
+              'mobility=controlled,kernel=linux,firmware=m3.elf')])
+
+        assocs = {'mobility': 'controlled', 'kernel': 'linux'}
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info'],
+                                     'm3.elf', None, **assocs)
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
                                       None, False)
 
     def test_main_submit_parser_error(self):

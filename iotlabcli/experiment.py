@@ -184,7 +184,8 @@ def wait_experiment(api, exp_id, states='Running',
     raise RuntimeError("Timeout reached")
 
 
-def exp_resources(nodes, firmware_path=None, profile_name=None):
+def exp_resources(nodes, firmware_path=None, profile_name=None,
+                  **associations):
     """Create an experiment resources dict.
 
     :param nodes: a list of nodes url or a AliasNodes object
@@ -192,6 +193,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None):
         * AliasNodes(5, 'grenoble', 'm3:at86rf321', mobile=False)
     :param firmware_path: Firmware association
     :param profile_name: Profile association
+    :param **associations: Other name associations
     """
 
     if isinstance(nodes, AliasNodes):
@@ -204,6 +206,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None):
         'nodes': nodes,
         'firmware': firmware_path,
         'profile': profile_name,
+        'associations': associations,
     }
 
     return exp_dict
@@ -382,7 +385,7 @@ class Association(object):
         return _NamedAssociation
 
 
-class _Experiment(object):
+class _Experiment(object):  # pylint:disable=too-many-instance-attributes
     """ Class describing an experiment """
 
     ASSOCATTR_FMT = '{0}associations'
@@ -396,6 +399,7 @@ class _Experiment(object):
         self.nodes = []
         self.firmwareassociations = None
         self.profileassociations = None
+        self.associations = None
 
     def _set_type(self, exp_type):
         """ Set current experiment type.
@@ -426,6 +430,11 @@ class _Experiment(object):
         # register profile, may be None
         self.add_association('profile', exp_dict['profile'], nodes)
 
+        # Add other associations
+        associations = exp_dict.get('associations', {})
+        for assoctype, assoc in associations.items():
+            self.add_association(assoctype, assoc, nodes, optional=True)
+
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
         self._set_type('physical')
@@ -446,7 +455,7 @@ class _Experiment(object):
         self._set_type('alias')
         self.nodes.append(alias_nodes)
 
-    def add_association(self, assoctype, name, nodes):
+    def add_association(self, assoctype, name, nodes, optional=False):
         """Add association."""
         if name is None:
             return
@@ -458,18 +467,24 @@ class _Experiment(object):
         assoc = Association.for_type(assoctype)(name, assoc_nodes)
 
         # Add association to assocs_list
-        assocs_list = self._association_list(assoctype)
+        assocs_list = self._association_list(assoctype, optional)
         assoc.add_to_list_sorted(assocs_list)
 
-    def _association_list(self, assoctype):
+    def _association_list(self, assoctype, optional=False):
         """Set and return association list for `assoctype`.
 
-        Set list as attribute 'self.{assoctype}association'.
+        If not optional, set list as attribute 'self.{assoctype}association'
+        else set list in 'self.associations[assoctype]'
         """
 
-        # Store list as attribute '{assoctype}association'
-        assocattr = self.ASSOCATTR_FMT.format(assoctype)
-        associations_list = self.setattr_if_none(assocattr, [])
+        if not optional:
+            # Store list as attribute '{assoctype}association'
+            assocattr = self.ASSOCATTR_FMT.format(assoctype)
+            associations_list = self.setattr_if_none(assocattr, [])
+        else:
+            # Store list in 'associations[assoctype]' dict
+            associations_dict = self.setattr_if_none('associations', {})
+            associations_list = associations_dict.setdefault(assoctype, [])
 
         return associations_list
 

@@ -197,7 +197,8 @@ def exp_resources_from_str(exp_str):
     nodes, associations = exp_infos_from_str(exp_str)
     firmware_path = associations.pop('firmware', None)
     profile_name = associations.pop('profile', None)
-    return experiment.exp_resources(nodes, firmware_path, profile_name)
+    return experiment.exp_resources(nodes, firmware_path, profile_name,
+                                    **associations)
 
 
 def _valid_param(param):
