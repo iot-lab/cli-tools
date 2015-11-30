@@ -75,3 +75,5 @@ Setting the license to CeCILL v2.1
 ### Features ###
 
 + Add `--jmespath` and `--format` options to handle json output
+
++ 1.8.1: Fix pylint 1.5.0 new warnings

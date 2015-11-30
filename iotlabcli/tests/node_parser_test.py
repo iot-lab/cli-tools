@@ -21,7 +21,7 @@
 
 """ Test the iotlabcli.parser.node module """
 
-from iotlabcli.tests import patch
+from .c23 import patch
 
 import iotlabcli.parser.node as node_parser
 from iotlabcli.tests.my_mock import MainMock

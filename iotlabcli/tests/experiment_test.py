@@ -25,16 +25,15 @@
 # pylint:disable=protected-access
 # pylint >= 1.4
 # pylint:disable=too-few-public-methods
+# Pylint Mock issues
+# pylint: disable=no-member
 
 import os.path
-import unittest
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from mock import patch, mock_open
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, mock_open
 import json
+import unittest
+
+from .c23 import patch, mock_open
+
 from iotlabcli import experiment
 from iotlabcli import rest
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
@@ -64,13 +63,13 @@ class TestExperiment(unittest.TestCase):
         exp.add_exp_resources(exp_d_2)
         exp.add_exp_resources(exp_d_3)
 
-        self.assertEquals(exp.type, 'physical')
-        self.assertEquals(exp.nodes, ['m3-%u.grenoble.iot-lab.info' % num for
-                                      num in (0, 1, 2, 3, 4, 6, 8, 9, 27)])
+        self.assertEqual(exp.type, 'physical')
+        self.assertEqual(exp.nodes, ['m3-%u.grenoble.iot-lab.info' % num for
+                                     num in (0, 1, 2, 3, 4, 6, 8, 9, 27)])
         self.assertTrue(exp.firmwareassociations is not None)
         self.assertTrue(exp.profileassociations is not None)
-        self.assertEquals(2, len(exp.firmwareassociations))
-        self.assertEquals(2, len(exp.profileassociations))
+        self.assertEqual(2, len(exp.firmwareassociations))
+        self.assertEqual(2, len(exp.profileassociations))
 
 
 class TestExperimentSubmit(CommandMock):
@@ -97,13 +96,13 @@ class TestExperimentSubmit(CommandMock):
             'profileassociations': None,
             'firmwareassociations': None
         }
-        self.assertEquals(expected, json.loads(call_dict['new_exp.json']))
+        self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
         # Try 'print', should return exp_dict
         ret = experiment.submit_experiment(self.api, 'exp_name', 20,
                                            resources, start_time=314159,
                                            print_json=True)
-        self.assertEquals(ret.__dict__, expected)
+        self.assertEqual(ret.__dict__, expected)
 
     def test_experiment_submit_alias(self):
         """ Run experiment_submit alias """
@@ -151,7 +150,7 @@ class TestExperimentSubmit(CommandMock):
                 {'firmwarename': 'firmware_2.elf', 'nodes': ['3']}
             ]
         }
-        self.assertEquals(expected, exp_desc)
+        self.assertEqual(expected, exp_desc)
         self.assertTrue('firmware.elf' in files_dict)
 
     def test_exp_submit_types_detect(self):
@@ -214,9 +213,9 @@ class TestExperimentSubmit(CommandMock):
 
         # read_file_calls
         _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
-        self.assertEquals(_files,
-                          set((experiment.EXP_FILENAME,
-                               'firmware.elf', 'firmware_2.elf')))
+        self.assertEqual(_files,
+                         set((experiment.EXP_FILENAME,
+                              'firmware.elf', 'firmware_2.elf')))
 
         self.assertRaises(
             ValueError,
@@ -246,10 +245,10 @@ class TestExperimentGet(CommandMock):
         """ Test experiment.get_experiment """
 
         ret = experiment.get_experiment(self.api, 123)
-        self.assertEquals(ret, API_RET)
+        self.assertEqual(ret, API_RET)
 
         ret = experiment.get_experiment(self.api, 123, option='resources')
-        self.assertEquals(ret, API_RET)
+        self.assertEqual(ret, API_RET)
 
 
 @patch('iotlabcli.experiment.get_experiment')
@@ -274,7 +273,7 @@ class TestExperimentWait(CommandMock):
 
         # simple
         ret = experiment.wait_experiment(self.api, 123, step=0)
-        self.assertEquals('Running', ret)
+        self.assertEqual('Running', ret)
 
         # Error before Running
         self.wait_ret = ['Waiting', 'toLaunch', 'Launching', 'Error']
@@ -300,7 +299,7 @@ class TestExperimentGetWriteExpArchive(unittest.TestCase):
         api = rest.Api('user', 'password')
 
         ret = experiment.get_experiment(api, 123, option='data')
-        self.assertEquals(ret, 'Written')
+        self.assertEqual(ret, 'Written')
         # encode, not real but easier for tests
         w_exp_archive.assert_called_with(123, arch_content.encode('utf-8'))
 

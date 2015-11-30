@@ -26,11 +26,8 @@ import sys
 import errno
 import argparse
 import itertools
-import jmespath
-import iotlabcli
-from iotlabcli import helpers
-from iotlabcli import rest
-DOMAIN_DNS = 'iot-lab.info'
+
+# pylint: disable=wrong-import-order
 try:
     # pylint: disable=import-error,no-name-in-module
     from urllib.error import HTTPError
@@ -43,6 +40,14 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from ordereddict import OrderedDict
+
+import jmespath
+
+import iotlabcli
+from iotlabcli import helpers
+from iotlabcli import rest
+
+DOMAIN_DNS = 'iot-lab.info'
 
 
 def base_parser(user_required=False):
@@ -105,7 +110,7 @@ def main_cli(function, parser, args=None):  # flake8: noqa
         parser_opts = parser.parse_args(args)
         result = function(parser_opts)
     except HTTPError as err:  # should be first as it's an IOError
-        if 401 == err.code:
+        if err.code == 401:
             # print an info on how to get rid of the error
             err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
                    "\tRegister your login:password using `auth-cli`\n")

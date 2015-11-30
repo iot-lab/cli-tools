@@ -42,14 +42,14 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
                        'debug-start', 'debug-stop')
 
     result = None
-    if 'update' == command:
+    if command == 'update':
         assert cmd_opt is not None, '`cmd_opt` required for update'
         files = helpers.FilesDict()
 
         files.add_firmware(cmd_opt)
         files[NODE_FILENAME] = json.dumps(nodes_list)
         result = api.node_update(exp_id, files)
-    elif 'profile' == command:
+    elif command == 'profile':
         cmd_opt = '&name={0}'.format(cmd_opt)
         result = api.node_command(command, exp_id, nodes_list, cmd_opt)
     else:

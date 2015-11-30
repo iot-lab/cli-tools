@@ -22,7 +22,7 @@
 
 """ Test the iotlabcli.parser.robot module """
 
-from iotlabcli.tests import patch
+from .c23 import patch
 
 import iotlabcli.parser.robot as robot_parser
 from iotlabcli.tests.my_mock import MainMock

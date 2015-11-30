@@ -34,7 +34,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof.set_radio('rssi', (11, 12, 13), period=1, num_per_channel=1)
         m3_prof.mobility = None
 
-        self.assertEquals(
+        self.assertEqual(
             m3_prof.__dict__,
             {
                 'power': 'dc',
@@ -61,7 +61,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(None, None)
         m3_prof.set_radio('rssi', (26,), period=42)
-        self.assertEquals(
+        self.assertEqual(
             m3_prof.__dict__,
             {
                 'power': 'dc',
@@ -84,7 +84,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof.set_radio('sniffer', (11,))
         m3_prof.mobility = None
 
-        self.assertEquals(
+        self.assertEqual(
             m3_prof.__dict__,
             {
                 'power': 'dc',
@@ -119,7 +119,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof.set_radio(mode=None, channels=None)
         m3_prof.mobility = circuit
 
-        self.assertEquals(
+        self.assertEqual(
             m3_prof.__dict__,
             {
                 'power': 'dc',
@@ -137,7 +137,7 @@ class TestM3Profile(unittest.TestCase):
         m3_prof.set_radio(mode=None, channels=None)
         m3_prof.mobility = None
 
-        self.assertEquals(
+        self.assertEqual(
             m3_prof.__dict__,
             {
                 'power': 'dc',
@@ -158,7 +158,7 @@ class TestWSN430Profile(unittest.TestCase):
         wsn430_prof.set_radio(5000)
         wsn430_prof.set_sensors(30000, True, True)
 
-        self.assertEquals(
+        self.assertEqual(
             wsn430_prof.__dict__,
             {
                 'profilename': 'name',
@@ -188,7 +188,7 @@ class TestWSN430Profile(unittest.TestCase):
         wsn430_prof.set_radio(frequency=None)
         wsn430_prof.set_sensors(None)
 
-        self.assertEquals(
+        self.assertEqual(
             wsn430_prof.__dict__,
             {
                 'profilename': 'name',

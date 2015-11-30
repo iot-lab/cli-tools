@@ -21,9 +21,10 @@
 
 """Node parser"""
 
-import argparse
 import sys
+import argparse
 from argparse import RawTextHelpFormatter
+
 from iotlabcli import rest
 from iotlabcli import helpers
 from iotlabcli import auth
@@ -119,7 +120,7 @@ def node_parse_and_run(opts):
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     command = opts.command
-    if 'with_argument' != opts.command:
+    if opts.command != 'with_argument':
         # opts.command has a real value
         command = opts.command
         cmd_opt = None

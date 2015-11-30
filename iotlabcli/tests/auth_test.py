@@ -25,7 +25,9 @@
 
 import os
 import unittest
-from iotlabcli.tests import patch, mock_open
+
+from .c23 import patch, mock_open
+
 from iotlabcli import auth
 
 TEST_RC_FILE = 'test_iotlabrc_file'
@@ -58,27 +60,27 @@ class TestAuthModule(unittest.TestCase):
         """ Test writing auth then reading it back """
         # pylint: disable=protected-access
         auth.write_password_file('username', 'password')
-        self.assertEquals(('username', 'password'),
-                          auth.get_user_credentials())
+        self.assertEqual(('username', 'password'),
+                         auth.get_user_credentials())
 
     def test_read_with_no_file(self):
         """ Test reading password with no file """
         # pylint: disable=protected-access
-        self.assertEquals((None, None), auth._read_password_file())
+        self.assertEqual((None, None), auth._read_password_file())
 
     @patch('iotlabcli.auth._read_password_file')
     def test_get_user_credentials(self, m_read):
         """ Test auth.get_user_credentials """
         m_read.return_value = ('super_user', 'super_passwd')
         # passwords given
-        self.assertEquals(('user', 'passwd'),
-                          auth.get_user_credentials('user', 'passwd'))
+        self.assertEqual(('user', 'passwd'),
+                         auth.get_user_credentials('user', 'passwd'))
         self.passwords = ['password_prompt']
-        self.assertEquals(('user', 'password_prompt'),
-                          auth.get_user_credentials('user'))
+        self.assertEqual(('user', 'password_prompt'),
+                         auth.get_user_credentials('user'))
 
-        self.assertEquals(('super_user', 'super_passwd'),
-                          auth.get_user_credentials())
+        self.assertEqual(('super_user', 'super_passwd'),
+                         auth.get_user_credentials())
 
     def test_error__read_password_file(self):
         """ Test Error while reading password file """

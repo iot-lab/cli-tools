@@ -20,9 +20,10 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """Robot parser"""
-import argparse
 import sys
+import argparse
 from argparse import RawTextHelpFormatter
+
 from iotlabcli import rest
 from iotlabcli import auth
 from iotlabcli import helpers

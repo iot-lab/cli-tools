@@ -26,19 +26,11 @@
 
 import unittest
 
+from .c23 import HTTPError, patch
+
 from iotlabcli import rest
 from iotlabcli.helpers import json_dumps
 from iotlabcli.tests.my_mock import RequestRet
-
-# pylint: disable=import-error,no-name-in-module
-try:  # pragma: no cover
-    from mock import patch
-except ImportError:  # pragma: no cover
-    from unittest.mock import patch
-try:  # pragma: no cover
-    from urllib2 import HTTPError
-except ImportError:  # pragma: no cover
-    from urllib.error import HTTPError
 
 
 class TestRest(unittest.TestCase):
@@ -68,30 +60,30 @@ class TestRest(unittest.TestCase):
         ret = self.api.method('page')
         m_req.assert_called_with('get', self._url + 'page',
                                  files=None, json=None, auth=_auth)
-        self.assertEquals(ret, ret)
+        self.assertEqual(ret, ret)
         ret = self.api.method('page?1', 'get')
         m_req.assert_called_with('get', self._url + 'page?1',
                                  files=None, json=None, auth=_auth)
-        self.assertEquals(ret, ret)
+        self.assertEqual(ret, ret)
 
         # call delete
         ret = self.api.method('deeel', 'delete')
         m_req.assert_called_with('delete', self._url + 'deeel',
                                  files=None, json=None, auth=_auth)
-        self.assertEquals(ret, ret)
+        self.assertEqual(ret, ret)
 
         # call post
         ret = self.api.method('post_page', 'post', json={})
         m_req.assert_called_with('post', self._url + 'post_page',
                                  files=None, json={}, auth=_auth)
-        self.assertEquals(ret, ret)
+        self.assertEqual(ret, ret)
 
         # call multipart
         _files = {'entry': '{}'}
         ret = self.api.method('multip', 'post', files=_files)
         m_req.assert_called_with('post', self._url + 'multip',
                                  files=_files, json=None, auth=_auth)
-        self.assertEquals(ret, ret)
+        self.assertEqual(ret, ret)
         patch.stopall()
 
     @patch('iotlabcli.rest.Api.method')
@@ -100,25 +92,25 @@ class TestRest(unittest.TestCase):
         ret = {'ret': 'my_url'}
         api_method.return_value = ret
 
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url'))
-        self.assertEquals(1, api_method.call_count)
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url'))
+        self.assertEqual(1, api_method.call_count)
 
         ret = {'ret': 'my_url_2'}
         api_method.return_value = ret
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
-        self.assertEquals(ret, rest.Api._get_with_cache('my_url_2'))
-        self.assertEquals(2, api_method.call_count)
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEqual(ret, rest.Api._get_with_cache('my_url_2'))
+        self.assertEqual(2, api_method.call_count)
 
         ret = {'ret': 'circuits'}
         api_method.return_value = ret
-        self.assertEquals(ret, rest.Api.get_circuits())
-        self.assertEquals(ret, rest.Api.get_circuits())
-        self.assertEquals(3, api_method.call_count)
+        self.assertEqual(ret, rest.Api.get_circuits())
+        self.assertEqual(ret, rest.Api.get_circuits())
+        self.assertEqual(3, api_method.call_count)
 
     def test_check_credentials(self):
         """ Test Api.method rest submission """
@@ -141,7 +133,7 @@ class TestRest(unittest.TestCase):
         ret_val = RequestRet(200, content='text_only')
         with patch('requests.request', return_value=ret_val):
             ret = self.api.method(self._url, raw=True)
-            self.assertEquals(ret, 'text_only'.encode('utf-8'))
+            self.assertEqual(ret, 'text_only'.encode('utf-8'))
 
     def test_method_errors(self):
         """ Test Api.method rest submission error cases """

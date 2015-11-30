@@ -25,19 +25,11 @@
 import unittest
 import sys
 import argparse
+
+from .c23 import HTTPError, patch, Mock
+
 from iotlabcli.parser import common
 from iotlabcli.tests.my_mock import api_mock, api_mock_stop
-
-# pylint: disable=import-error,no-name-in-module
-try:
-    from mock import patch, Mock
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from unittest.mock import patch, Mock
-try:
-    from urllib2 import HTTPError
-except ImportError:  # pragma: no cover
-    from urllib.error import HTTPError
 
 BUILTIN = 'builtins' if sys.version_info[0] == 3 else '__builtin__'
 
@@ -52,9 +44,9 @@ class TestCommonParser(unittest.TestCase):
             "items": [{'site': 'grenoble'}, {'site': 'strasbourg'}]
         }
 
-        self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
-        self.assertEquals(['grenoble', 'strasbourg'], common.sites_list())
-        self.assertEquals(1, _method_get_sites.call_count)
+        self.assertEqual(['grenoble', 'strasbourg'], common.sites_list())
+        self.assertEqual(['grenoble', 'strasbourg'], common.sites_list())
+        self.assertEqual(1, _method_get_sites.call_count)
 
     @patch('iotlabcli.rest.Api.get_circuits')
     @patch('iotlabcli.parser.common.sites_list')
@@ -71,7 +63,7 @@ class TestCommonParser(unittest.TestCase):
             ],
         }
 
-        self.assertEquals(
+        self.assertEqual(
             {'site_name': 'grenoble', 'trajectory_name': 'Jhall_e'},
             common.get_circuit('grenoble,Jhall_e'))
         # unkown site
@@ -86,6 +78,9 @@ class TestCommonParser(unittest.TestCase):
 
     def test_main_cli(self):
         """ Run the main-cli function """
+        # Redefinition of function.side_effect type from XXX
+        # pylint: disable=redefined-variable-type
+
         function = Mock(return_value='{"result": 0}')
         parser = Mock()
         parser.error.side_effect = SystemExit
@@ -198,20 +193,20 @@ class TestNodeSelectionParser(unittest.TestCase):
 
         # No nodes provided => all nodes, no external requests
         res = common.list_nodes(api, 123)
-        self.assertEquals(res, [])
+        self.assertEqual(res, [])
         self.assertFalse(g_nodes_list.called)
 
         # Normal case, no external requests, only list of all provided nodes
         res = common.list_nodes(api, 123, nodes_ll=nodes_ll)
-        self.assertEquals(res, ["m3-1.grenoble.iot-lab.info",
-                                "m3-2.grenoble.iot-lab.info",
-                                "m3-1.strasbourg.iot-lab.info",
-                                "m3-2.strasbourg.iot-lab.info"])
+        self.assertEqual(res, ["m3-1.grenoble.iot-lab.info",
+                               "m3-2.grenoble.iot-lab.info",
+                               "m3-1.strasbourg.iot-lab.info",
+                               "m3-2.strasbourg.iot-lab.info"])
         self.assertFalse(g_nodes_list.called)
 
         res = common.list_nodes(api, 123, excl_nodes_ll=nodes_ll)
-        self.assertEquals(res, ["m3-3.grenoble.iot-lab.info",
-                                "m3-3.strasbourg.iot-lab.info"])
+        self.assertEqual(res, ["m3-3.grenoble.iot-lab.info",
+                               "m3-3.strasbourg.iot-lab.info"])
         self.assertTrue(g_nodes_list.called)
 
     def test__get_experiment_nodes_list(self):
@@ -226,10 +221,10 @@ class TestNodeSelectionParser(unittest.TestCase):
             }
         )
         # pylint: disable=protected-access
-        self.assertEquals(common._get_experiment_nodes_list(api, 3),
-                          ["m3-1.grenoble.iot-lab.info",
-                           "m3-2.grenoble.iot-lab.info",
-                           "m3-3.grenoble.iot-lab.info"])
+        self.assertEqual(common._get_experiment_nodes_list(api, 3),
+                         ["m3-1.grenoble.iot-lab.info",
+                          "m3-2.grenoble.iot-lab.info",
+                          "m3-3.grenoble.iot-lab.info"])
 
     @patch('iotlabcli.parser.common.check_site_with_server')
     def test_nodes_list_from_str(self, _):

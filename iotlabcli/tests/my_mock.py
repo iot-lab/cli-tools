@@ -23,14 +23,12 @@
 
 import sys
 import unittest
+
+from .c23 import patch, Mock
+
 from iotlabcli import experiment
 from iotlabcli.rest import Api
 from iotlabcli.helpers import json_dumps
-# pylint: disable=import-error,no-name-in-module
-try:
-    from mock import patch, Mock
-except ImportError:  # pragma: no cover
-    from unittest.mock import patch, Mock
 
 
 API_RET = {"result": "test"}

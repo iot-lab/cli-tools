@@ -22,9 +22,9 @@
 """Authentication parser"""
 
 from __future__ import print_function
-import argparse
 import sys
 import getpass
+import argparse
 from argparse import RawTextHelpFormatter
 
 from iotlabcli.parser import common

@@ -23,7 +23,8 @@
 
 import sys
 import unittest
-from iotlabcli.tests import patch
+
+from .c23 import patch
 
 import iotlabcli.parser.auth as auth_parser
 
@@ -58,6 +59,8 @@ class TestMainAuthParser(unittest.TestCase):
 
     def test_main_exceptions(self, store_m):
         """ Test parser.auth.main error cases """
+        # Replacing 'side_effect'
+        # pylint:disable=redefined-variable-type
         with patch('iotlabcli.auth.Api') as api_class:
             api = api_class.return_value
             api.check_credential.return_value = True

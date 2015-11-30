@@ -21,8 +21,10 @@
 
 """ Test the iotlabcli.parser.profile module """
 # pylint:disable=missing-docstring,too-many-public-methods
+# Mock object not being recognized
+# pylint: disable=no-member
 
-from iotlabcli.tests import patch
+from .c23 import patch
 
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.profile as profile_parser
@@ -69,7 +71,7 @@ class TestMainProfileParser(MainMock):
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
             mode=None, channels=None, period=None, num_per_channel=None)
-        self.assertEquals(profilem3.mobility, None)
+        self.assertEqual(profilem3.mobility, None)
 
         # Test for RSSI
         args = ['addm3', '-n', 'name', '-p', 'dc']
@@ -83,7 +85,7 @@ class TestMainProfileParser(MainMock):
             period=140, average=1, power=True, voltage=True, current=True)
         profilem3.set_radio.assert_called_with(
             mode='rssi', channels=[11, 12, 13], period=1, num_per_channel=1)
-        self.assertEquals(profilem3.mobility, None)
+        self.assertEqual(profilem3.mobility, None)
 
         # Test for Radio Sniffer only
         args = ['addm3', '-n', 'name', '-p', 'dc']
@@ -95,7 +97,7 @@ class TestMainProfileParser(MainMock):
             voltage=False, current=False)
         profilem3.set_radio.assert_called_with(
             mode='sniffer', channels=[11], period=None, num_per_channel=None)
-        self.assertEquals(profilem3.mobility, None)
+        self.assertEqual(profilem3.mobility, None)
 
         # Test for mobility only
         # required fields
@@ -106,7 +108,7 @@ class TestMainProfileParser(MainMock):
         opts = parser.parse_args(args)
 
         profile_parser._m3_profile(opts)  # pylint: disable=protected-access
-        self.assertEquals(profilem3.mobility, circuit)
+        self.assertEqual(profilem3.mobility, circuit)
 
     @staticmethod
     @patch('iotlabcli.parser.profile.ProfileWSN430')
@@ -143,7 +145,7 @@ class TestMainProfileParser(MainMock):
     def test__add_profile(self):
         ret = profile_parser._add_profile(  # pylint: disable=protected-access
             self.api, 'name', {'test_profile': 1}, json_out=True)
-        self.assertEquals(ret, {'test_profile': 1})
+        self.assertEqual(ret, {'test_profile': 1})
         self.assertFalse(self.api.add_profile.called)
 
     def test_main_get_parser(self):

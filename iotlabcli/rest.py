@@ -33,6 +33,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from iotlabcli import helpers
 # pylint: disable=import-error,no-name-in-module
+# pylint: disable=wrong-import-order
 try:  # pragma: no cover
     from urllib.parse import urljoin
     from urllib.error import HTTPError
@@ -119,7 +120,7 @@ class Api(object):
         url = 'experiments/%s' % expid
         if option:
             url += '?%s' % option
-        return self.method(url, raw=('data' == option))
+        return self.method(url, raw=(option == 'data'))
 
     def stop_experiment(self, expid):
         """ Stop user experiment.
@@ -200,7 +201,7 @@ class Api(object):
             self.method('users/%s?login' % self.auth.username, raw=True)
             return True
         except HTTPError as err:
-            if 401 == err.code:
+            if err.code == 401:
                 return False
             raise  # pragma no cover
 

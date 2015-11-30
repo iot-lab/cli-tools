@@ -24,7 +24,9 @@
 
 import unittest
 import sys
-from iotlabcli.tests import patch
+
+from .c23 import patch
+
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
 
@@ -38,7 +40,7 @@ class TestHelpers(unittest.TestCase):
                                           {'state': 'Waiting', 'id': 10135},
                                           {'state': 'Running', 'id': 10130}]})
         states_d = helpers.exps_by_states_dict(api, helpers.ACTIVE_STATES)
-        self.assertEquals(
+        self.assertEqual(
             {'Waiting': [10134, 10135], 'Running': [10130]}, states_d)
         my_mock.api_mock_stop()
 
@@ -48,12 +50,12 @@ class TestHelpers(unittest.TestCase):
         with patch('iotlabcli.helpers.exps_by_states_dict') as exps_m:
             exps_m.return_value = {'Running': [234]}
 
-            self.assertEquals(123, helpers.get_current_experiment(api, 123))
-            self.assertEquals(234, helpers.get_current_experiment(api, None))
+            self.assertEqual(123, helpers.get_current_experiment(api, 123))
+            self.assertEqual(234, helpers.get_current_experiment(api, None))
 
             # also return 'active' experiments
             exps_m.return_value = {'Waiting': [234]}
-            self.assertEquals(234, helpers.get_current_experiment(
+            self.assertEqual(234, helpers.get_current_experiment(
                 api, None, running_only=False))
 
     @patch('sys.stderr', sys.stdout)
@@ -70,15 +72,15 @@ class TestHelpers(unittest.TestCase):
         with patch('os.getenv', return_value=None):
             read_file_mock.side_effect = None
             read_file_mock.return_value = 'API_URL_CUSTOM'
-            self.assertEquals('API_URL_CUSTOM', helpers.read_custom_api_url())
+            self.assertEqual('API_URL_CUSTOM', helpers.read_custom_api_url())
 
         # Only env variable
         with patch('os.getenv', return_value='API_URL_2'):
             read_file_mock.side_effect = IOError()
-            self.assertEquals('API_URL_2', helpers.read_custom_api_url())
+            self.assertEqual('API_URL_2', helpers.read_custom_api_url())
 
         # File priority over env variable
         with patch('os.getenv', return_value='API_URL_2'):
             read_file_mock.side_effect = None
             read_file_mock.return_value = 'API_URL_CUSTOM'
-            self.assertEquals('API_URL_CUSTOM', helpers.read_custom_api_url())
+            self.assertEqual('API_URL_CUSTOM', helpers.read_custom_api_url())
