@@ -20,6 +20,9 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """ Test the iotlabcli.experiment_parser module """
+# pylint: disable=too-many-public-methods
+
+import unittest
 
 from .c23 import patch
 
@@ -28,7 +31,7 @@ import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
 
 
-class TestMainInfoParser(MainMock):  # pylint: disable=too-many-public-methods
+class TestMainInfoParser(MainMock):
     """Test experimen.parser."""
 
     def setUp(self):
@@ -123,12 +126,12 @@ class TestMainInfoParser(MainMock):  # pylint: disable=too-many-public-methods
         experiment_parser.main(['submit', '--name', 'exp_name',
                                 '--duration', '20', '--reservation', '314159',
                                 '--list', 'grenoble,m3,1-5'])
-        nodes_list = [
+        resources = [
             experiment.exp_resources(
                 ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)],
                 None, None)
         ]
-        submit_exp.assert_called_with(self.api, 'exp_name', 20, nodes_list,
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
                                       314159, False)
 
         # print with simple options
@@ -146,7 +149,7 @@ class TestMainInfoParser(MainMock):  # pylint: disable=too-many-public-methods
             '-l', '3,archi=m3:at86rf231+site=grenoble,firmware_2.elf,profile2',
         ])
         experiment.AliasNodes._alias = 0  # pylint:disable=protected-access
-        nodes_list = [
+        resources = [
             experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
                 'firmware.elf', 'profile1'),
@@ -158,7 +161,27 @@ class TestMainInfoParser(MainMock):  # pylint: disable=too-many-public-methods
                 'firmware_2.elf', 'profile2'),
         ]
 
-        submit_exp.assert_called_with(self.api, None, 20, nodes_list,
+        submit_exp.assert_called_with(self.api, None, 20, resources,
+                                      None, False)
+
+    @patch('iotlabcli.experiment.submit_experiment')
+    def test_main_submit_parser_assocs(self, submit_exp):
+        """Run experiment_parser.main.submit mobility."""
+        submit_exp.return_value = {}
+
+        # Physical tests
+        experiment_parser.main(
+            ['submit', '--name', 'exp_name', '--duration', '20',
+             '--list',
+             ('grenoble,m3,1,'
+              'mobility=controlled,kernel=linux,firmware=m3.elf')])
+
+        assocs = {'mobility': 'controlled', 'kernel': 'linux'}
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info'],
+                                     'm3.elf', None, **assocs)
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
                                       None, False)
 
     def test_main_submit_parser_error(self):
@@ -194,3 +217,59 @@ class TestMainInfoParser(MainMock):  # pylint: disable=too-many-public-methods
                                 '-l', '~/firmware.elf,./firmware_2.elf'])
         load_exp.assert_called_with(self.api, '../test_exp.json',
                                     ['~/firmware.elf', './firmware_2.elf'])
+
+
+# pylint:disable=protected-access
+class TestAssociationParser(unittest.TestCase):
+    """Test experiment submit associations."""
+
+    def _assert_assoc(self, params, expected):
+        """Check given params return expected associations."""
+        ret = experiment_parser._extract_associations(params)
+        self.assertEqual(ret, expected)
+
+    def _assert_fail_assoc(self, params):
+        """Check given params fails."""
+        self.assertRaises(ValueError,
+                          experiment_parser._extract_associations, params)
+
+    def test_legacy_assocs(self):
+        """Valid legacy mode associations."""
+
+        # Nothing given
+        self._assert_assoc([], {})
+        self._assert_assoc(['', ''], {})
+
+        # Only one
+        self._assert_assoc(['tutorial_m3.elf'],
+                           {'firmware': 'tutorial_m3.elf'})
+        self._assert_assoc(['', 'battery'],
+                           {'profile': 'battery'})
+        # Firmware and profile
+        self._assert_assoc(['tuto_m3.elf', 'battery'],
+                           {'firmware': 'tuto_m3.elf', 'profile': 'battery'})
+
+    def test_valid_new_assocs(self):
+        """Valid new mode associations."""
+        # Nothing given
+        self._assert_assoc(['', '', 'firmware='], {})
+
+        # With new value
+        self._assert_assoc(['tuto_m3.elf', 'battery', 'mobility=JHall'],
+                           {'firmware': 'tuto_m3.elf', 'profile': 'battery',
+                            'mobility': 'JHall'})
+        self._assert_assoc(['', 'battery', 'mobility=JHall'],
+                           {'profile': 'battery', 'mobility': 'JHall'})
+        self._assert_assoc(['', 'firmware=m3.elf'],
+                           {'firmware': 'm3.elf'})
+
+    def test_invalid_legacy_assocs(self):
+        """Invalid legacy mode associations."""
+        self._assert_fail_assoc(['tuto.elf', 'battery', 'extra_unknown'])
+
+    def test_invalid_new_assocs(self):
+        """Invalid new mode associations."""
+        self._assert_fail_assoc(['mobility=JHall', 'm3.elf'])
+        self._assert_fail_assoc(['m3.elf', 'mobility=JHall', 'batt'])
+        self._assert_fail_assoc(['m3.elf', 'firmware=tuto.elf'])
+        self._assert_fail_assoc(['val aue'])

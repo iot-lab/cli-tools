@@ -94,7 +94,8 @@ class TestExperimentSubmit(CommandMock):
             ],
             'reservation': 314159,
             'profileassociations': None,
-            'firmwareassociations': None
+            'firmwareassociations': None,
+            'associations': None
         }
         self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
@@ -148,7 +149,8 @@ class TestExperimentSubmit(CommandMock):
             'firmwareassociations': [
                 {'firmwarename': 'firmware.elf', 'nodes': ['1', '2']},
                 {'firmwarename': 'firmware_2.elf', 'nodes': ['3']}
-            ]
+            ],
+            'associations': None
         }
         self.assertEqual(expected, exp_desc)
         self.assertTrue('firmware.elf' in files_dict)
@@ -172,6 +174,35 @@ class TestExperimentSubmit(CommandMock):
         ]
         experiment.submit_experiment(self.api, None, 20, resources)
         self.assertEqual(1, self.api.submit_experiment.call_count)
+
+    def test_exp_submit_associations(self):
+        """Test experiment submission with associations."""
+        nodes = ['m3-1.grenoble.iot-lab.info']
+        assocs = {'mobility': 'controlled', 'kernel': 'linux'}
+        resources = [
+            experiment.exp_resources(nodes, CURRENT_DIR + '/firmware.elf',
+                                     None, **assocs),
+        ]
+
+        experiment.submit_experiment(self.api, None, 20, resources)
+        call_dict = self.api.submit_experiment.call_args[0][0]
+        expected = {
+            'name': None,
+            'duration': 20,
+            'type': 'physical',
+            'nodes': nodes,
+            'reservation': None,
+            'profileassociations': None,
+            'firmwareassociations': [
+                {'firmwarename': 'firmware.elf', 'nodes': nodes}],
+            'associations': {
+                'mobility': [
+                    {'mobilityname': 'controlled', 'nodes': nodes}],
+                'kernel': [
+                    {'kernelname': 'linux', 'nodes': nodes}],
+            }
+        }
+        self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
     def test_exp_submit_types_detect(self):
         """ Try experiment submit types detection"""

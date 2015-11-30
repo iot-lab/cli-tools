@@ -184,14 +184,16 @@ def wait_experiment(api, exp_id, states='Running',
     raise RuntimeError("Timeout reached")
 
 
-def exp_resources(nodes, firmware_path=None, profile_name=None):
+def exp_resources(nodes, firmware_path=None, profile_name=None,
+                  **associations):
     """Create an experiment resources dict.
 
     :param nodes: a list of nodes url or a AliasNodes object
         * ['m3-1.grenoble.iot-lab.info', 'wsn430-2.strasbourg.iot-lab.info']
         * AliasNodes(5, 'grenoble', 'm3:at86rf321', mobile=False)
-    :param firmware_path: Firmware associated
-    :param profile_name: Name of the profile associated
+    :param firmware_path: Firmware association
+    :param profile_name: Profile association
+    :param **associations: Other name associations
     """
 
     if isinstance(nodes, AliasNodes):
@@ -204,6 +206,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None):
         'nodes': nodes,
         'firmware': firmware_path,
         'profile': profile_name,
+        'associations': associations,
     }
 
     return exp_dict
@@ -300,49 +303,93 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
         return self.__dict__ == other.__dict__
 
 
-# Private methods
+# # # # # # # # # #
+# Private methods #
+# # # # # # # # # #
 
 
-class _FirmwareAssociations(object):  # pylint: disable=too-few-public-methods
-    """A _FirmwareAssociations class
+class Association(object):
+    """Association class value->Nodes.
 
-    >>> fw = _FirmwareAssociations('name', ['3'])
-    >>> fw == _FirmwareAssociations('name', ['bla bla bla', 'test test'])
+    >>> first = Association.for_type('test')('name', ['m3-1'])
+    >>> second = Association.for_type('test')('name', ['m3-2', 'm3-3'])
+
+    # Comparing only names to detect in a list
+    >>> first == second
     True
-    >>> fw == {'firmwarename': 'name', 'nodes':['3']}
+    >>> second.extend(first)
+    >>> print(second.nodes)
+    ['m3-1', 'm3-2', 'm3-3']
+
+    # Verify type when comparing
+    >>> first == {'name': 'name', 'nodes':['m3-1']}
     False
     """
-    def __init__(self, firmwarename, nodes):
-        self.firmwarename = firmwarename
-        self.nodes = nodes
+    ASSOCTYPE = ''
+    NODES_KEY = staticmethod(helpers.node_url_sort_key)
+
+    def __init__(self, value, nodes):
+        assert self.ASSOCTYPE, "VirtualClass, create real with 'for_type'"
+        setattr(self, self.valuename(), value)
+        self.nodes = sorted(nodes, key=self.NODES_KEY)
+
+    @classmethod
+    def valuename(cls):
+        """Return value attribute name."""
+        return '{0}name'.format(cls.ASSOCTYPE)
+
+    @property
+    def value(self):
+        """Return value."""
+        return getattr(self, self.valuename())
+
+    def extend(self, association):
+        """Add nodes to the association.
+
+        Remove duplicates and sort them for readability and testability.
+        """
+        # Same assoctype and name
+        assert self == association
+        self.nodes = sorted(list(set(self.nodes + association.nodes)),
+                            key=self.NODES_KEY)
 
     def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.firmwarename == other.firmwarename)
+        return (isinstance(other, Association) and
+                self.ASSOCTYPE == other.ASSOCTYPE and
+                self.value == other.value)
+
+    def add_to_list_sorted(self, assoc_list):
+        """Add current nodes association to assoclist.
+
+        If the association already exist, update with current nodes.
+        Else insert current association in assoclist.
+        """
+        # Add association in place
+        try:
+            # Append to existing one
+            # get same class object
+            existing = assoc_list[assoc_list.index(self)]
+            existing.extend(self)
+        except ValueError:  # Not present
+            # Insert new one sorted
+            assoc_list.append(self)
+            assoc_list.sort(key=lambda x: x.value)
+
+    @classmethod
+    def for_type(cls, assoctype):
+        """Create association class for assoctype."""
+        class _NamedAssociation(cls):
+            """NamedAssociations class->Nodes."""
+            ASSOCTYPE = assoctype  # overrides
+            __name__ = '{0}Association'.format(ASSOCTYPE.title())
+        return _NamedAssociation
 
 
-class _ProfileAssociations(object):  # pylint: disable=too-few-public-methods
-    """A _ProfileAssociations class
-
-    # coverage
-    >>> pr = _ProfileAssociations('name', ['3'])
-    >>> pr == _ProfileAssociations('name', ['bla bla bla', 'test test'])
-    True
-    >>> pr == {'profilename': 'name', 'nodes':['3']}
-    False
-
-    """
-    def __init__(self, profilename, nodes):
-        self.profilename = profilename
-        self.nodes = nodes
-
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                self.profilename == other.profilename)
-
-
-class _Experiment(object):
+class _Experiment(object):  # pylint:disable=too-many-instance-attributes
     """ Class describing an experiment """
+
+    ASSOCATTR_FMT = '{0}associations'
+
     def __init__(self, name, duration, start_time=None):
         self.duration = duration
         self.reservation = start_time
@@ -352,6 +399,7 @@ class _Experiment(object):
         self.nodes = []
         self.firmwareassociations = None
         self.profileassociations = None
+        self.associations = None
 
     def _set_type(self, exp_type):
         """ Set current experiment type.
@@ -361,24 +409,6 @@ class _Experiment(object):
             raise ValueError(
                 "Invalid experiment, should be only physical or only alias")
         self.type = exp_type
-
-    @staticmethod
-    def _assocs_append(assoc_list, assoc):
-        """ Append an association to the given association list
-        If a similar association was already present, add assoc.nodes to it """
-        l_l = assoc_list or []
-
-        if assoc in l_l:
-            # update assoc with nodes already in list
-
-            cur_assoc = l_l.pop(l_l.index(assoc))
-            # Add nodes to the list, uniq
-            nodes = list(set(cur_assoc.nodes + assoc.nodes))
-            # keep sorted to ease tests and readability
-            assoc.nodes = sorted(nodes, key=helpers.node_url_sort_key)
-
-        l_l.append(assoc)
-        return l_l
 
     def add_exp_resources(self, exp_dict):
         """ Add 'exp_resources' to current experiment
@@ -392,35 +422,18 @@ class _Experiment(object):
             'alias': self.set_alias_nodes,
         }[exp_dict['type']](nodes)
 
-        # register profile, may be None
-        self.set_profile_associations(exp_dict['profile'], nodes)
-
         # register firmware
         if exp_dict['firmware'] is not None:
             firmware_name = basename(exp_dict['firmware'])
-            self.set_fw_association(firmware_name, nodes)
+            self.add_association('firmware', firmware_name, nodes)
 
-    def set_fw_association(self, firmware_name, nodes):
-        """Set firmware associations list"""
-        # use alias number for AliasNodes
-        _nodes = [nodes.alias] if self.type == 'alias' else nodes
+        # register profile, may be None
+        self.add_association('profile', exp_dict['profile'], nodes)
 
-        assoc = _FirmwareAssociations(firmware_name, _nodes)
-        assocs = self._assocs_append(self.firmwareassociations, assoc)
-        self.firmwareassociations = sorted(
-            assocs, key=lambda x: x.firmwarename)
-
-    def set_profile_associations(self, profile_name, nodes):
-        """Set profile associations list"""
-        if profile_name is None:
-            return
-        # use alias number for AliasNodes
-        _nodes = [nodes.alias] if self.type == 'alias' else nodes
-
-        assoc = _ProfileAssociations(profile_name, _nodes)
-        assocs = self._assocs_append(self.profileassociations, assoc)
-        self.profileassociations = sorted(
-            assocs, key=lambda x: x.profilename)
+        # Add other associations
+        associations = exp_dict.get('associations', {})
+        for assoctype, assoc in associations.items():
+            self.add_association(assoctype, assoc, nodes, optional=True)
 
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
@@ -441,6 +454,50 @@ class _Experiment(object):
         """Set alias nodes list """
         self._set_type('alias')
         self.nodes.append(alias_nodes)
+
+    def add_association(self, assoctype, name, nodes, optional=False):
+        """Add association."""
+        if name is None:
+            return
+
+        # use alias number for AliasNodes
+        assoc_nodes = [nodes.alias] if self.type == 'alias' else nodes
+
+        # Create association
+        assoc = Association.for_type(assoctype)(name, assoc_nodes)
+
+        # Add association to assocs_list
+        assocs_list = self._association_list(assoctype, optional)
+        assoc.add_to_list_sorted(assocs_list)
+
+    def _association_list(self, assoctype, optional=False):
+        """Set and return association list for `assoctype`.
+
+        If not optional, set list as attribute 'self.{assoctype}association'
+        else set list in 'self.associations[assoctype]'
+        """
+
+        if not optional:
+            # Store list as attribute '{assoctype}association'
+            assocattr = self.ASSOCATTR_FMT.format(assoctype)
+            associations_list = self.setattr_if_none(assocattr, [])
+        else:
+            # Store list in 'associations[assoctype]' dict
+            associations_dict = self.setattr_if_none('associations', {})
+            associations_list = associations_dict.setdefault(assoctype, [])
+
+        return associations_list
+
+    def setattr_if_none(self, name, default):
+        """Set attribute as `default` if None
+
+        :returns: attribute value after update
+        """
+        # Set default if None
+        if getattr(self, name) is None:
+            setattr(self, name, default)
+
+        return getattr(self, name)
 
 
 def _write_experiment_archive(exp_id, data):
