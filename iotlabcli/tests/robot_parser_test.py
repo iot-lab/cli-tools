@@ -31,23 +31,60 @@ from iotlabcli.tests.my_mock import MainMock
 # pylint: disable=too-few-public-methods
 
 
-@patch('iotlabcli.robot.robot_command')
-@patch('iotlabcli.parser.common.list_nodes')
 class TestMainRobotParser(MainMock):
-    """ Test the robot-cli main parser """
+    """Test the robot-cli main parser."""
 
-    def test_main(self, list_nodes, robot_command):
-        """ Run the parser.robot.main function """
+    @patch('iotlabcli.robot.robot_command')
+    @patch('iotlabcli.parser.common.list_nodes')
+    def test_main_status(self, list_nodes, robot_command):
+        """Run the parser.robot.main function for status commands."""
         robot_command.return_value = {'result': 'test'}
 
         list_nodes.return_value = []
-        args = ['--status']
+        args = ['status']
         robot_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         robot_command.assert_called_with(self.api, 'status', 123, [])
 
-        args = ['-s', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
+        args = ['status', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
         list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify
         robot_parser.main(args)
         robot_command.assert_called_with(self.api, 'status', 123,
                                          ['m3-1', 'm3-2', 'm3-3'])
+
+    @patch('iotlabcli.robot.robot_update_mobility')
+    @patch('iotlabcli.parser.common.list_nodes')
+    def test_main_update(self, list_nodes, robot_update_mobility):
+        """Run the parser.robot.main function for update commands."""
+        robot_update_mobility.return_value = {'result': 'test'}
+
+        list_nodes.return_value = []
+        args = ['update', 'traj,grenoble']
+        robot_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        robot_update_mobility.assert_called_with(
+            self.api, 123, 'traj', 'grenoble', [])
+
+        # Invalid mobility format
+        robot_update_mobility.reset_mock()
+        args = ['update', 'traj',
+                '-l', 'grenoble,m3,1-2',
+                '-l', 'grenoble,m3,3']
+        self.assertRaises(SystemExit, robot_parser.main, args)
+        self.assertFalse(robot_update_mobility.called)
+
+    @patch('iotlabcli.robot.mobility_command')
+    def test_main_mobility(self, mobility_command):
+        """Run the parser.robot.main function for mobility commands."""
+        mobility_command.return_value = {'result': 'test'}
+
+        # List mobility
+        args = ['get', '--list']
+        robot_parser.main(args)
+        mobility_command.assert_called_with(self.api, 'list')
+
+        # Get mobility
+        args = ['get', '-n', 'traj_name,site_name']
+        robot_parser.main(args)
+        mobility_command.assert_called_with(self.api, 'get',
+                                            ('traj_name', 'site_name'))

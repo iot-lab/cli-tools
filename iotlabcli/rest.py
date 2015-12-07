@@ -64,7 +64,7 @@ except ImportError:
 
 
 # pylint: disable=maybe-no-member,no-member
-class Api(object):
+class Api(object):  # pylint:disable=too-many-public-methods
     """ IoT-Lab REST API """
     _cache = {}
     url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
@@ -208,19 +208,41 @@ class Api(object):
     # robot
 
     def robot_command(self, command, expid, nodes=()):
-        """ Run command on user experiment list nodes
+        """Run 'status' on user experiment robot list nodes.
+
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
-        :returns: dict
         """
         assert command in ('status',)
-        return self.method('experiments/%s/robots' % expid,
-                           'post', json=nodes)
+        return self.method('experiments/%s/robots' % expid, 'post', json=nodes)
+
+    def robot_update_mobility(self, expid, name, site, nodes=()):
+        """Update mobility on user experiment robot list nodes.
+
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :param nodes: list of nodes, if empty apply on all nodes
+        """
+        url = 'experiments/%s/robots?mobility' % expid
+        url += '&name=%s&site=%s' % (name, site)
+        return self.method(url, 'post', json=nodes)
+
+    @classmethod
+    def mobility_predefined_list(cls):
+        """List predefined mobilities."""
+        return cls._get_with_cache('robots/mobility')
+
+    def mobility_user_list(self):
+        """List user mobilities."""
+        return self.method('robots/mobility?user')
+
+    def mobility_user_get(self, name, site):
+        """Get user mobilities."""
+        return self.method('robots/mobility/{site}/{name}'.format(name=name,
+                                                                  site=site))
 
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):
-        """
-        Call http `method` on iot-lab-url/'url'
+        """Call http `method` on iot-lab-url/'url'.
 
         :param url: url of API.
         :param method: request method

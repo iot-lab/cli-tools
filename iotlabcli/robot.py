@@ -34,3 +34,42 @@ def robot_command(api, command, exp_id, nodes_list=()):
     assert command in ('status',)
     result = api.robot_command(command, exp_id, nodes_list)
     return result
+
+
+def robot_update_mobility(api, exp_id, name, site, nodes_list=()):
+    """Update robot mobility 'name [site]' on nodes_list.
+
+    :param api: API Rest api object
+    :param exp_id: Target experiment id
+    :param name: mobility name
+    :param site: mobility site
+    :param nodes_list: List of nodes where to run command.
+                       Empty list runs on all nodes
+    """
+    result = api.robot_update_mobility(exp_id, name, site, nodes_list)
+    return result
+
+
+def mobility_command(api, command, arg=None):
+    """Run mobility command.
+
+    Command argument:
+
+    * 'list' no arguments
+    * 'get': Mobility (name, site) tuple.
+
+    :param command: in ['list', 'get']
+    :param arg: argument specific to command
+
+    """
+    assert command in ('list', 'get')
+
+    if command == 'list':
+        result = api.mobility_user_list()
+    elif command == 'get':
+        name, site = arg  # pylint:disable=unpacking-non-sequence
+        result = api.mobility_user_get(name, site)
+    else:  # pragma: no cover
+        raise ValueError('Unknown command %r' % command)
+
+    return result
