@@ -216,6 +216,16 @@ class Api(object):  # pylint:disable=too-many-public-methods
         assert command in ('status',)
         return self.method('experiments/%s/robots' % expid, 'post', json=nodes)
 
+    def robot_update_mobility(self, expid, name, site, nodes=()):
+        """Update mobility on user experiment robot list nodes.
+
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :param nodes: list of nodes, if empty apply on all nodes
+        """
+        url = 'experiments/%s/robots?mobility' % expid
+        url += '&name=%s&site=%s' % (name, site)
+        return self.method(url, 'post', json=nodes)
+
     @classmethod
     def mobility_predefined_list(cls):
         """List predefined mobilities."""

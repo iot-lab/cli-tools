@@ -36,6 +36,20 @@ def robot_command(api, command, exp_id, nodes_list=()):
     return result
 
 
+def robot_update_mobility(api, exp_id, name, site, nodes_list=()):
+    """Update robot mobility 'name [site]' on nodes_list.
+
+    :param api: API Rest api object
+    :param exp_id: Target experiment id
+    :param name: mobility name
+    :param site: mobility site
+    :param nodes_list: List of nodes where to run command.
+                       Empty list runs on all nodes
+    """
+    result = api.robot_update_mobility(exp_id, name, site, nodes_list)
+    return result
+
+
 def mobility_command(api, command, arg=None):
     """Run mobility command.
 

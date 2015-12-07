@@ -62,10 +62,21 @@ def parse_options():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True  # not required by default in Python3
 
+    # Robot Commands
+
     # 'status' command
     status_parser = subparsers.add_parser('status', help='Get robot status')
     common.add_nodes_selection_list(status_parser)
     common.add_expid_arg(status_parser)
+
+    # 'update' command
+    up_parser = subparsers.add_parser('update', help='Update robot mobility')
+    up_parser.add_argument('update_name_site', help='Update robot mobility',
+                           metavar='NAME,SITE', type=name_site)
+    common.add_nodes_selection_list(up_parser)
+    common.add_expid_arg(up_parser)
+
+    # Mobility commands
 
     # 'get' command
     get_parser = subparsers.add_parser('get', help='Get robot mobilities')
@@ -91,6 +102,13 @@ def robot_parse_and_run(opts):  # noqa  # Too complex but straightforward
         nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                                   opts.exclude_nodes_list)
         ret = iotlabcli.robot.robot_command(api, 'status', exp_id, nodes)
+    elif command == 'update':
+        exp_id = helpers.get_current_experiment(api, opts.experiment_id)
+        nodes = common.list_nodes(api, exp_id, opts.nodes_list,
+                                  opts.exclude_nodes_list)
+        name, site = opts.update_name_site
+        ret = iotlabcli.robot.robot_update_mobility(api, exp_id,
+                                                    name, site, nodes)
     elif command == 'get' and opts.get_list:
         ret = iotlabcli.robot.mobility_command(api, 'list')
     elif command == 'get' and opts.get_name_site is not None:

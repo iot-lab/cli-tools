@@ -47,6 +47,17 @@ class TestRobot(unittest.TestCase):
 
         self.api.robot_command.assert_called_with('status', 123, nodes_list)
 
+    def test_robot_update_mobility(self):
+        """Test robot_update_mobility."""
+        nodes_list = ["m3-1", "m3-2", "m3-3"]
+
+        # With site name
+        ret = robot.robot_update_mobility(self.api, 123,
+                                          'mob_name', 'grenoble', nodes_list)
+        self.assertEqual(my_mock.API_RET, ret)
+        self.api.robot_update_mobility.assert_called_with(
+            123, 'mob_name', 'grenoble', nodes_list)
+
     def test_mobility_command(self):
         """Test 'mobility_command'."""
 
