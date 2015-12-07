@@ -208,19 +208,17 @@ class Api(object):
     # robot
 
     def robot_command(self, command, expid, nodes=()):
-        """ Run command on user experiment list nodes
+        """Run 'status' on user experiment robot list nodes.
+
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
-        :returns: dict
         """
         assert command in ('status',)
-        return self.method('experiments/%s/robots' % expid,
-                           'post', json=nodes)
+        return self.method('experiments/%s/robots' % expid, 'post', json=nodes)
 
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):
-        """
-        Call http `method` on iot-lab-url/'url'
+        """Call http `method` on iot-lab-url/'url'.
 
         :param url: url of API.
         :param method: request method
