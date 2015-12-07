@@ -79,8 +79,7 @@ def parse_options():
 
     # ####### STOP PARSER ###############
     stop_parser = subparsers.add_parser('stop', help='stop user experiment')
-    stop_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
-                             help='experiment id submission')
+    common.add_expid_arg(stop_parser)
 
     # ####### GET PARSER ###############
     get_parser = subparsers.add_parser(
@@ -89,8 +88,7 @@ def parse_options():
         help='get user\'s experiment',
         formatter_class=RawTextHelpFormatter)
 
-    get_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
-                            help='experiment id')
+    common.add_expid_arg(get_parser)
 
     get_group = get_parser.add_mutually_exclusive_group(required=True)
     get_group.add_argument(
@@ -159,8 +157,7 @@ def parse_options():
         'wait', help='wait user experiment started',
         epilog=help_msgs.WAIT_EPILOG, formatter_class=RawTextHelpFormatter)
 
-    wait_parser.add_argument('-i', '--id', dest='experiment_id', type=int,
-                             help='experiment id submission')
+    common.add_expid_arg(wait_parser)
 
     wait_parser.add_argument(
         '--state', default='Running',

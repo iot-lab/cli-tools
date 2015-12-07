@@ -83,6 +83,12 @@ def add_output_formatter(parser):
                        help="Format function, default `helpers.json_dumps`")
 
 
+def add_expid_arg(parser):
+    """Add '-i' / '--id' for 'experiment_id' option."""
+    parser.add_argument('-i', '--id', dest='experiment_id', type=int,
+                        help='experiment id submission')
+
+
 def print_result(result, jmespath_expr=None, format_function=None):
     """ Print result vule """
     format_function = format_function or helpers.json_dumps

@@ -69,9 +69,7 @@ def parse_options():
                 NODE_EPILOG),
     )
 
-    parser.add_argument(
-        '-i', '--id', dest='experiment_id', type=int,
-        help='experiment id submission')
+    common.add_expid_arg(parser)
 
     # command
     # argument with parameter can't both set 'command' and set argument value

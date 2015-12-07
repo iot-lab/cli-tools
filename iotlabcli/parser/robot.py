@@ -45,9 +45,7 @@ def parse_options():
         # + # help_msgs.COMMAND_EPILOG),  # TODO
     )
 
-    parser.add_argument(
-        '-i', '--id', dest='experiment_id', type=int,
-        help='experiment id submission')
+    common.add_expid_arg(parser)
 
     # command
     cmd_group = parser.add_mutually_exclusive_group(required=True)
