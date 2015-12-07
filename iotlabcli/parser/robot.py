@@ -22,12 +22,10 @@
 """Robot parser"""
 import sys
 import argparse
-from argparse import RawTextHelpFormatter
 
 from iotlabcli import rest
 from iotlabcli import auth
 from iotlabcli import helpers
-from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
 import iotlabcli.robot
 
@@ -39,23 +37,15 @@ def parse_options():
 
     parent_parser = common.base_parser()
     # We create top level parser
-    parser = argparse.ArgumentParser(
-        parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        epilog=(help_msgs.PARSER_EPILOG.format(cli='robot', option='--status'))
-        # + # help_msgs.COMMAND_EPILOG),  # TODO
-    )
+    parser = argparse.ArgumentParser(parents=[parent_parser])
 
-    common.add_expid_arg(parser)
+    subparsers = parser.add_subparsers(dest='command')
+    subparsers.required = True  # not required by default in Python3
 
-    # command
-    cmd_group = parser.add_mutually_exclusive_group(required=True)
-
-    cmd_group.add_argument(
-        '-s', '--status', help='Get robot status', const='status',
-        dest='command', action='store_const')
-
-    # nodes list or exclude list
-    common.add_nodes_selection_list(parser)
+    # 'status' command
+    status_parser = subparsers.add_parser('status', help='Get robot status')
+    common.add_nodes_selection_list(status_parser)
+    common.add_expid_arg(status_parser)
 
     return parser
 
@@ -64,12 +54,18 @@ def robot_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command """
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
     command = opts.command
-    nodes = common.list_nodes(api, exp_id, opts.nodes_list,
-                              opts.exclude_nodes_list)
-    return iotlabcli.robot.robot_command(api, command, exp_id, nodes)
+
+    if command == 'status':
+        exp_id = helpers.get_current_experiment(api, opts.experiment_id)
+        nodes = common.list_nodes(api, exp_id, opts.nodes_list,
+                                  opts.exclude_nodes_list)
+        ret = iotlabcli.robot.robot_command(api, 'status', exp_id, nodes)
+    else:  # pragma: no cover
+        raise ValueError('Unknown command')
+
+    return ret
 
 
 def main(args=None):

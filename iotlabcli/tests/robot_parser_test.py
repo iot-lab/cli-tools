@@ -41,12 +41,12 @@ class TestMainRobotParser(MainMock):
         robot_command.return_value = {'result': 'test'}
 
         list_nodes.return_value = []
-        args = ['--status']
+        args = ['status']
         robot_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         robot_command.assert_called_with(self.api, 'status', 123, [])
 
-        args = ['-s', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
+        args = ['status', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
         list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify
         robot_parser.main(args)
         robot_command.assert_called_with(self.api, 'status', 123,
