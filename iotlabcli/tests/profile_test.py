@@ -32,7 +32,6 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(140, 1, True, True, True)
         m3_prof.set_radio('rssi', (11, 12, 13), period=1, num_per_channel=1)
-        m3_prof.mobility = None
 
         self.assertEqual(
             m3_prof.__dict__,
@@ -53,7 +52,6 @@ class TestM3Profile(unittest.TestCase):
                     'power': True,
                     'voltage': True,
                 },
-                'mobility': None,
             }
         )
 
@@ -74,7 +72,6 @@ class TestM3Profile(unittest.TestCase):
                     'period': 42,
                 },
                 'consumption': None,
-                'mobility': None,
             }
         )
 
@@ -82,7 +79,6 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('sniff_11', 'dc')
         m3_prof.set_consumption(None, None)
         m3_prof.set_radio('sniffer', (11,))
-        m3_prof.mobility = None
 
         self.assertEqual(
             m3_prof.__dict__,
@@ -97,37 +93,6 @@ class TestM3Profile(unittest.TestCase):
                     'period': None,
                 },
                 'consumption': None,
-                'mobility': None,
-            }
-        )
-
-    def test_valid_mobility_profile(self):
-        circuit = {
-            "coordinates": [
-                {"name": "0", "w": 0.0, "x": 40.6, "y": 34.2, "z": 0.0},
-                {"name": "1", "w": 3.14, "x": 59.4, "y": 34.2, "z": 0.0},
-                {"name": "3", "w": 3.14, "x": 40.6, "y": 34.2, "z": 0.0},
-                {"name": "2", "w": 0.0, "x": 17.5, "y": 34.2, "z": 0.0},
-            ],
-            "points": ["0", "1", "3", "2"],
-            "site_name": "devgrenoble",
-            "trajectory_name": "Jhall",
-        }
-
-        m3_prof = profile.ProfileM3('name', 'dc')
-        m3_prof.set_consumption(None, None)
-        m3_prof.set_radio(mode=None, channels=None)
-        m3_prof.mobility = circuit
-
-        self.assertEqual(
-            m3_prof.__dict__,
-            {
-                'power': 'dc',
-                'profilename': 'name',
-                'nodearch': 'm3',
-                'consumption': None,
-                'radio': None,
-                'mobility': circuit,
             }
         )
 
@@ -135,7 +100,6 @@ class TestM3Profile(unittest.TestCase):
         m3_prof = profile.ProfileM3('name', 'dc')
         m3_prof.set_consumption(None, None)
         m3_prof.set_radio(mode=None, channels=None)
-        m3_prof.mobility = None
 
         self.assertEqual(
             m3_prof.__dict__,
@@ -145,7 +109,6 @@ class TestM3Profile(unittest.TestCase):
                 'nodearch': 'm3',
                 'consumption': None,
                 'radio': None,
-                'mobility': None,
             }
         )
 

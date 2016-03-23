@@ -253,23 +253,11 @@ class Api(object):
 
         :returns JSONObject
         """
-        return cls._get_with_cache('experiments?sites')
+        sites = cls._cache.get('sites', None)
 
-    @classmethod
-    def get_circuits(cls):
-        """ Get tested robot circuits
-
-        :returns JSONObject
-        """
-        return cls._get_with_cache('robots/circuits')
-
-    @classmethod
-    def _get_with_cache(cls, url):
-        """ Get resource from either cache or rest
-        :returns JSONObject
-        """
-        try:
-            return cls._cache[url]
-        except KeyError:
-            api = cls(None, None)  # unauthenticated request
-            return cls._cache.setdefault(url, api.method(url))
+        if 'sites' not in cls._cache:
+            # unauthenticated request
+            api = cls(username=None, password=None)
+            sites = api.method('experiments?sites')
+            cls._cache['sites'] = sites
+        return cls._cache['sites']

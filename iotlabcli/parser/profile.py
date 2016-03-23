@@ -227,12 +227,6 @@ def add_m3_a8_parser(node_type, subparser):
         choices=node_class.choices['radio']['period'],
         metavar='{1..65535}', help='period measure')
 
-    if node_type == 'M3':
-        # circuits configuration
-        circuit = subparser.add_argument_group('Robot circuit configuration')
-        circuit.add_argument('--circuit', type=common.get_circuit,
-                             help='Circuit selection: site,name')
-
 
 def _wsn430_profile(opts):
     """ Create a wsn430 profile from namespace object """
@@ -259,9 +253,7 @@ def _m3_a8_profile(opts, node_class):
 
 def _m3_profile(opts):
     """ Create a m3 profile from namespace object """
-    profile = _m3_a8_profile(opts, ProfileM3)
-    profile.mobility = opts.circuit
-    return profile
+    return _m3_a8_profile(opts, ProfileM3)
 
 
 def _a8_profile(opts):
