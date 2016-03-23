@@ -45,10 +45,6 @@ class ProfileM3A8(object):
         self.consumption = None
         self.radio = None
 
-        # dict with at least 'site_name' and 'trajectory_name'
-        # can also have ignored: 'coordinates' and 'points'
-        self.mobility = None  # only for M3
-
     # pylint: disable=too-many-arguments
     def set_consumption(self, period, average,
                         power=False, voltage=False, current=False):

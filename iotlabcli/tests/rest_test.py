@@ -106,12 +106,6 @@ class TestRest(unittest.TestCase):
         self.assertEqual(ret, rest.Api._get_with_cache('my_url_2'))
         self.assertEqual(2, api_method.call_count)
 
-        ret = {'ret': 'circuits'}
-        api_method.return_value = ret
-        self.assertEqual(ret, rest.Api.get_circuits())
-        self.assertEqual(ret, rest.Api.get_circuits())
-        self.assertEqual(3, api_method.call_count)
-
     def test_check_credentials(self):
         """ Test Api.method rest submission """
         ret_val = RequestRet(200, content='"OK"')

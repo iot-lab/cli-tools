@@ -256,14 +256,6 @@ class Api(object):
         return cls._get_with_cache('experiments?sites')
 
     @classmethod
-    def get_circuits(cls):
-        """ Get tested robot circuits
-
-        :returns JSONObject
-        """
-        return cls._get_with_cache('robots/circuits')
-
-    @classmethod
     def _get_with_cache(cls, url):
         """ Get resource from either cache or rest
         :returns JSONObject

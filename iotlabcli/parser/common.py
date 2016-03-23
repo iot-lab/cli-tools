@@ -146,28 +146,6 @@ def archis_list():
     return ['m3', 'a8', 'wsn430', 'custom', 'des']
 
 
-def get_circuit(circuit_str):
-    """ Get the circuit represented by `circuit_str`
-    :param circuit_str: Circuit selection: site,circuit_name
-    :returns: Circuit dictionary
-    """
-    site, name = circuit_str.split(',')
-
-    check_site_with_server(site)  # check site for better error messages
-    circuits = rest.Api.get_circuits()
-    try:
-        trajectories = []
-        for circuit in circuits[site]:
-            traj = circuit['trajectory_name']
-            trajectories.append(str(traj))
-            if traj == name:
-                return circuit
-        raise argparse.ArgumentTypeError("Circuit %r not found in %r" % (
-            name, trajectories))
-    except KeyError:
-        raise argparse.ArgumentTypeError("No circuits for site %r" % site)
-
-
 def check_site_with_server(site_name, _sites_list=None):
     """ Check if the given site exists by requesting the server list.
     If sites_list is given, it is used instead of doing a remote request
