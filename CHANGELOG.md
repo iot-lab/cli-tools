@@ -75,3 +75,32 @@ Setting the license to CeCILL v2.1
 + Add `--jmespath` and `--format` options to handle json output
 
 + 1.8.1: Fix pylint 1.5.0 new warnings
+
+
+2.0.0
+-----
+
+### Backward incompatible changes ###
+
+- robot-cli: `--status` command replaced by `status`
+- profile-cli: remove support for mobility in profiles (remove from the api)
+
+### Features ###
+
++ New architectures: add support for 'custom' and 'des' nodes
++ experiment-cli submit: add named arguments and associations support:
+
+    --list grenoble,m3,1,tutorial.elf,consumption
+    # equivalent to
+    --list grenoble,m3,1,profile=consumption,firmware=tutorial.elf
+
+    # Specifying robot mobility to 'Jhall'
+    --list grenoble,m3,381,mobility=Jhall
++ robot-cli: add new commands
+
+    status: get robot status
+    get --list: list user mobilities
+    get --name NAME,SITE: get given mobility JSON
+    update NAME,SITE: update robots with given mobility
+
++ rest: add commands to download map and configuration (for oml-plot-tools)
