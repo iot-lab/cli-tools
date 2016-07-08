@@ -24,9 +24,8 @@
 import sys
 import unittest
 
-from .c23 import patch
-
 import iotlabcli.parser.auth as auth_parser
+from .c23 import patch
 
 # pylint: disable=missing-docstring,too-many-public-methods
 

@@ -32,11 +32,11 @@ import os.path
 import json
 import unittest
 
-from .c23 import patch, mock_open
-
 from iotlabcli import experiment
 from iotlabcli import rest
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
+
+from .c23 import patch, mock_open
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 

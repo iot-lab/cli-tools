@@ -26,9 +26,9 @@
 import os
 import unittest
 
-from .c23 import patch, mock_open
-
 from iotlabcli import auth
+
+from .c23 import patch, mock_open
 
 TEST_RC_FILE = 'test_iotlabrc_file'
 

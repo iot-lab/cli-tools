@@ -26,11 +26,11 @@
 
 import unittest
 
-from .c23 import HTTPError, patch
-
 from iotlabcli import rest
 from iotlabcli.helpers import json_dumps
 from iotlabcli.tests.my_mock import RequestRet
+
+from .c23 import HTTPError, patch
 
 
 class TestRest(unittest.TestCase):

@@ -24,11 +24,11 @@
 
 import unittest
 
-from .c23 import patch
-
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
+
+from .c23 import patch
 
 
 class TestMainInfoParser(MainMock):

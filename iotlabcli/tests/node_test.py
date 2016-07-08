@@ -26,10 +26,10 @@
 # pylint: disable=no-member
 import unittest
 
-from .c23 import patch
-
 from iotlabcli import node
 from iotlabcli.tests import my_mock
+
+from .c23 import patch
 
 
 class TestNode(unittest.TestCase):

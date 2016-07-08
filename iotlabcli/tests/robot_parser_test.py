@@ -22,10 +22,10 @@
 
 """ Test the iotlabcli.parser.robot module """
 
-from .c23 import patch
-
 import iotlabcli.parser.robot as robot_parser
 from iotlabcli.tests.my_mock import MainMock
+
+from .c23 import patch
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-few-public-methods

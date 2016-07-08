@@ -24,11 +24,11 @@
 # Mock object not being recognized
 # pylint: disable=no-member
 
-from .c23 import patch
-
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.profile as profile_parser
 import iotlabcli.profile as profile
+
+from .c23 import patch
 
 
 class TestMainProfileParser(MainMock):

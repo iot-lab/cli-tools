@@ -44,4 +44,5 @@ elif version_info[0] == 3:  # pragma: no cover
 else:  # pragma: no cover
     raise ValueError('Unknown python version %r' % version_info)
 
+# pylint:disable=wrong-import-position
 from mock import patch, Mock, mock_open  # noqa
