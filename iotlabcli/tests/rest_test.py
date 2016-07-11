@@ -151,5 +151,5 @@ class TestRest(unittest.TestCase):
         get_with_cache.return_value = expected
 
         ret = rest.Api.mobility_predefined_list()
-        get_with_cache.assert_called()
+        self.assertTrue(get_with_cache.called)
         self.assertEqual(ret, expected)
