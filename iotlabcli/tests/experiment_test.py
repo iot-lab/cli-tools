@@ -36,6 +36,7 @@ import unittest
 
 from iotlabcli import experiment
 from iotlabcli import rest
+from iotlabcli import helpers
 from iotlabcli import tests
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
@@ -408,6 +409,88 @@ class TestSiteAssociation(unittest.TestCase):
         self.assertRaises(ValueError,
                           experiment.site_association,
                           script='script.sh')
+
+
+class TestExperimentScript(CommandMock):
+    """Test iotlabcli.experiment.script."""
+
+    def test_experiment_script_run(self):
+        """Test running experiment script run."""
+
+        experiment.script_experiment(
+            self.api, 123, 'run',
+            experiment.site_association(
+                'grenoble', script=tests.resource_file('script.sh')),
+            experiment.site_association(
+                'strasbourg', script=tests.resource_file('script_2.sh')),
+        )
+
+        scripts_json = helpers.json_dumps({
+            'script': [
+                {'scriptname': 'script.sh', 'sites': ['grenoble']},
+                {'scriptname': 'script_2.sh', 'sites': ['strasbourg']},
+            ],
+        })
+        expected_files = {
+            'script.json': scripts_json,
+            'script.sh': SCRIPTS['script.sh'],
+            'script_2.sh': SCRIPTS['script_2.sh'],
+        }
+        self.api.script_command.assert_called_with(123, 'run',
+                                                   files=expected_files)
+
+    def test_script_run_error(self):
+        """Test running experiment run with argument errors."""
+
+        # No sites/scripts
+        self.assertRaises(ValueError,
+                          experiment.script_experiment,
+                          self.api, 123, 'run')
+
+        # site multiple times
+        self.assertRaises(
+            ValueError,
+            experiment.script_experiment, self.api, 123, 'run',
+            experiment.site_association(
+                'grenoble', script=tests.resource_file('script.sh')),
+            experiment.site_association(
+                'grenoble', script=tests.resource_file('script_2.sh'))
+        )
+
+    def test_script_kill_status(self):
+        """Test exp.script kill and status commands."""
+        # no sites
+        experiment.script_experiment(self.api, 123, 'kill')
+        self.api.script_command.assert_called_with(123, 'kill', json=[])
+
+        experiment.script_experiment(self.api, 123, 'status')
+        self.api.script_command.assert_called_with(123, 'status', json=[])
+
+        # one site
+        experiment.script_experiment(self.api, 123, 'kill', 'grenoble')
+        self.api.script_command.assert_called_with(123, 'kill',
+                                                   json=['grenoble'])
+
+        experiment.script_experiment(self.api, 123, 'status', 'grenoble')
+        self.api.script_command.assert_called_with(123, 'status',
+                                                   json=['grenoble'])
+
+        # multiple sites
+        experiment.script_experiment(self.api, 123, 'kill',
+                                     'grenoble', 'strasbourg')
+        self.api.script_command.assert_called_with(
+            123, 'kill', json=['grenoble', 'strasbourg'])
+
+        experiment.script_experiment(self.api, 123, 'status',
+                                     'grenoble', 'strasbourg')
+        self.api.script_command.assert_called_with(
+            123, 'status', json=['grenoble', 'strasbourg'])
+
+    def test_script_invalid_cmd(self):
+        """Test running experiment script with invalid command."""
+        self.assertRaises(ValueError,
+                          experiment.script_experiment,
+                          self.api, 123, 'unknown_command')
 
 
 class TestExperimentStop(CommandMock):

@@ -25,7 +25,12 @@ from os.path import basename
 import re
 import json
 import time
-import collections
+try:
+    # pylint: disable=import-error,no-name-in-module
+    import backport_collections as collections
+except ImportError:  # pragma: no cover
+    # pylint: disable=import-error,no-name-in-module
+    import collections
 
 from iotlabcli import helpers
 from iotlabcli.associations import AssociationsMap
@@ -33,6 +38,7 @@ from iotlabcli.associations import associationsmapdict_from_dict
 
 # static name for experiment file : rename by server-rest
 EXP_FILENAME = 'new_exp.json'
+RUN_FILENAME = 'script.json'
 
 NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
 SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', )
@@ -217,6 +223,81 @@ def info_experiment(api, list_id=False, site=None):
     :param site: Restrict informations collection on site
     """
     return api.get_resources(list_id, site)
+
+
+def script_experiment(api, exp_id, command, *options):
+    """Upload an run scripts on sites.
+
+    :param api: API Rest api object
+    :param command: in ('run', 'kill', 'status')
+    :param *options: list of 'site_association' with script 'run'
+                     list of sites for 'kill', 'status' may be None
+    """
+    if command == 'run':
+        files_dict = _script_run_files_dict(*options)
+        return api.script_command(exp_id, command, files=files_dict)
+
+    elif command in ('kill', 'status'):
+        sites_list = sorted(options)
+        return api.script_command(exp_id, command, json=sites_list)
+
+    else:
+        raise ValueError('Unknown script command %r' % command)
+
+
+def _script_run_files_dict(*site_associations):
+    """Return script start files dict.
+
+    Returns dict with format
+    {
+        <RUN_FILENAME>: json({'script': [<scripts_associations>], ...}),
+        'scriptname': b'scriptcontent',
+    }
+    """
+
+    if not site_associations:
+        raise ValueError('Got empty site_associations %r', site_associations)
+
+    _check_sites_uniq(*site_associations)
+
+    files_dict = helpers.FilesDict()
+
+    # Save association and files
+    associations = {}
+    for sites, assocs in site_associations:
+        for assoctype, assocname in assocs.items():
+            _add_siteassoc_to_dict(associations, sites, assoctype, assocname)
+        files_dict.add_files_from_dict(SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+
+    # Add scrit sites association to files_dict
+    files_dict[RUN_FILENAME] = helpers.json_dumps(associations)
+    return files_dict
+
+
+def _add_siteassoc_to_dict(assocs, sites, assoctype, assocname):
+    """Add given site association to 'assocs' dict."""
+    name = site_association_name(assoctype, assocname)
+    assoc = assocs.setdefault(assoctype, AssociationsMap(assoctype, 'sites'))
+    assoc.extendvalues(name, sites)
+
+
+def _check_sites_uniq(*site_associations):
+    """Check that sites are uniq
+
+    >>> _check_sites_uniq(site_association('grenoble', script='script'),
+    ...                   site_association('lille', script='script'))
+    >>> _check_sites_uniq(site_association('grenoble', script='script'),
+    ...                   site_association('grenoble', script='script2'))
+    Traceback (most recent call last):
+    ...
+    ValueError: Sites may only be given once: ['grenoble']
+    """
+    sites = [assocs.sites for assocs in site_associations]
+    sites = helpers.flatten_list_list(sites)
+    duplicates = [s for s, c in collections.Counter(sites).items() if c > 1]
+
+    if duplicates:
+        raise ValueError('Sites may only be given once: %s' % duplicates)
 
 
 def wait_experiment(api, exp_id, states='Running',

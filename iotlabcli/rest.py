@@ -166,7 +166,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
             'post', json=nodes)
 
     def node_update(self, expid, files):
-        """ Launch upadte command (flash firmware) on user
+        """ Launch update command (flash firmware) on user
         experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
@@ -176,6 +176,22 @@ class Api(object):  # pylint:disable=too-many-public-methods
         """
         return self.method('experiments/%s/nodes?update' % expid,
                            'post', files=files)
+
+    # script
+    def script_command(self, expid, command, files=None, json=None):
+        """Execute scripts on sites.
+
+        :param expid: experiment id submission (e.g. OAR scheduler)
+        :param command: in ('run', 'kill', 'status')
+        :param files: 'run' only: script-site association and scripts content
+        :param json: 'kill/status' only: sites list, may be empty for all sites
+        """
+        # Only json or files and for the correct command (inverted checks)
+        assert json is not None or command in ('run',)
+        assert files is not None or command in ('kill', 'status',)
+
+        url = 'experiments/%s/script?%s' % (expid, command)
+        return self.method(url, 'post', files=files, json=json)
 
     # Profile methods
 

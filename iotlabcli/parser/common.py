@@ -39,7 +39,7 @@ try:
     from collections import OrderedDict
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
-    from ordereddict import OrderedDict
+    from backport_collections import OrderedDict
 
 import jmespath
 

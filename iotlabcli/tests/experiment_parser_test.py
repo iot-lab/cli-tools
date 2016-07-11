@@ -338,6 +338,84 @@ class TestMainInfoParser(MainMock):
         # Exp id is required
         self.assertRaises(SystemExit, experiment_parser.main, ['reload'])
 
+    @patch('iotlabcli.experiment.script_experiment')
+    def test_main_script_parser(self, script):
+        """ Run experiment_parser.main.run """
+        # Run script
+        script_sh = resource_file('script.sh')
+
+        script.return_value = {}
+        experiment_parser.main(['script', '--run',
+                                'grenoble,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Multiple sites
+        experiment_parser.main(['script', '--run',
+                                'grenoble,strasbourg,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        'strasbourg.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Multiple sites associations
+        script.return_value = {}
+        experiment_parser.main(['script', '--run',
+                                'grenoble,script=%s' % script_sh,
+                                'strasbourg,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh),
+            experiment.site_association('strasbourg.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Error no arguments
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run'])
+        # Unknown assoc
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run',
+                           'grenoble,script=%s,assoc=new' % script_sh])
+        # Error no script
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run', 'grenoble,assoc=test'])
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run', 'assoc=test'])
+
+        # kill script
+        experiment_parser.main(['script', '--kill'])
+        script.assert_called_with(self.api, 123, 'kill')
+
+        experiment_parser.main(['script', '--kill', 'grenoble'])
+        script.assert_called_with(self.api, 123, 'kill',
+                                  'grenoble.iot-lab.info')
+
+        experiment_parser.main(['script', '--kill', 'grenoble', 'strasbourg'])
+        script.assert_called_with(self.api, 123, 'kill',
+                                  'grenoble.iot-lab.info',
+                                  'strasbourg.iot-lab.info')
+
+        # Status script
+        experiment_parser.main(['script', '--status'])
+        script.assert_called_with(self.api, 123, 'status')
+
+        experiment_parser.main(['script', '--status', 'grenoble'])
+        script.assert_called_with(self.api, 123, 'status',
+                                  'grenoble.iot-lab.info')
+
+        experiment_parser.main(['script', '--status',
+                                'grenoble', 'strasbourg'])
+        script.assert_called_with(self.api, 123, 'status',
+                                  'grenoble.iot-lab.info',
+                                  'strasbourg.iot-lab.info')
+
 
 # pylint:disable=protected-access
 class TestAssociationParser(unittest.TestCase):
@@ -439,3 +517,34 @@ class TestSiteAssociationParser(unittest.TestCase):
         self.assertRaises(argparse.ArgumentTypeError,
                           experiment_parser.site_association_from_str,
                           'script=test,grenoble')
+
+
+class TestRunSiteAssociationParser(unittest.TestCase):
+    """Test run_site_association_from_str parser."""
+
+    def _test_run_site_assocs_from_str(self, assoc_str, *sites, **kwassocs):
+        """Test if sites association is the expected one."""
+        self.assertEqual(
+            experiment_parser.run_site_association_from_str(assoc_str),
+            experiment.site_association(*sites, **kwassocs))
+
+    def test_run_site_assoctiations_from_str(self):
+        """Test run_site_association_from_str."""
+        # Multi site
+        self._test_run_site_assocs_from_str(
+            'grenoble,strasbourg,script=iotlabcli/tests/script.sh',
+            *('grenoble.iot-lab.info', 'strasbourg.iot-lab.info'),
+            **{'script': 'iotlabcli/tests/script.sh'})
+
+    def test_run_site_assoctiation_from_str_invalid(self):
+        """Test invalid run_site_association_from_str."""
+        # Invalid association
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.run_site_association_from_str,
+                          ('grenoble,script=iotlabcli/tests/script.sh'
+                           ',ipv6=aaaa::1/64'))
+
+        # No 'script'
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.run_site_association_from_str,
+                          'grenoble')

@@ -69,6 +69,18 @@ Examples:
 SUBMIT_LIST_HELP = _read_help_file('submit_list_help.md')
 SUBMIT_SITE_ASSOC_HELP = _read_help_file('submit_site_association_help.md')
 
+SCRIPT_EPILOG = """
+Examples:
+    * Run script 'experiment.sh' on grenoble:
+        $ experiment-cli script --run grenoble,script=experiment.sh
+    * Run many scripts scripts on different site
+        $ experiment-cli script --run grenoble,lille,script=exp.sh \\
+            strasbourg,script=exp2.sh
+    * Check and control script
+        $ experiment-cli script --status
+        $ experiment-cli script --kill
+"""
+
 WAIT_EPILOG = """
 Examples:
     * wait that currently starting experiment becomes 'Running':
