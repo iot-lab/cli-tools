@@ -104,3 +104,5 @@ Setting the license to CeCILL v2.1
     update NAME,SITE: update robots with given mobility
 
 + rest: add commands to download map and configuration (for oml-plot-tools)
+
++ 2.1.0: Add a context manager for missing auth-cli

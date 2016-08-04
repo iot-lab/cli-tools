@@ -26,6 +26,7 @@ import sys
 import errno
 import argparse
 import itertools
+import contextlib
 
 # pylint: disable=wrong-import-order
 try:
@@ -109,17 +110,29 @@ def print_result(result, jmespath_expr=None, format_function=None):
             raise err
 
 
+@contextlib.contextmanager
+def catch_missing_auth_cli():
+    """Catch HTTPError 401 and display a message on missing auth-cli."""
+
+    auth_cli_err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
+                    "\tRegister your login:password using `auth-cli`\n")
+    try:
+        yield
+    except HTTPError as err:
+        if err.code != 401:
+            raise
+        print(auth_cli_err, file=sys.stderr)
+        sys.exit(1)
+
+
 def main_cli(function, parser, args=None):  # flake8: noqa
     """ Main command-line execution. """
     args = args or sys.argv[1:]
     try:
-        parser_opts = parser.parse_args(args)
-        result = function(parser_opts)
+        with catch_missing_auth_cli():
+            parser_opts = parser.parse_args(args)
+            result = function(parser_opts)
     except HTTPError as err:  # should be first as it's an IOError
-        if err.code == 401:
-            # print an info on how to get rid of the error
-            err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
-                   "\tRegister your login:password using `auth-cli`\n")
         print(err, file=sys.stderr)
 
     except (IOError, ValueError) as err:
