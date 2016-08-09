@@ -32,7 +32,7 @@ from .c23 import patch
 
 
 class TestMainInfoParser(MainMock):
-    """Test experimen.parser."""
+    """Test experiment.parser."""
 
     def setUp(self):
         MainMock.setUp(self)
@@ -221,7 +221,7 @@ class TestMainInfoParser(MainMock):
 
 # pylint:disable=protected-access
 class TestAssociationParser(unittest.TestCase):
-    """Test experiment submit associations."""
+    """Test _extract_associations associations."""
 
     def _assert_assoc(self, params, expected):
         """Check given params return expected associations."""
