@@ -46,6 +46,45 @@ Examples from iot-lab bash scripts
     Running
 
 
+Get nodes list per architecture
+-------------------------------
+
+### List all 'custom' archi nodes ###
+
+    experiment-cli --jmespath="items[?starts_with(@.archi, 'custom:')]" info -l
+    [
+        {
+            "archi": "custom:samr21:at86rf233",
+            "mobile": 0,
+            "network_address": "custom-1.saclay.iot-lab.info",
+            ...
+        }
+    ]
+
+
+### List all saclay 'samr21' network addresses ###
+
+    experiment-cli --jmespath="items[?contains(@.archi, 'samr21')].network_address" info  -l
+    [
+        "custom-1.saclay.iot-lab.info",
+        ...
+        "custom-8.saclay.iot-lab.info"
+    ]
+
+
+### List nodes by exact archi ###
+
+    experiment-cli --jmespath="items[?archi=='custom:samr21:at86rf233'].network_address" info -l
+    [
+        {
+            "archi": "custom:samr21:at86rf233",
+            "mobile": 0,
+            "network_address": "custom-1.saclay.iot-lab.info",
+            ...
+        }
+    ]
+
+
 RIOT Makefile
 -------------
 
