@@ -106,3 +106,4 @@ Setting the license to CeCILL v2.1
 + rest: add commands to download map and configuration (for oml-plot-tools)
 
 + 2.1.0: Add a context manager for missing auth-cli
++ 2.2.0: Add 'custom' nodes profile creation in profile-cli

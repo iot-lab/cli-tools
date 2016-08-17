@@ -121,13 +121,18 @@ class ProfileM3A8(object):
 
 
 class ProfileM3(ProfileM3A8):
-    """A Profile measure class for M3 """
+    """A Profile measure class for M3."""
     arch = 'm3'
 
 
 class ProfileA8(ProfileM3A8):
-    """A Profile measure class for A8 """
+    """A Profile measure class for A8."""
     arch = 'a8'
+
+
+class ProfileCustom(ProfileM3A8):
+    """A Profile measure class for Custom."""
+    arch = 'custom'
 
 
 class ProfileWSN430(object):

@@ -32,6 +32,7 @@ from iotlabcli import auth
 from iotlabcli.parser import help_msgs
 from iotlabcli.parser import common
 from iotlabcli.profile import ProfileWSN430, ProfileM3, ProfileA8
+from iotlabcli.profile import ProfileCustom
 
 PROFILE_PARSER = """
 
@@ -78,6 +79,13 @@ def parse_options():
         epilog=help_msgs.ADD_EPILOG_M3_A8.format(cmd='adda8', archi='a8'),
         formatter_class=RawTextHelpFormatter)
     add_m3_a8_parser('A8', add_a8_parser)
+
+    add_custom_parser = subparsers.add_parser(
+        'addcustom', help='add custom user profile',
+        epilog=help_msgs.ADD_EPILOG_M3_A8.format(cmd='addcustom',
+                                                 archi='custom'),
+        formatter_class=RawTextHelpFormatter)
+    add_m3_a8_parser('CUSTOM', add_custom_parser)
 
     del_parser = subparsers.add_parser('del', help='delete user profile')
     get_parser = subparsers.add_parser('get', help='get user\'s profile')
@@ -162,8 +170,9 @@ def parse_options():
 
 def add_m3_a8_parser(node_type, subparser):
     """ Add options for m3 and a8 parsers as they are the same """
-    assert node_type in ('M3', 'A8')
-    node_class = {'M3': ProfileM3, 'A8': ProfileA8}[node_type]
+    node_class = {
+        'M3': ProfileM3, 'A8': ProfileA8, 'CUSTOM': ProfileCustom
+    }[node_type]
 
     subparser.add_argument('-n', '--name', dest='name', required=True,
                            help='profile name')
@@ -261,6 +270,11 @@ def _a8_profile(opts):
     return _m3_a8_profile(opts, ProfileA8)
 
 
+def _custom_profile(opts):
+    """ Create a a8 profile from namespace object """
+    return _m3_a8_profile(opts, ProfileCustom)
+
+
 def _add_profile(api, name, profile, json_out=False):
     """ Add user profile. if json, dump json dict to stdout """
     if json_out:
@@ -276,9 +290,12 @@ def add_profile_parser(api, opts):
     :param opts: command-line parser opts
     :type opts:  Namespace object with opts attribute
     """
-    profile_func_d = {'addwsn430': _wsn430_profile,
-                      'addm3': _m3_profile,
-                      'adda8': _a8_profile}
+    profile_func_d = {
+        'addwsn430': _wsn430_profile,
+        'addm3': _m3_profile,
+        'adda8': _a8_profile,
+        'addcustom': _custom_profile
+    }
 
     try:
         profile = profile_func_d[opts.command](opts)
@@ -340,6 +357,7 @@ def profile_parse_and_run(opts):
         'addwsn430': add_profile_parser,
         'addm3': add_profile_parser,
         'adda8': add_profile_parser,
+        'addcustom': add_profile_parser,
         'load': load_profile_parser,
         'get': get_profile_parser,
         'del': del_profile_parser,
