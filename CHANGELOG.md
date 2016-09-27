@@ -107,3 +107,4 @@ Setting the license to CeCILL v2.1
 
 + 2.1.0: Add a context manager for missing auth-cli
 + 2.2.0: Add 'custom' nodes profile creation in profile-cli
++ 2.2.1: Officially support python3.5, fix broken test and cleanup tox.ini
