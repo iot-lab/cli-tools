@@ -41,12 +41,12 @@ def name_site(name_site_str):
     >>> name_site('name')
     ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: need more than 1 value to unpack...
+    ValueError: ...
 
     >>> name_site('name,site,extra')
     ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ValueError: too many values to unpack...
+    ValueError: ...
     """
     name, site = name_site_str.split(',')
     return name, site
