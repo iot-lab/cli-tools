@@ -284,6 +284,20 @@ class TestExperimentStop(CommandMock):
         self.api.stop_experiment.assert_called_with(123)
 
 
+class TestExperimentReload(CommandMock):
+    """Test iotlabcli.experiment.reload_experiment """
+
+    def test_experiment_reload(self):
+        """Test reloading an experiment."""
+        experiment.reload_experiment(self.api, 123, None, None)
+        exp_files = {}
+        self.api.reload_experiment.assert_called_with(123, exp_files)
+
+        experiment.reload_experiment(self.api, 123, 120, 3124159)
+        exp_files = {'duration': '120', 'reservation': '3124159'}
+        self.api.reload_experiment.assert_called_with(123, exp_files)
+
+
 class TestExperimentGet(CommandMock):
     """ Test iotlabcli.experiment.get_experiment """
 

@@ -218,6 +218,22 @@ class TestMainInfoParser(MainMock):
         load_exp.assert_called_with(self.api, '../test_exp.json',
                                     ['~/firmware.elf', './firmware_2.elf'])
 
+    @patch('iotlabcli.experiment.reload_experiment')
+    def test_main_reload_parser(self, reload_exp):
+        """ Run experiment_parser.main.info """
+        reload_exp.return_value = {}
+
+        experiment_parser.main(['reload', '-i', '123'])
+        reload_exp.assert_called_with(self.api, 123, None, None)
+        experiment_parser.main(['reload',
+                                '--id', '123',
+                                '--duration', '120',
+                                '--reservation', '314159'])
+        reload_exp.assert_called_with(self.api, 123, 120, 314159)
+
+        # Exp id is required
+        self.assertRaises(SystemExit, experiment_parser.main, ['reload'])
+
 
 # pylint:disable=protected-access
 class TestAssociationParser(unittest.TestCase):
