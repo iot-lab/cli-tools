@@ -257,6 +257,29 @@ def exp_resources_from_str(exp_str):
                                     **associations)
 
 
+def site_association_from_str(site_assoc_str):
+    """Extract site_association from given string.
+
+    Format is:
+
+        site,name=value
+        site1,site2,site3,assoc_name=assoc_value,assoc2=assoc_val2
+
+    Sites validity is checked
+
+    :raises argparse.ArgumentTypeError: on invalid site_assoc_str
+    """
+    # Decode keywoard associations
+    try:
+        sites, kwassocs = _args_kwargs(site_assoc_str.split(','))
+
+        # Validate site and add domain
+        sites = [common.site_with_domain_checked(site) for site in sites]
+        return experiment.site_association(*sites, **kwassocs)
+    except ValueError as err:
+        raise argparse.ArgumentTypeError('Invalid site_association: %s' % err)
+
+
 def _valid_param(param):
     """Check parameter are valid for _args_kwargs.
 

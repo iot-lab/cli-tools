@@ -21,8 +21,10 @@
 
 """ Test the iotlabcli.experiment_parser module """
 # pylint: disable=too-many-public-methods
+# pylint: disable=invalid-name
 
 import unittest
+import argparse
 
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
@@ -322,3 +324,49 @@ class TestAssociationParser(unittest.TestCase):
         self._assert_fail_assoc(['m3.elf', 'mobility=JHall', 'batt'])
         self._assert_fail_assoc(['m3.elf', 'firmware=tuto.elf'])
         self._assert_fail_assoc(['val aue'])
+
+
+class TestSiteAssociationParser(unittest.TestCase):
+    """Test site_association_from_str parser."""
+
+    def _test_site_assocs_from_str(self, assoc_str, *sites, **kwassocs):
+        """Test if sites association is the expected one."""
+        self.assertEqual(
+            experiment_parser.site_association_from_str(assoc_str),
+            experiment.site_association(*sites, **kwassocs))
+
+    def test_site_assoctiations_from_str(self):
+        """Test site_association_from_str."""
+        # Multi site
+        self._test_site_assocs_from_str(
+            'grenoble,strasbourg,script=iotlabcli/tests/script.sh',
+            *('grenoble.iot-lab.info', 'strasbourg.iot-lab.info'),
+            **{'script': 'iotlabcli/tests/script.sh'})
+
+        # Multi associations
+        self._test_site_assocs_from_str(
+            'grenoble,script=iotlabcli/tests/script.sh,ipv6=2001::',
+            *('grenoble.iot-lab.info',),
+            **{'script': 'iotlabcli/tests/script.sh', 'ipv6': '2001::'})
+
+    def test_site_assoctiation_from_str_invalid(self):
+        """Test invalid site_association_from_str."""
+        # Invalid association
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'grenoble')
+
+        # Invalid site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'invalid,script=test')
+
+        # No site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'script=test')
+
+        # Invalid args/kwargs with site after
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'script=test,grenoble')
