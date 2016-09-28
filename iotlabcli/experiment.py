@@ -139,6 +139,26 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     return api.submit_experiment(exp_files)
 
 
+def reload_experiment(api, exp_id, duration=None, start_time=None):
+    """Reload given experiment, duration and start_time can be adapted.
+
+    :param api: API Rest api object
+    :param exp_id: experiment id
+    :param duration: experiment duration in minutes. None for same duration.
+    :param start_time: experiment start time timestamp.
+        None for as soon as possible
+    """
+    exp_json = {}
+
+    # API needs strings and values shoud be absent if None
+    if duration is not None:
+        exp_json['duration'] = str(duration)
+    if start_time is not None:
+        exp_json['reservation'] = str(start_time)
+
+    return api.reload_experiment(exp_id, exp_json)
+
+
 def info_experiment(api, list_id=False, site=None):
     """ Print testbed information for user experiment submission:
     * resources description

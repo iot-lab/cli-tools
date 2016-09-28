@@ -129,6 +129,16 @@ class Api(object):  # pylint:disable=too-many-public-methods
         """
         return self.method('experiments/%s' % expid, 'delete')
 
+    def reload_experiment(self, expid, exp_json=None):
+        """Reload user experiment.
+
+        :param expid: experiment id submission (e.g. OAR scheduler)
+        :param exp_json: experiment duration and reservation configuration
+        :returns JSONObject
+        """
+        url = 'experiments/%d?reload' % expid
+        return self.method(url, 'post', json=exp_json)
+
     # Node commands
 
     def node_command(self, command, expid, nodes=(), option=None):

@@ -66,12 +66,7 @@ def parse_options():
 
     submit_parser.add_argument('-n', '--name', help='experiment name')
 
-    submit_parser.add_argument('-d', '--duration', required=True, type=int,
-                               help='experiment duration in minutes')
-
-    submit_parser.add_argument('-r', '--reservation', type=int,
-                               help=('experiment schedule starting : seconds '
-                                     'since 1970-01-01 00:00:00 UTC'))
+    _parser_add_duration_and_reservation(submit_parser, duration_required=True)
 
     submit_parser.add_argument('-p', '--print',
                                dest='print_json', action='store_true',
@@ -137,6 +132,16 @@ def parse_options():
                              type=(lambda s: s.split(',')),
                              help='comma separated firmware(s) path list')
 
+    # ####### RELOAD PARSER ###############
+    reload_parser = subparsers.add_parser('reload',
+                                          epilog=help_msgs.RELOAD_EPILOG,
+                                          help='reload user experiment',
+                                          formatter_class=RawTextHelpFormatter)
+    common.add_expid_arg(reload_parser, required=True)
+
+    _parser_add_duration_and_reservation(reload_parser,
+                                         duration_required=False)
+
     # ####### INFO PARSER ###############
     info_parser = subparsers.add_parser('info', epilog=help_msgs.INFO_EPILOG,
                                         help='resources description list',
@@ -170,6 +175,21 @@ def parse_options():
         help="Max time to wait in seconds")
 
     return parser
+
+
+def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
+        subparser, duration_required):
+    """Add a 'duration' and a 'reservation' argument to subparser.
+
+    :param subparser: subparser instance
+    :param duration_required: select if duration is required or optional
+    """
+    subparser.add_argument('-d', '--duration', required=duration_required,
+                           type=int, help='experiment duration in minutes')
+
+    subparser.add_argument('-r', '--reservation', type=int,
+                           help=('experiment schedule starting : seconds '
+                                 'since 1970-01-01 00:00:00 UTC'))
 
 
 def exp_infos_from_str(exp_str):
@@ -500,6 +520,14 @@ def load_experiment_parser(opts):
     return experiment.load_experiment(api, opts.path_file, opts.firmware_list)
 
 
+def reload_experiment_parser(opts):
+    """Parse namespace 'opts' object and execute requested 'reload' command."""
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return experiment.reload_experiment(api, opts.experiment_id,
+                                        opts.duration, opts.reservation)
+
+
 def info_experiment_parser(opts):
     """ Parse namespace 'opts' object and execute requested 'info' command """
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
@@ -532,6 +560,7 @@ def experiment_parse_and_run(opts):
         'stop': stop_experiment_parser,
         'get': get_experiment_parser,
         'load': load_experiment_parser,
+        'reload': reload_experiment_parser,
         'info': info_experiment_parser,
         'wait': wait_experiment_parser,
     }[opts.command]
