@@ -67,6 +67,7 @@ Examples:
 """
 
 SUBMIT_LIST_HELP = _read_help_file('submit_list_help.md')
+SUBMIT_SITE_ASSOC_HELP = _read_help_file('submit_site_association_help.md')
 
 WAIT_EPILOG = """
 Examples:

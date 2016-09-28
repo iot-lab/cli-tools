@@ -19,6 +19,8 @@ files_list=$(echo "${files_list}" | grep -v \
     -e 'COPYING' \
     -e 'MANIFEST.in' \
     -e 'iotlabcli/parser/help/*' \
+    -e 'iotlabcli/tests/script.sh' \
+    -e 'iotlabcli/tests/script_2.sh' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist

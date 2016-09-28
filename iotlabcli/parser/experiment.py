@@ -184,12 +184,18 @@ def parser_add_submit_subparser(subparsers):
                             dest='nodes_list', required=True,
                             type=exp_resources_from_str,
                             help="experiment list")
+    res_parser.add_argument('-s', '--site-association', action='append',
+                            type=site_association_from_str,
+                            help='sites associations')
 
     # Help messages for resources
     help_parser = submit_parser.add_argument_group('advanced help options')
     common.HelpAction.add_help(help_parser, '--help-list',
                                'show help on --list option',
                                help_msgs.SUBMIT_LIST_HELP)
+    common.HelpAction.add_help(help_parser, '--help-site-association',
+                               'show help on --site-association option',
+                               help_msgs.SUBMIT_SITE_ASSOC_HELP)
 
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
@@ -569,7 +575,8 @@ def submit_experiment_parser(opts):
 
     return experiment.submit_experiment(api, opts.name, opts.duration,
                                         opts.nodes_list, opts.reservation,
-                                        opts.print_json)
+                                        opts.print_json,
+                                        opts.site_association)
 
 
 def stop_experiment_parser(opts):

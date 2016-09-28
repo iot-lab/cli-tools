@@ -28,6 +28,9 @@
 # Pylint Mock issues
 # pylint: disable=no-member,maybe-no-member
 
+# pylint:disable=invalid-name
+# pylint:disable=attribute-defined-outside-init
+
 import json
 import unittest
 
@@ -37,6 +40,13 @@ from iotlabcli import tests
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
 from .c23 import mock, patch, mock_open
+
+SCRIPTS = {
+    'script.sh': (b'#! /bin/sh\n'
+                  b'echo "script.sh"\n'),
+    'script_2.sh': (b'#! /bin/sh\n'
+                    b'echo "script_2.sh"\n'),
+}
 
 
 class TestExperiment(unittest.TestCase):
@@ -93,7 +103,8 @@ class TestExperimentSubmit(CommandMock):
             'reservation': 314159,
             'profileassociations': None,
             'firmwareassociations': None,
-            'associations': None
+            'associations': None,
+            'siteassociations': None,
         }
         self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
@@ -148,7 +159,8 @@ class TestExperimentSubmit(CommandMock):
                 {'firmwarename': 'firmware.elf', 'nodes': ['1', '2']},
                 {'firmwarename': 'firmware_2.elf', 'nodes': ['3']}
             ],
-            'associations': None
+            'associations': None,
+            'siteassociations': None,
         }
         self.assertEqual(expected, exp_desc)
         self.assertTrue('firmware.elf' in files_dict)
@@ -199,7 +211,8 @@ class TestExperimentSubmit(CommandMock):
                     {'mobilityname': 'controlled', 'nodes': nodes}],
                 'kernel': [
                     {'kernelname': 'linux', 'nodes': nodes}],
-            }
+            },
+            'siteassociations': None,
         }
         self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
@@ -227,11 +240,74 @@ class TestExperimentSubmit(CommandMock):
         self.assertRaises(ValueError, experiment.submit_experiment,
                           self.api, 'exp_name', 20, resources)
 
+    def test_exp_submit_site_association(self):
+        """Test experiment submission with site associations."""
+        nodes = ['m3-1.grenoble.iot-lab.info', 'a8-1.strasbourg.iot-lab.info']
+        resources = [experiment.exp_resources(nodes)]
+
+        site_assocs = [
+            experiment.site_association(
+                'grenoble',
+                script=tests.resource_file('script.sh'),
+                ipv6='aaaa::/64',
+            ),
+            experiment.site_association(
+                'strasbourg',
+                script=tests.resource_file('script_2.sh'),
+            ),
+        ]
+
+        experiment.submit_experiment(self.api, None, 20, resources,
+                                     sites_assocs=site_assocs)
+        files_dict = self.api.submit_experiment.call_args[0][0]
+        expected = {
+            'name': None,
+            'duration': 20,
+            'type': 'physical',
+            'nodes': nodes,
+            'reservation': None,
+            'profileassociations': None,
+            'firmwareassociations': None,
+            'associations': None,
+            'siteassociations': {
+                'script': [
+                    {
+                        'scriptname': 'script.sh',
+                        'sites': ['grenoble']
+                    },
+                    {
+                        'scriptname': 'script_2.sh',
+                        'sites': ['strasbourg']
+                    },
+                ],
+                'ipv6': [
+                    {
+                        'ipv6name': 'aaaa::/64',
+                        'sites': ['grenoble']
+                    },
+                ],
+            },
+        }
+        self.assertEqual(expected, json.loads(files_dict['new_exp.json']))
+        self.assertEqual(files_dict['script.sh'], SCRIPTS['script.sh'])
+        self.assertEqual(files_dict['script_2.sh'], SCRIPTS['script_2.sh'])
+
+    def _read_file_for_load(self, file_path, *_):
+        """ read_file mock """
+        expected = self.expected
+        if file_path == experiment.EXP_FILENAME:
+            return json.dumps(expected)
+        elif file_path.endswith('.elf'):
+            return 'elf32arm'
+        elif file_path.endswith('.sh'):
+            return '#!/bin/sh'
+        raise ValueError(file_path)
+
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load(self, read_file_mock):
         """ Try experiment_load """
         node_fmt = 'm3-%u.grenoble.iot-lab.info'
-        expected = {
+        self.expected = {
             "name": None,
             "duration": 20,
             "nodes": [node_fmt % num for num in range(1, 6)],
@@ -249,14 +325,7 @@ class TestExperimentSubmit(CommandMock):
             "profileassociations": None,
             "reservation": None,
         }
-
-        def read_file(file_path, _=''):
-            """ read_file mock """
-            if file_path == experiment.EXP_FILENAME:
-                return json.dumps(expected)
-            else:
-                return "elf32arm"
-        read_file_mock.side_effect = read_file
+        read_file_mock.side_effect = self._read_file_for_load
 
         experiment.load_experiment(
             self.api, experiment.EXP_FILENAME, ['firmware.elf'])
@@ -272,6 +341,38 @@ class TestExperimentSubmit(CommandMock):
             experiment.load_experiment,
             self.api, experiment.EXP_FILENAME,
             ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])
+
+    @patch('iotlabcli.helpers.read_file')
+    def test_experiment_load_with_script(self, read_file_mock):
+        """Try experiment_load with script."""
+        self.expected = {
+            "name": None,
+            "duration": 20,
+            "nodes": ['m3-1.grenoble.iot-lab.info'],
+            "firmwareassociations": [{
+                "firmwarename": "firmware.elf",
+                "nodes": ['m3-1.grenoble.iot-lab.info'],
+            }],
+            "type": "physical",
+            "profileassociations": None,
+            "reservation": None,
+            "siteassociations": {
+                'script': [{
+                    "scriptname": "script.sh",
+                    "sites": ['grenoble'],
+                }],
+            },
+        }
+        read_file_mock.side_effect = self._read_file_for_load
+
+        experiment.load_experiment(
+            self.api, experiment.EXP_FILENAME, ['script.sh'])
+
+        # read_file_calls
+        _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
+        self.assertEqual(_files,
+                         set((experiment.EXP_FILENAME,
+                              'firmware.elf', 'script.sh')))
 
 
 class TestSiteAssociation(unittest.TestCase):

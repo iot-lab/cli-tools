@@ -26,6 +26,7 @@
 import unittest
 import argparse
 
+from iotlabcli.tests import resource_file
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
@@ -151,14 +152,14 @@ class TestMainInfoParser(MainMock):
                 None, None)
         ]
         submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
-                                      314159, False)
+                                      314159, False, None)
 
         # print with simple options
         nodes = [experiment.exp_resources(['m3-1.grenoble.iot-lab.info'])]
         experiment_parser.main(
             ['submit', '-p', '-d', '20', '-l', 'grenoble,m3,1'])
         submit_exp.assert_called_with(self.api, None, 20, nodes,
-                                      None, True)
+                                      None, True, None)
 
         # Alias tests
         experiment_parser.main([
@@ -181,7 +182,7 @@ class TestMainInfoParser(MainMock):
         ]
 
         submit_exp.assert_called_with(self.api, None, 20, resources,
-                                      None, False)
+                                      None, False, None)
 
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser_assocs(self, submit_exp):
@@ -201,7 +202,59 @@ class TestMainInfoParser(MainMock):
                                      'm3.elf', None, **assocs)
         ]
         submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
-                                      None, False)
+                                      None, False, None)
+
+    @patch('iotlabcli.experiment.submit_experiment')
+    def test_main_submit_parser_site_assocs(self, submit_exp):
+        """Run experiment_parser.main.submit site associations."""
+        script_sh = resource_file('script.sh')
+        script_2_sh = resource_file('script_2.sh')
+
+        submit_exp.return_value = {}
+
+        # Groupped assocs
+        experiment_parser.main([
+            'submit', '--name', 'exp_name', '--duration', '20',
+            '--list', 'grenoble,m3,1',
+            '--list', 'strasbourg,m3,1',
+            '--site-association', 'grenoble,strasbourg,script=%s' % script_sh,
+        ])
+
+        sites_assocs = [
+            experiment.site_association('grenoble.iot-lab.info',
+                                        'strasbourg.iot-lab.info',
+                                        script=script_sh),
+        ]
+
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info']),
+            experiment.exp_resources(['m3-1.strasbourg.iot-lab.info']),
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
+                                      None, False, sites_assocs)
+
+        # Different assocs
+        experiment_parser.main([
+            'submit', '--name', 'exp_name', '--duration', '20',
+            '--list', 'grenoble,m3,1',
+            '--list', 'strasbourg,m3,1',
+            '--site-association', 'grenoble,script=%s,ipv6=2001::' % script_sh,
+            '--site-association', 'strasbourg,script=%s' % script_2_sh,
+        ])
+
+        sites_assocs = [
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh, ipv6='2001::'),
+            experiment.site_association('strasbourg.iot-lab.info',
+                                        script=script_2_sh),
+        ]
+
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info']),
+            experiment.exp_resources(['m3-1.strasbourg.iot-lab.info']),
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
+                                      None, False, sites_assocs)
 
     def test_main_submit_parser_error(self):
         """ Run experiment_parser.main.submit with error"""
@@ -216,6 +269,17 @@ class TestMainInfoParser(MainMock):
             SystemExit, experiment_parser.main,
             ['submit', '--duration', '20', '-l', 'grenoble,m3,100-1'])
 
+    def test_main_submit_parser_site_assocs_error(self):
+        """ Run experiment_parser.main.submit with site assocs error"""
+        self.assertRaises(
+            SystemExit, experiment_parser.main,
+            ['submit', '--duration', '20', '-l', 'grenoble,m3,1',
+             '--site-association', 'invalid,script=test'])
+        self.assertRaises(
+            SystemExit, experiment_parser.main,
+            ['submit', '--duration', '20', '-l', 'grenoble,m3,1',
+             '--site-association', 'grenoble'])
+
     def test_main_submit_helps(self):
         """Run experiment_parser.main helps messages."""
         with patch('sys.stdout', StringIO()) as stdout:
@@ -223,6 +287,11 @@ class TestMainInfoParser(MainMock):
                               ['submit', '--help-list'])
             output = stdout.getvalue()
             self.assertTrue(output.startswith('Resources list\n'))
+        with patch('sys.stdout', StringIO()) as stdout:
+            self.assertRaises(SystemExit, experiment_parser.main,
+                              ['submit', '--help-site-association'])
+            output = stdout.getvalue()
+            self.assertTrue(output.startswith('Site associations\n'))
 
     @patch('iotlabcli.experiment.wait_experiment')
     def test_main_wait_parser(self, wait_exp):

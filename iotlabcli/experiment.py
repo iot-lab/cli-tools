@@ -35,10 +35,12 @@ from iotlabcli.associations import associationsmapdict_from_dict
 EXP_FILENAME = 'new_exp.json'
 
 NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
+SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', )
 
 
 def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
-                      resources, start_time=None, print_json=False):
+                      resources, start_time=None, print_json=False,
+                      sites_assocs=None):
     """ Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
@@ -49,6 +51,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     :param resources: list of 'exp_resources'
     :param print_json: select if experiment should be printed as json instead
         of submitted
+    :param sites_assocs: list of 'site_association'
     """
 
     assert resources, 'Empty resources: %r' % resources
@@ -58,6 +61,12 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     for res_dict in resources:
         experiment.add_exp_resources(res_dict)
         exp_files.add_files_from_dict(NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict)
+
+    sites_assocs = sites_assocs or ()
+    for site_assoc in sites_assocs:
+        experiment.add_site_association(site_assoc)
+        assocs = site_assoc.associations
+        exp_files.add_files_from_dict(SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
 
     if print_json:  # output experiment description
         return experiment
@@ -442,6 +451,7 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         self.firmwareassociations = None
         self.profileassociations = None
         self.associations = None
+        self.siteassociations = None
 
     def _firmwareassociations(self):
         """Init and return firmwareassociations."""
@@ -459,6 +469,12 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         return assocs.setdefault(assoctype,
                                  AssociationsMap(assoctype, **_NODESMAPKWARGS))
 
+    def _siteassociations(self, assoctype):
+        """Init and return associations[assoctype]."""
+        assocs = setattr_if_none(self, 'siteassociations', {})
+        return assocs.setdefault(assoctype,
+                                 AssociationsMap(assoctype, 'sites'))
+
     @classmethod
     def from_dict(cls, exp_dict):
         """Create an _Experiment object from given `exp_dict`."""
@@ -472,7 +488,7 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         return experiment
 
     def _load_assocs(self, firmwareassociations=None, profileassociations=None,
-                     associations=None):
+                     associations=None, siteassociations=None):
         """Load associations to AssociationsMap and set attributes."""
         self.firmwareassociations = AssociationsMap.from_list(
             firmwareassociations, 'firmware', **_NODESMAPKWARGS)
@@ -480,6 +496,8 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
             profileassociations, 'profile', **_NODESMAPKWARGS)
         self.associations = associationsmapdict_from_dict(associations,
                                                           **_NODESMAPKWARGS)
+        self.siteassociations = associationsmapdict_from_dict(siteassociations,
+                                                              'sites')
 
     def _set_type(self, exp_type):
         """ Set current experiment type.
@@ -526,6 +544,16 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         """Returns nodes to use in association."""
         return [nodes.alias] if self.type == 'alias' else nodes
 
+    def add_site_association(self, assoc):
+        """Add a site_association."""
+        for assoctype, assocname in assoc.associations.items():
+            self._add_site_association(assoc.sites, assoctype, assocname)
+
+    def _add_site_association(self, sites, assoctype, assocname):
+        """Add given site association."""
+        name = site_association_name(assoctype, assocname)
+        self._siteassociations(assoctype).extendvalues(name, sites)
+
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
         self._set_type('physical')
@@ -563,6 +591,9 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         files = []
         # Handle None attributes
         files += (self.firmwareassociations or {}).keys()
+        for assoctype in SITE_ASSOCIATIONS_FILE_ASSOCS:
+            files += (self.siteassociations or {}).get(assoctype, {}).keys()
+
         return files
 
 
@@ -591,6 +622,14 @@ def nodes_association_name(assoctype, assocname):
     """
     return _basename_if_in(assocname, assoctype,
                            NODES_ASSOCIATIONS_FILE_ASSOCS)
+
+
+def site_association_name(assoctype, assocname):
+    """Adapt assocname depending on assoctype.
+
+    * Return basename(assocname) if assoctype is a file-association.
+    """
+    return _basename_if_in(assocname, assoctype, SITE_ASSOCIATIONS_FILE_ASSOCS)
 
 
 def _basename_if_in(value, key, container, transform=basename):
