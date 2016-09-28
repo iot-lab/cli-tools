@@ -25,6 +25,8 @@ from os.path import basename
 import re
 import json
 import time
+import collections
+
 from iotlabcli import helpers
 from iotlabcli.associations import AssociationsMap
 from iotlabcli.associations import associationsmapdict_from_dict
@@ -305,6 +307,25 @@ def exp_resources(nodes, firmware_path=None, profile_name=None,
     }
 
     return resources
+
+
+SiteAssociationTuple = collections.namedtuple(
+    'SiteAssociationTuple', ['sites', 'associations'])
+
+
+def site_association(*sites, **kwassociations):
+    """Return a site_association tuple."""
+    if not sites:
+        raise ValueError('No sites given')
+
+    if len(sites) != len(set(sites)):
+        raise ValueError('Sites are not uniq {}'.format(sites))
+
+    # Associations are mandatory
+    if not kwassociations:
+        raise ValueError('No association given')
+
+    return SiteAssociationTuple(sites, kwassociations)
 
 
 class AliasNodes(object):  # pylint: disable=too-few-public-methods

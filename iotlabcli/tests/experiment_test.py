@@ -274,6 +274,41 @@ class TestExperimentSubmit(CommandMock):
             ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])
 
 
+class TestSiteAssociation(unittest.TestCase):
+    """Test iotlabcli.experiment.site_association."""
+    def test_site_assoctiation(self):
+        """Test working site associations."""
+        # One site / assoc
+        assocs = experiment.site_association('grenoble', script='script.sh')
+        self.assertEqual(assocs, (('grenoble',), {'script': 'script.sh'}))
+
+        # Multiple sites / asocs
+        assocs = experiment.site_association(
+            'grenoble', 'strasbourg', script='script.sh', ipv6='2001::')
+        self.assertEqual(assocs, (('grenoble', 'strasbourg'),
+                                  {'script': 'script.sh', 'ipv6': '2001::'}))
+        self.assertEqual(assocs.sites, ('grenoble', 'strasbourg'))
+        self.assertEqual(assocs.associations,
+                         {'script': 'script.sh', 'ipv6': '2001::'})
+
+    def test_site_assoctiations_error(self):
+        """Test error in site associations."""
+        # No assoc
+        self.assertRaises(ValueError,
+                          experiment.site_association,
+                          'grenoble')
+
+        # Multiple times site
+        self.assertRaises(ValueError,
+                          experiment.site_association,
+                          'grenoble', 'grenoble',
+                          script='script.sh')
+        # No site
+        self.assertRaises(ValueError,
+                          experiment.site_association,
+                          script='script.sh')
+
+
 class TestExperimentStop(CommandMock):
     """ Test iotlabcli.experiment.stop_experiment """
 
