@@ -25,7 +25,6 @@ from __future__ import print_function
 import sys
 import errno
 import argparse
-import itertools
 import contextlib
 
 # pylint: disable=wrong-import-order
@@ -286,7 +285,7 @@ def expand_short_nodes_list(nodes_str):
         nodes_ll = [_expand_minus_str(minus_nodes_str) for minus_nodes_str in
                     nodes_str.split('+')]
         # [[1, 2, 3], [6], [12]]
-        return list(itertools.chain.from_iterable(nodes_ll))  # flatten
+        return helpers.flatten_list_list(nodes_ll)
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
         raise ValueError('Invalid nodes list: %s ([0-9+-])' % nodes_str)
@@ -309,11 +308,11 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
 
     if nodes_ll is not None:
         # flatten lists into one
-        nodes = list(itertools.chain.from_iterable(nodes_ll))
+        nodes = helpers.flatten_list_list(nodes_ll)
 
     elif excl_nodes_ll is not None:
         # flatten lists into one
-        excl_nodes = set(itertools.chain.from_iterable(excl_nodes_ll))
+        excl_nodes = set(helpers.flatten_list_list(excl_nodes_ll))
 
         # remove exclude nodes from experiment nodes
         exp_nodes = set(_get_experiment_nodes_list(api, exp_id))
