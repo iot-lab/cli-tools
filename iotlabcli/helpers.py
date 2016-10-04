@@ -24,6 +24,7 @@
 import sys
 import os
 import json
+import itertools
 
 OAR_STATES = ["Waiting", "toLaunch", "Launching",
               "Running",
@@ -236,3 +237,12 @@ def json_dumps(obj):
         def default(self, obj):  # pylint: disable=method-hidden
             return obj.__dict__
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
+
+
+def flatten_list_list(list_list):
+    """Flatten given list of list.
+
+    >>> flatten_list_list([[1, 2, 3], [4], [5], [6, 7, 8]])
+    [1, 2, 3, 4, 5, 6, 7, 8]
+    """
+    return list(itertools.chain.from_iterable(list_list))
