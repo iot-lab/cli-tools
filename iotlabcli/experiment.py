@@ -27,6 +27,7 @@ import json
 import time
 from iotlabcli import helpers
 from iotlabcli.associations import AssociationsMap
+from iotlabcli.associations import associationsmapdict_from_dict
 
 # static name for experiment file : rename by server-rest
 EXP_FILENAME = 'new_exp.json'
@@ -128,30 +129,48 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
 
     # 1. load experiment description
     exp_dict = json.loads(helpers.read_file(exp_desc_path))
+    experiment = _Experiment.from_dict(exp_dict)
+
+    # 2. List files and update path with provided path
+    files = _files_with_filespath(experiment.filenames(), firmware_list)
+
+    # Construct experiment files
     exp_files = helpers.FilesDict()
-    # 2. Add experiment description
-    exp_files[EXP_FILENAME] = helpers.json_dumps(exp_dict)
-
-    # 3. Add firmwares files to the experiment files using
-    #    firmware_list and experiment firmwareassociations
-
-    # extract firmwares names
-    _fw_association = exp_dict['firmwareassociations'] or []
-    firmwares = set([assoc['firmwarename'] for assoc in _fw_association])
-
-    try:
-        # replace firwmare name by firmware_path from firmware_list
-        for _fw_path in firmware_list:
-            firmwares.remove(basename(_fw_path))
-            firmwares.add(_fw_path)
-    except KeyError as err:
-        raise ValueError("Firmware {!s} is not in experiment: {}".format(
-            err, exp_desc_path))
-    else:
-        # Add all firmwares to the experiment files
-        for _fw_path in firmwares:
-            exp_files.add_firmware(_fw_path)
+    exp_files[EXP_FILENAME] = helpers.json_dumps(experiment)
+    for exp_file in files:
+        exp_files.add_file(exp_file)
     return api.submit_experiment(exp_files)
+
+
+def _files_with_filespath(files, filespath):
+    """Return `files` updated with `filespath`.
+
+    Return a `files` list with path taken from `filespath` if basename
+    matches one in `files`.
+
+    >>> _files_with_filespath(['a', 'b', 'c', 'a'], ['dir/c', 'dir/a'])
+    ['b', 'dir/a', 'dir/c']
+
+    >>> _files_with_filespath(['a', 'b', 'c', 'a'], [])
+    ['a', 'b', 'c']
+
+    >>> _files_with_filespath(['a', 'b'], ['dir/a', 'dir/c'])
+    Traceback (most recent call last):
+    ...
+    ValueError: Filespath ['dir/c'] not in files list ['a', 'b']
+    """
+    # Change filespath to a dict by basename
+    filespathdict = dict(((basename(f), f) for f in filespath))
+
+    # Update to full filepath if provided
+    updatedfiles = [filespathdict.pop(f, f) for f in set(files)]
+
+    # Error if there are remaining files in filespath
+    if filespathdict:
+        raise ValueError('Filespath %s not in files list %s' %
+                         (list(filespathdict.values()), sorted(set(files))))
+
+    return sorted(updatedfiles)
 
 
 def reload_experiment(api, exp_id, duration=None, start_time=None):
@@ -417,6 +436,28 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         return assocs.setdefault(assoctype,
                                  AssociationsMap(assoctype, **_NODESMAPKWARGS))
 
+    @classmethod
+    def from_dict(cls, exp_dict):
+        """Create an _Experiment object from given `exp_dict`."""
+        experiment = cls(exp_dict.pop('name'), exp_dict.pop('duration'),
+                         exp_dict.pop('reservation'))
+
+        experiment.type = exp_dict.pop('type')
+        experiment.nodes = exp_dict.pop('nodes')
+        experiment._load_assocs(**exp_dict)  # pylint:disable=protected-access
+        # No checking
+        return experiment
+
+    def _load_assocs(self, firmwareassociations=None, profileassociations=None,
+                     associations=None):
+        """Load associations to AssociationsMap and set attributes."""
+        self.firmwareassociations = AssociationsMap.from_list(
+            firmwareassociations, 'firmware', **_NODESMAPKWARGS)
+        self.profileassociations = AssociationsMap.from_list(
+            profileassociations, 'profile', **_NODESMAPKWARGS)
+        self.associations = associationsmapdict_from_dict(associations,
+                                                          **_NODESMAPKWARGS)
+
     def _set_type(self, exp_type):
         """ Set current experiment type.
         If type was already set and is different ValueError is raised
@@ -477,6 +518,13 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         """Set alias nodes list """
         self._set_type('alias')
         self.nodes.append(alias_nodes)
+
+    def filenames(self):
+        """Extract list of filenames required."""
+        files = []
+        # Handle None attributes
+        files += (self.firmwareassociations or {}).keys()
+        return files
 
 
 def setattr_if_none(obj, attr, default):
