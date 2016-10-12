@@ -174,34 +174,73 @@ def info_experiment(api, list_id=False, site=None):
 
 def wait_experiment(api, exp_id, states='Running',
                     step=5, timeout=float('+inf')):
-    """ Wait for the experiment to be in `states`
-    and also Terminated or Error
+    """Wait for the experiment to be in `states`.
+
+    Also returns if Terminated or Error
 
     :param api: API Rest api object
     :param exp_id: scheduler OAR id submission
     :param states: Comma separated string of states to wait for
     :param step: time to wait between each server check
     :param timeout: timeout if wait takes too long
-
     """
+    def _state_function():
+        """Get current user experiment state."""
+        return get_experiment(api, exp_id, 'state')['state']
+    exp_str = '%s' % (exp_id,)
 
+    return wait_state(_state_function, exp_str, states, step, timeout)
+
+
+def _states_from_str(states_str):
+    """Return list of states from comma separated string.
+
+    Also verify given states are valid.
+    """
+    return helpers.check_experiment_state(states_str).split(',')
+
+
+STOPPED_STATES = set(_states_from_str('Terminated,Error'))
+
+
+def wait_state(state_fct, exp_str, states='Running',
+               step=5, timeout=float('+inf')):
+    """Wait until `state_fct` returns a state in `states`
+    and also Terminated or Error
+
+    :param state_fct: function that returns current state
+    :param states: Comma separated string of states to wait for
+    :param step: time to wait between each server check
+    :param timeout: timeout if wait takes too long
+    """
+    expected_states = set(_states_from_str(states))
     start_time = time.time()
-    end_time = start_time + timeout
 
-    full_states = helpers.check_experiment_state(states + ',Terminated,Error')
+    while not _timeout(start_time, timeout):
+        state = state_fct()
 
-    while time.time() < end_time:  # timeout
-        state = get_experiment(api, exp_id, 'state')['state']
-        if state not in full_states:
-            time.sleep(step)
-            continue
-        if state in states:  # state was awaited
+        if state in expected_states:
             return state
-        # non wanted state, usually 'Terminated or Error'
-        raise RuntimeError(
-            "Experiment {0} already in state {1!r}".format(exp_id, str(state)))
 
-    raise RuntimeError("Timeout reached")
+        if state in STOPPED_STATES:
+            # Terminated or Error
+            err = "Experiment {0} already in state '{1!s}'"
+            raise RuntimeError(err.format(exp_str, state))
+
+        # Still wait
+        time.sleep(step)
+
+    raise RuntimeError('Timeout reached')
+
+
+def _timeout(start_time, timeout):
+    """Return if timeout is reached.
+
+    :param start_time: initial time
+    :param timeout: timeout
+    :param _now: allow overriding 'now' call
+    """
+    return time.time() > start_time + timeout
 
 
 def exp_resources(nodes, firmware_path=None, profile_name=None,

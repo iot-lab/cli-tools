@@ -158,21 +158,7 @@ def parse_options():
                                   '(EXP_LIST format : 1-34+72)'))
 
     # ####### WAIT PARSER ###############
-    wait_parser = subparsers.add_parser(
-        'wait', help='wait user experiment started',
-        epilog=help_msgs.WAIT_EPILOG, formatter_class=RawTextHelpFormatter)
-
-    common.add_expid_arg(wait_parser)
-
-    wait_parser.add_argument(
-        '--state', default='Running',
-        help="wait states `State1,State2` or Finished, default 'Running'")
-    wait_parser.add_argument(
-        '--step', default=5, type=int,
-        help="Wait time in seconds between each check")
-    wait_parser.add_argument(
-        '--timeout', default=float('+inf'), type=float,
-        help="Max time to wait in seconds")
+    parser_add_wait_subparser(subparsers, expid_required=False)
 
     return parser
 
@@ -190,6 +176,27 @@ def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
     subparser.add_argument('-r', '--reservation', type=int,
                            help=('experiment schedule starting : seconds '
                                  'since 1970-01-01 00:00:00 UTC'))
+
+
+def parser_add_wait_subparser(subparsers, expid_required=False):
+    """Add wait experiment subparser and return it."""
+    wait_parser = subparsers.add_parser(
+        'wait', help='wait user experiment started',
+        epilog=help_msgs.WAIT_EPILOG, formatter_class=RawTextHelpFormatter)
+
+    common.add_expid_arg(wait_parser, required=expid_required)
+
+    wait_parser.add_argument(
+        '--state', default='Running',
+        help="wait states `State1,State2` or Finished, default 'Running'")
+    wait_parser.add_argument(
+        '--step', default=5, type=int,
+        help="Wait time in seconds between each check")
+    wait_parser.add_argument(
+        '--timeout', default=float('+inf'), type=float,
+        help="Max time to wait in seconds")
+
+    return wait_parser
 
 
 def exp_infos_from_str(exp_str):
