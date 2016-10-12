@@ -230,6 +230,14 @@ class TestMainInfoParser(MainMock):
     def test_main_load_parser(self, load_exp):
         """ Run experiment_parser.main.load """
         load_exp.return_value = {}
+
+        experiment_parser.main(['load', '-f', '../test_exp.json',
+                                '-l', '~/firmware.elf',
+                                '-l', './firmware_2.elf'])
+        load_exp.assert_called_with(self.api, '../test_exp.json',
+                                    ['~/firmware.elf', './firmware_2.elf'])
+
+        # Deprecated, not documented anymore but keep it working
         experiment_parser.main(['load', '-f', '../test_exp.json',
                                 '-l', '~/firmware.elf,./firmware_2.elf'])
         load_exp.assert_called_with(self.api, '../test_exp.json',

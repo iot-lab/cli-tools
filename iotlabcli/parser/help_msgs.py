@@ -70,8 +70,8 @@ Examples:
         $ experiment-cli load -f 192.json
         Note : by default firmwares are searched in the current directory
     * load experiment with firmware list and explicit path:
-        $ experiment-cli load -f 192.json -l /home/cc2420.hex,../cc1101.hex
-    * reload an experiment :
+        $ experiment-cli load -f 192.json -l /home/cc2420.hex -l ../cc1101.hex
+    * reload an experiment using load:
         $ experiment-cli get -i 192 -a
         $ tar -xzvf 192.tar.gz
         $ cd 192

@@ -116,15 +116,15 @@ def get_active_experiments(api, running_only=True):
     return exp_by_states
 
 
-def load_experiment(api, exp_desc_path, firmware_list=()):
+def load_experiment(api, exp_desc_path, files_list=()):
     """ Load and submit user experiment description with firmware(s)
 
-    Firmwares required for experiment will be loaded from current directory,
-    except if their path is given in firmware_list
+    Firmwares and scripts required for experiment will be loaded from
+    current directory, except if their path is given in files_list
 
     :param api: API Rest api object
     :param exp_desc_path: path to experiment json description file
-    :param firmware_list: list of firmware path
+    :param files_list: list of files path
     """
 
     # 1. load experiment description
@@ -132,7 +132,7 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     experiment = _Experiment.from_dict(exp_dict)
 
     # 2. List files and update path with provided path
-    files = _files_with_filespath(experiment.filenames(), firmware_list)
+    files = _files_with_filespath(experiment.filenames(), files_list)
 
     # Construct experiment files
     exp_files = helpers.FilesDict()

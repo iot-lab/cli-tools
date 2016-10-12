@@ -20,7 +20,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """ Experiment parser """
-# pylint:disable=protected-access
 
 import sys
 import time
@@ -134,11 +133,16 @@ def parse_options():
                                         formatter_class=RawTextHelpFormatter)
 
     load_parser.add_argument('-f', '--file', dest='path_file',
-                             required=True, help='experiment path file')
+                             metavar='EXP_JSON', required=True,
+                             help='experiment path file')
 
-    load_parser.add_argument('-l', '--list', dest='firmware_list', default=[],
-                             type=(lambda s: s.split(',')),
-                             help='comma separated firmware(s) path list')
+    _load_list_help = ('file path for firmware/script/... if not in'
+                       ' current directory.')
+
+    load_parser.add_argument('-l', '--list', metavar='FILEPATH',
+                             dest='files', default=[],
+                             type=(lambda s: s.split(',')), action='append',
+                             help=_load_list_help)
 
     # ####### RELOAD PARSER ###############
     reload_parser = subparsers.add_parser('reload',
@@ -535,7 +539,8 @@ def load_experiment_parser(opts):
 
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    return experiment.load_experiment(api, opts.path_file, opts.firmware_list)
+    files = helpers.flatten_list_list(opts.files)
+    return experiment.load_experiment(api, opts.path_file, files)
 
 
 def reload_experiment_parser(opts):
@@ -587,7 +592,7 @@ def experiment_parse_and_run(opts):
 
 
 def main(args=None):
-    """ Main command-line execution loop." """
+    """Main command-line execution loop."""
     args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(experiment_parse_and_run, parser, args)
