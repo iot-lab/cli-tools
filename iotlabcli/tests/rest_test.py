@@ -153,3 +153,17 @@ class TestRest(unittest.TestCase):
         ret = rest.Api.mobility_predefined_list()
         self.assertTrue(get_with_cache.called)
         self.assertEqual(ret, expected)
+
+
+class TestGetAnyExperimentState(unittest.TestCase):
+    """Test get_any_experiment_state."""
+
+    @patch('iotlabcli.rest.Api.method')
+    def test_get_any_experiment_state(self, _method):
+        """Test get_any_experiment_state."""
+        _method.return_value = {'state': 'Running'}
+
+        ret = rest.Api.get_any_experiment_state(123, 'harter')
+
+        self.assertEqual(ret, {'state': 'Running'})
+        _method.assert_called_with('experiments/123?anystate&user=harter')

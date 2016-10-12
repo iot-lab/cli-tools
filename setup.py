@@ -44,7 +44,7 @@ def get_version(package):
 
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
-           'robot-cli']
+           'robot-cli', 'admin-cli']
 
 INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
 if sys.version_info[0:2] == (2, 6):
