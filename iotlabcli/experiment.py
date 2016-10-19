@@ -39,8 +39,8 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
     :param api: API Rest api object
     :param name: experiment name
-    :param duration: experiment duration in seconds
-    :param resources: list of 'exp_resources' which
+    :param duration: experiment duration in minutes
+    :param resources: list of 'exp_resources'
     :param print_json: select if experiment should be printed as json instead
         of submitted
     """
