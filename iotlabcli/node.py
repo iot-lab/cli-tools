@@ -46,7 +46,7 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
         assert cmd_opt is not None, '`cmd_opt` required for update'
         files = helpers.FilesDict()
 
-        files.add_firmware(cmd_opt)
+        files.add_file(cmd_opt)
         files[NODE_FILENAME] = json.dumps(nodes_list)
         result = api.node_update(exp_id, files)
     elif command == 'profile':
