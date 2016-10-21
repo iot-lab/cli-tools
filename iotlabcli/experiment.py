@@ -26,6 +26,7 @@ import re
 import json
 import time
 from iotlabcli import helpers
+from iotlabcli.associations import AssociationsMap
 
 # static name for experiment file : rename by server-rest
 EXP_FILENAME = 'new_exp.json'
@@ -380,82 +381,8 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
 # Private methods #
 # # # # # # # # # #
 
-
-class Association(object):
-    """Association class value->Nodes.
-
-    >>> first = Association.for_type('test')('name', ['m3-1'])
-    >>> second = Association.for_type('test')('name', ['m3-2', 'm3-3'])
-
-    # Comparing only names to detect in a list
-    >>> first == second
-    True
-    >>> second.extend(first)
-    >>> print(second.nodes)
-    ['m3-1', 'm3-2', 'm3-3']
-
-    # Verify type when comparing
-    >>> first == {'name': 'name', 'nodes':['m3-1']}
-    False
-    """
-    ASSOCTYPE = ''
-    NODES_KEY = staticmethod(helpers.node_url_sort_key)
-
-    def __init__(self, value, nodes):
-        assert self.ASSOCTYPE, "VirtualClass, create real with 'for_type'"
-        setattr(self, self.valuename(), value)
-        self.nodes = sorted(nodes, key=self.NODES_KEY)
-
-    @classmethod
-    def valuename(cls):
-        """Return value attribute name."""
-        return '{0}name'.format(cls.ASSOCTYPE)
-
-    @property
-    def value(self):
-        """Return value."""
-        return getattr(self, self.valuename())
-
-    def extend(self, association):
-        """Add nodes to the association.
-
-        Remove duplicates and sort them for readability and testability.
-        """
-        # Same assoctype and name
-        assert self == association
-        self.nodes = sorted(list(set(self.nodes + association.nodes)),
-                            key=self.NODES_KEY)
-
-    def __eq__(self, other):
-        return (isinstance(other, Association) and
-                self.ASSOCTYPE == other.ASSOCTYPE and
-                self.value == other.value)
-
-    def add_to_list_sorted(self, assoc_list):
-        """Add current nodes association to assoclist.
-
-        If the association already exist, update with current nodes.
-        Else insert current association in assoclist.
-        """
-        # Add association in place
-        try:
-            # Append to existing one
-            # get same class object
-            existing = assoc_list[assoc_list.index(self)]
-            existing.extend(self)
-        except ValueError:  # Not present
-            # Insert new one sorted
-            assoc_list.append(self)
-            assoc_list.sort(key=lambda x: x.value)
-
-    @classmethod
-    def for_type(cls, assoctype):
-        """Create association class for assoctype."""
-        class _NamedAssociation(cls):
-            """NamedAssociations class->Nodes."""
-            ASSOCTYPE = assoctype  # overrides
-            __name__ = '{0}Association'.format(ASSOCTYPE.title())
-        return _NamedAssociation
+# Kwargs to initialize 'AssociationsMap' for nodes sorted.
+_NODESMAPKWARGS = dict(resource='nodes', sortkey=helpers.node_url_sort_key)
 
 
 class _Experiment(object):  # pylint:disable=too-many-instance-attributes
@@ -473,6 +400,22 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         self.firmwareassociations = None
         self.profileassociations = None
         self.associations = None
+
+    def _firmwareassociations(self):
+        """Init and return firmwareassociations."""
+        return setattr_if_none(self, 'firmwareassociations',
+                               AssociationsMap('firmware', **_NODESMAPKWARGS))
+
+    def _profileassociations(self):
+        """Init and return profileassociations."""
+        return setattr_if_none(self, 'profileassociations',
+                               AssociationsMap('profile', **_NODESMAPKWARGS))
+
+    def _associations(self, assoctype):
+        """Init and return associations[assoctype]."""
+        assocs = setattr_if_none(self, 'associations', {})
+        return assocs.setdefault(assoctype,
+                                 AssociationsMap(assoctype, **_NODESMAPKWARGS))
 
     def _set_type(self, exp_type):
         """ Set current experiment type.
@@ -499,17 +442,17 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         # register firmware
         if resources['firmware'] is not None:
             firmware = basename(resources['firmware'])
-            self.add_association('firmware', firmware, nodes)
+            self._firmwareassociations().extendvalues(firmware, nodes)
 
         # register profile, may be None
         if resources['profile'] is not None:
             profile = resources['profile']
-            self.add_association('profile', profile, nodes)
+            self._profileassociations().extendvalues(profile, nodes)
 
         # Add other associations
         associations = resources.get('associations', {})
         for assoctype, assocname in associations.items():
-            self.add_association(assoctype, assocname, nodes, optional=True)
+            self._associations(assoctype).extendvalues(assocname, nodes)
 
     def _nodes_to_assoc(self, nodes):
         """Returns nodes to use in association."""
@@ -534,34 +477,6 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         """Set alias nodes list """
         self._set_type('alias')
         self.nodes.append(alias_nodes)
-
-    def add_association(self, assoctype, name, assoc_nodes, optional=False):
-        """Add association."""
-
-        # Create association
-        assoc = Association.for_type(assoctype)(name, assoc_nodes)
-
-        # Add association to assocs_list
-        assocs_list = self._association_list(assoctype, optional)
-        assoc.add_to_list_sorted(assocs_list)
-
-    def _association_list(self, assoctype, optional=False):
-        """Set and return association list for `assoctype`.
-
-        If not optional, set list as attribute 'self.{assoctype}association'
-        else set list in 'self.associations[assoctype]'
-        """
-
-        if not optional:
-            # Store list as attribute '{assoctype}association'
-            assocattr = self.ASSOCATTR_FMT.format(assoctype)
-            associations_list = setattr_if_none(self, assocattr, [])
-        else:
-            # Store list in 'associations[assoctype]' dict
-            associations_dict = setattr_if_none(self, 'associations', {})
-            associations_list = associations_dict.setdefault(assoctype, [])
-
-        return associations_list
 
 
 def setattr_if_none(obj, attr, default):
