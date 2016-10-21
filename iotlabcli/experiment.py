@@ -497,16 +497,16 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
 
         # register firmware
         if resources['firmware'] is not None:
-            firmware_name = basename(resources['firmware'])
-            self.add_association('firmware', firmware_name, nodes)
+            firmware = basename(resources['firmware'])
+            self.add_association('firmware', firmware, nodes)
 
         # register profile, may be None
         self.add_association('profile', resources['profile'], nodes)
 
         # Add other associations
         associations = resources.get('associations', {})
-        for assoctype, assoc in associations.items():
-            self.add_association(assoctype, assoc, nodes, optional=True)
+        for assoctype, assocname in associations.items():
+            self.add_association(assoctype, assocname, nodes, optional=True)
 
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
