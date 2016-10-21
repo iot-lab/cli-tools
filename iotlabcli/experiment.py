@@ -501,7 +501,9 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
             self.add_association('firmware', firmware, nodes)
 
         # register profile, may be None
-        self.add_association('profile', resources['profile'], nodes)
+        if resources['profile'] is not None:
+            profile = resources['profile']
+            self.add_association('profile', profile, nodes)
 
         # Add other associations
         associations = resources.get('associations', {})
@@ -530,8 +532,6 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
 
     def add_association(self, assoctype, name, nodes, optional=False):
         """Add association."""
-        if name is None:
-            return
 
         # use alias number for AliasNodes
         assoc_nodes = [nodes.alias] if self.type == 'alias' else nodes
