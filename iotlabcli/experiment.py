@@ -553,24 +553,25 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         if not optional:
             # Store list as attribute '{assoctype}association'
             assocattr = self.ASSOCATTR_FMT.format(assoctype)
-            associations_list = self.setattr_if_none(assocattr, [])
+            associations_list = setattr_if_none(self, assocattr, [])
         else:
             # Store list in 'associations[assoctype]' dict
-            associations_dict = self.setattr_if_none('associations', {})
+            associations_dict = setattr_if_none(self, 'associations', {})
             associations_list = associations_dict.setdefault(assoctype, [])
 
         return associations_list
 
-    def setattr_if_none(self, name, default):
-        """Set attribute as `default` if None
 
-        :returns: attribute value after update
-        """
-        # Set default if None
-        if getattr(self, name) is None:
-            setattr(self, name, default)
+def setattr_if_none(obj, attr, default):
+    """Set attribute as `default` if None
 
-        return getattr(self, name)
+    :returns: attribute value after update
+    """
+    # Set default if None
+    if getattr(obj, attr) is None:
+        setattr(obj, attr, default)
+
+    return getattr(obj, attr)
 
 
 def _write_experiment_archive(exp_id, data):
