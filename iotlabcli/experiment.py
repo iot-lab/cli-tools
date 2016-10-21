@@ -274,7 +274,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None,
     else:
         exp_type = 'physical'
 
-    exp_dict = {
+    resources = {
         'type': exp_type,
         'nodes': nodes,
         'firmware': firmware_path,
@@ -282,7 +282,7 @@ def exp_resources(nodes, firmware_path=None, profile_name=None,
         'associations': associations,
     }
 
-    return exp_dict
+    return resources
 
 
 class AliasNodes(object):  # pylint: disable=too-few-public-methods
@@ -483,28 +483,28 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
                 "Invalid experiment, should be only physical or only alias")
         self.type = exp_type
 
-    def add_exp_resources(self, exp_dict):
+    def add_exp_resources(self, resources):
         """ Add 'exp_resources' to current experiment
         It will update node type, nodes, firmware and profile associations
         """
 
         # register nodes in experiment
-        nodes = exp_dict['nodes']
+        nodes = resources['nodes']
         {
             'physical': self.set_physical_nodes,
             'alias': self.set_alias_nodes,
-        }[exp_dict['type']](nodes)
+        }[resources['type']](nodes)
 
         # register firmware
-        if exp_dict['firmware'] is not None:
-            firmware_name = basename(exp_dict['firmware'])
+        if resources['firmware'] is not None:
+            firmware_name = basename(resources['firmware'])
             self.add_association('firmware', firmware_name, nodes)
 
         # register profile, may be None
-        self.add_association('profile', exp_dict['profile'], nodes)
+        self.add_association('profile', resources['profile'], nodes)
 
         # Add other associations
-        associations = exp_dict.get('associations', {})
+        associations = resources.get('associations', {})
         for assoctype, assoc in associations.items():
             self.add_association(assoctype, assoc, nodes, optional=True)
 
