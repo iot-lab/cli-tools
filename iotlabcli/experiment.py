@@ -495,6 +495,7 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
             'alias': self.set_alias_nodes,
         }[resources['type']](nodes)
 
+        nodes = self._nodes_to_assoc(nodes)
         # register firmware
         if resources['firmware'] is not None:
             firmware = basename(resources['firmware'])
@@ -509,6 +510,10 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         associations = resources.get('associations', {})
         for assoctype, assocname in associations.items():
             self.add_association(assoctype, assocname, nodes, optional=True)
+
+    def _nodes_to_assoc(self, nodes):
+        """Returns nodes to use in association."""
+        return [nodes.alias] if self.type == 'alias' else nodes
 
     def set_physical_nodes(self, nodes_list):
         """Set physical nodes list """
@@ -530,11 +535,8 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         self._set_type('alias')
         self.nodes.append(alias_nodes)
 
-    def add_association(self, assoctype, name, nodes, optional=False):
+    def add_association(self, assoctype, name, assoc_nodes, optional=False):
         """Add association."""
-
-        # use alias number for AliasNodes
-        assoc_nodes = [nodes.alias] if self.type == 'alias' else nodes
 
         # Create association
         assoc = Association.for_type(assoctype)(name, assoc_nodes)
