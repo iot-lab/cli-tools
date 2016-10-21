@@ -51,7 +51,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     exp_files = helpers.FilesDict()
     for res_dict in resources:
         experiment.add_exp_resources(res_dict)
-        exp_files.add_firmware(res_dict.get('firmware', None))  # firmware
+        exp_files.add_file(res_dict.get('firmware', None))  # firmware
 
     if print_json:  # output experiment description
         return experiment

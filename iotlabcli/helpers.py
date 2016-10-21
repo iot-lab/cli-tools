@@ -142,7 +142,7 @@ def node_url_sort_key(node_url):
     return site, node_type, int(num_str)
 
 
-class FilesDict(dict):  # pylint: disable=too-few-public-methods
+class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
     so __setitem__ is overriden to check that
@@ -174,11 +174,13 @@ class FilesDict(dict):  # pylint: disable=too-few-public-methods
         elif self[key] != val:
             raise ValueError('Has different values for same key %r' % key)
 
-    def add_firmware(self, firmware_path):
-        """ Add a firmwware to the dictionary. If None, do nothing """
-        if firmware_path is None:
+    def add_file(self, file_path):
+        """Add a file to the dictionary. If None, do nothing """
+        if file_path is None:
             return
-        self[os.path.basename(firmware_path)] = read_file(firmware_path, 'b')
+        self[os.path.basename(file_path)] = read_file(file_path, 'b')
+
+    add_firmware = add_file  # Deprecated
 
 
 def read_custom_api_url():
