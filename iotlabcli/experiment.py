@@ -55,8 +55,10 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
     if print_json:  # output experiment description
         return experiment
+
     # submit experiment
     exp_files[EXP_FILENAME] = helpers.json_dumps(experiment)  # exp description
+
     return api.submit_experiment(exp_files)
 
 
