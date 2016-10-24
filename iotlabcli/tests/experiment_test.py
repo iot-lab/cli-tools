@@ -26,7 +26,7 @@
 # pylint >= 1.4
 # pylint:disable=too-few-public-methods
 # Pylint Mock issues
-# pylint: disable=no-member
+# pylint: disable=no-member,maybe-no-member
 
 import os.path
 import json
