@@ -23,7 +23,7 @@
 
 # pylint: disable=too-many-public-methods
 # Issues with 'mock'
-# pylint: disable=no-member
+# pylint: disable=no-member,maybe-no-member
 import unittest
 from iotlabcli import robot
 from iotlabcli.tests import my_mock

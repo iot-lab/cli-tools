@@ -22,7 +22,7 @@
 """ Test the iotlabcli.parser.profile module """
 # pylint:disable=missing-docstring,too-many-public-methods
 # Mock object not being recognized
-# pylint: disable=no-member
+# pylint: disable=no-member,maybe-no-member
 
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.profile as profile_parser
