@@ -196,9 +196,9 @@ def check_site_with_server(site_name, _sites_list=None):
     """ Check if the given site exists by requesting the server list.
     If sites_list is given, it is used instead of doing a remote request
 
-    >>> sites = ["strasbourg", "grenoble"]
-    >>> check_site_with_server("grenoble", sites)
-    >>> check_site_with_server("unknown", sites)
+    >>> _sites_list = ['strasbourg', 'grenoble']
+    >>> check_site_with_server('grenoble', _sites_list)
+    >>> check_site_with_server('unknown', _sites_list)
     ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ArgumentTypeError: Unknown site name 'unknown'
@@ -206,7 +206,13 @@ def check_site_with_server(site_name, _sites_list=None):
     sites = _sites_list or sites_list()
     if site_name in sites:
         return  # site_name is valid
-    raise argparse.ArgumentTypeError("Unknown site name %r" % site_name)
+    raise argparse.ArgumentTypeError('Unknown site name %r' % site_name)
+
+
+def site_with_domain_checked(site, domain=DOMAIN_DNS):
+    """Return site with domain and check site exists."""
+    check_site_with_server(site)
+    return '%s.%s' % (site, domain)
 
 
 def nodes_list_from_info(site, archi, nodes_str):
