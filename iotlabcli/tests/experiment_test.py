@@ -28,17 +28,15 @@
 # Pylint Mock issues
 # pylint: disable=no-member,maybe-no-member
 
-import os.path
 import json
 import unittest
 
 from iotlabcli import experiment
 from iotlabcli import rest
+from iotlabcli import tests
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
 from .c23 import patch, mock_open
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestExperiment(unittest.TestCase):
@@ -111,13 +109,13 @@ class TestExperimentSubmit(CommandMock):
         resources = [
             experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware.elf', 'profile1'),
+                tests.resource_file('firmware.elf'), 'profile1'),
             experiment.exp_resources(
                 experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware.elf', 'profile1'),
+                tests.resource_file('firmware.elf'), 'profile1'),
             experiment.exp_resources(
                 experiment.AliasNodes(4, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware_2.elf', 'profile2'),
+                tests.resource_file('firmware_2.elf'), 'profile2'),
         ]
 
         experiment.submit_experiment(self.api, None, 20, resources)
@@ -180,7 +178,8 @@ class TestExperimentSubmit(CommandMock):
         nodes = ['m3-1.grenoble.iot-lab.info']
         assocs = {'mobility': 'controlled', 'kernel': 'linux'}
         resources = [
-            experiment.exp_resources(nodes, CURRENT_DIR + '/firmware.elf',
+            experiment.exp_resources(nodes,
+                                     tests.resource_file('firmware.elf'),
                                      None, **assocs),
         ]
 
@@ -212,7 +211,7 @@ class TestExperimentSubmit(CommandMock):
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
         resources.append(experiment.exp_resources(
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
-            CURRENT_DIR + '/firmware.elf', 'profile1'))
+            tests.resource_file('firmware.elf'), 'profile1'))
 
         self.assertRaises(ValueError, experiment.submit_experiment,
                           self.api, 'exp_name', 20, resources)
