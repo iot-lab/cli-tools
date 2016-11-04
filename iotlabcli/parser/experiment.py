@@ -24,7 +24,8 @@
 import sys
 import time
 
-from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
+import argparse
+from argparse import ArgumentParser, RawTextHelpFormatter
 
 from iotlabcli import experiment
 from iotlabcli import helpers
@@ -218,7 +219,7 @@ def exp_infos_from_str(exp_str):
         nodes, params = _extract_firmware_nodes_list(params)
         associations = _extract_associations(params)
     except ValueError as err:
-        raise ArgumentTypeError(
+        raise argparse.ArgumentTypeError(
             'Invalid arguments in experiment list %r: %s' % (exp_str, err))
 
     return nodes, associations
@@ -291,53 +292,91 @@ def _args_kwargs(params):
     Traceback (most recent call last):
     ValueError: got argument after keyword argument
 
+    >>> _args_kwargs(['e=f', 'e=i'])
+    Traceback (most recent call last):
+    ValueError: keyword argument "e" specified multiple times
+
     :returns: (`args`, `kwargs`)
     """
     args, kwargs = [], {}
 
-    parse_kwargs = False
+    _check_args_then_kwargs(params)
+
     for param in params:
         _valid_param(param)
-
         if '=' in param:
-            parse_kwargs = True  # kwargs after args
-
             # Parsing kwargs
             key, value = param.split('=', 1)
-            if value:
-                kwargs[key] = value
-        elif parse_kwargs:
-            # Should be kwargs but no '='
-            raise ValueError('got argument after keyword argument')
-        else:  # not parse_kwargs
+            _add_key_value(kwargs, key, value)
+        else:
+            # Parsing args
             args.append(param)
 
     return args, kwargs
+
+
+def _check_args_then_kwargs(params):
+    """Check that args are first, and then kwargs only."""
+    is_kwargs = ['=' in param for param in params]
+    # Should be many False then many True
+    if is_kwargs != sorted(is_kwargs):
+        raise ValueError('got argument after keyword argument')
+
+
+def _add_key_value(kwargs, key, value=''):
+    """Add `key`,`value` if value is not empty.
+
+    Raise an error if key exists.
+    """
+    error = 'keyword argument "%s" specified multiple times'
+    if key in kwargs:
+        raise ValueError(error % key)
+    if value:
+        kwargs[key] = value
+
+
+def _submit_args_to_dict(firmware='', profile=''):
+    """Return kwargs for this arguments. Remove empty values"""
+    kwargs = {}
+    if firmware:
+        kwargs['firmware'] = firmware
+    if profile:
+        kwargs['profile'] = profile
+    return kwargs
+
+
+def _merge_assocs_args_d_kwargs(args_dict, kwargs):
+    """Merge args_dict and kwargs. Detect duplicate keys."""
+
+    error_str = 'Association "%s" provided by argument and keyword argument'
+    for key in args_dict:
+        if key in kwargs:
+            raise ValueError(error_str % key)
+
+    merged = {}
+    merged.update(args_dict)
+    merged.update(kwargs)
+    return merged
+
+
+SUBMIT_ASSOC_ARGS_KWARGS = '[firmware][,profile][,assoc=value][,assoc=...]'
 
 
 def _extract_associations(params):
     """Extract 'associations'.
 
     Firmware, profile at positional args then keyword arguments.
+    :raises ValueError: on invalid input.
     """
-    assocs = {}
     args, kwargs = _args_kwargs(params)
+    try:
+        args_dict = _submit_args_to_dict(*args)
+    except TypeError:
+        raise ValueError('Invalid positional arguments, should be %s' %
+                         SUBMIT_ASSOC_ARGS_KWARGS)
+    associations = _merge_assocs_args_d_kwargs(args_dict, kwargs)
 
-    # Get positional arguments 'firmware' and 'profile
-    for key, value in zip(('firmware', 'profile'), args):
-        if value:  # not None or empty
-            assocs[key] = value
-    if len(args) > 2:
-        raise ValueError('Wrong number of arguments')
-
-    # Get keyword arguments
-    for key, value in kwargs.items():
-        if key in assocs:
-            raise ValueError("got multiple values for keyword argument "
-                             "'%s'" % key)
-        assocs[key] = value
-
-    return assocs
+    return associations
 
 
 def get_alias_properties(properties_str):
@@ -350,42 +389,62 @@ def get_alias_properties(properties_str):
     ('strasbourg', 'm3:at86rf231', None)
 
     >>> get_alias_properties("site=strasbourg")
-    ... # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ArgumentTypeError: Properties "archi" and "site" are mandatory.
+    ValueError: Properties should be "archi", "site" and optional "mobile".
 
     >>> inval_prop = "site=strasbourg+archi=val+uknown=test"
     >>> get_alias_properties(inval_prop)
-    ... # doctest: +IGNORE_EXCEPTION_DETAIL
-    ... # doctest: +ELLIPSIS
     Traceback (most recent call last):
-    ArgumentTypeError: Invalid property in '...'
-    Allowed values are ['archi', 'site', 'mobile']
-
-    >>> get_alias_properties("site=")
-    ... # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ArgumentTypeError: Invalid empty value for property 'site' in ['site=']
+    ValueError: Properties should be "archi", "site" and optional "mobile".
     """
-    properties = properties_str.split('+')
+    properties_dict = _properties_str_to_dict(properties_str)
+
     try:
-        site = _get_property(properties, 'site')
-        archi = _get_property(properties, 'archi')
-        mobile = _get_property(properties, 'mobile')
-    except ValueError as err:
-        raise ArgumentTypeError(err)
+        properties = _alias_properties_from_kwargs(**properties_dict)
+    except TypeError:
+        raise ValueError('Properties should be "archi", "site"'
+                         ' and optional "mobile".')
 
-    # check extracted values
-    if archi is None or site is None:
-        raise ArgumentTypeError('Properties "archi" and "site" are mandatory.')
-
-    if len(properties) > (2 if mobile is None else 3):
-        # Refuse unkown properties
-        raise ArgumentTypeError(
-            "Invalid property in %r\n" % properties_str +
-            "Allowed values are ['archi', 'site', 'mobile']")
+    # Forward check if there are more properties
+    site, archi, mobile = properties
 
     return site, archi, mobile
+
+
+def _alias_properties_from_kwargs(site, archi, mobile=None):
+    """To be used with **properties, checks given keys.
+
+    Returns values.
+    """
+    return site, archi, mobile
+
+
+def _properties_str_to_dict(properties_str):
+    """Extract a properties string to a dict:
+
+    >>> _properties_str_to_dict('a=1+b=3') == {'a': '1', 'b': '3'}
+    True
+
+    >>> _properties_str_to_dict('a=1+a=2')
+    Traceback (most recent call last):
+    ValueError: Property "a" should appear only once
+
+    >>> _properties_str_to_dict('a=+b=2')
+    Traceback (most recent call last):
+    ValueError: Invalid empty value for property "a"
+    """
+    properties = [p.split('=', 1) for p in properties_str.split('+')]
+
+    prop_dict = {}
+
+    for key, value in properties:
+        if key in prop_dict:
+            raise ValueError('Property "%s" should appear only once' % key)
+        if value == '':
+            raise ValueError('Invalid empty value for property "%s"' % key)
+        prop_dict[key] = value
+
+    return prop_dict
 
 
 def mobile_from_mobile_str(mobile_str=None):
@@ -412,17 +471,26 @@ def mobile_from_mobile_str(mobile_str=None):
     ValueError: Invalid 'mobile' property: %r. Should be in 'true|false|0|1'
     """
     mobile_str = mobile_str or 'False'
-    mobile_str = mobile_str.title()  # upper first letter
 
-    if mobile_str == 'True':
-        return True
-    elif mobile_str == 'False':
-        return False
-    try:
-        return bool(int(mobile_str))
-    except ValueError:
-        raise ValueError(
-            "Invalid 'mobile' property: %r. Should be in 'true|false|0|1'")
+    for convert_fct in (_mobile_str_true_false, _mobile_str_as_bool):
+        try:
+            return convert_fct(mobile_str)
+        except (KeyError, ValueError):
+            pass
+
+    raise ValueError("Invalid 'mobile' property: %r."
+                     " Should be in 'true|false|0|1'")
+
+
+def _mobile_str_true_false(mobile_str):
+    """Try checking for 'true', 'false' in any case."""
+    mobile_str = mobile_str.title()  # upper first letter
+    return {'True': True, 'False': False}[mobile_str]
+
+
+def _mobile_str_as_bool(mobile_str):
+    """Try converting to an int-bool."""
+    return bool(int(mobile_str))
 
 
 def _extract_firmware_nodes_list(param_list):
@@ -453,40 +521,6 @@ def _extract_firmware_nodes_list(param_list):
         nodes = common.nodes_list_from_info(site, archi, nodes_str)
     common.check_site_with_server(site)
     return nodes, param_list
-
-
-def _get_property(properties, key):
-    """
-    >>> _get_property(['archi=val_1', 'site=grenoble', 'archi=val_2'], 'site')
-    'grenoble'
-
-    >>> _get_property(['archi=val_1'], 'site')  # None when absent
-
-    # value should appear only once
-    >>> _get_property(['archi=1', 'archi=2'], 'archi')
-    ... # doctest: +IGNORE_EXCEPTION_DETAIL
-    ... # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ValueError: Property 'archi' should appear only once in [...]
-
-    # invalid format
-    >>> _get_property(['archi='], 'archi')
-    ... # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ValueError: Invalid empty value for property 'archi' in ['archi=']
-    """
-    matching = [prop.split('=').pop(1) for prop in properties
-                if prop.startswith(key + '=')]
-    if len(matching) > 1:
-        raise ValueError('Property %r should appear only once in %r' %
-                         (key, properties))
-    if '' in matching:
-        raise ValueError('Invalid empty value for property %r in %r' %
-                         (key, properties))
-    try:
-        return matching.pop(0)
-    except IndexError:
-        return None
 
 
 def submit_experiment_parser(opts):
