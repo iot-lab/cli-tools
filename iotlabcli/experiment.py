@@ -471,15 +471,14 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         """ Add 'exp_resources' to current experiment
         It will update node type, nodes, firmware and profile associations
         """
+        # Alias/Physical
+        self._set_type(resources['type'])
 
         # register nodes in experiment
         nodes = resources['nodes']
-        {
-            'physical': self.set_physical_nodes,
-            'alias': self.set_alias_nodes,
-        }[resources['type']](nodes)
-
+        self._register_nodes(nodes)  # pylint:disable=not-callable
         nodes = self._nodes_to_assoc(nodes)
+
         # register firmware
         if resources['firmware'] is not None:
             firmware = basename(resources['firmware'])
@@ -518,6 +517,15 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         """Set alias nodes list """
         self._set_type('alias')
         self.nodes.append(alias_nodes)
+
+    @property
+    def _register_nodes(self):
+        """Register nodes with the correct method according to exp `type`."""
+        _register_fct_dict = {
+            'physical': self.set_physical_nodes,
+            'alias': self.set_alias_nodes,
+        }
+        return _register_fct_dict[self.type]
 
     def filenames(self):
         """Extract list of filenames required."""
