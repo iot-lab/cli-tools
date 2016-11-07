@@ -28,7 +28,7 @@ from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
 
-from .c23 import patch
+from .c23 import patch, StringIO
 
 
 class TestMainInfoParser(MainMock):
@@ -213,6 +213,14 @@ class TestMainInfoParser(MainMock):
         self.assertRaises(
             SystemExit, experiment_parser.main,
             ['submit', '--duration', '20', '-l', 'grenoble,m3,100-1'])
+
+    def test_main_submit_helps(self):
+        """Run experiment_parser.main helps messages."""
+        with patch('sys.stdout', StringIO()) as stdout:
+            self.assertRaises(SystemExit, experiment_parser.main,
+                              ['submit', '--help-list'])
+            output = stdout.getvalue()
+            self.assertTrue(output.startswith('Resources list\n'))
 
     @patch('iotlabcli.experiment.wait_experiment')
     def test_main_wait_parser(self, wait_exp):

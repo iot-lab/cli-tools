@@ -185,6 +185,12 @@ def parser_add_submit_subparser(subparsers):
                             type=exp_resources_from_str,
                             help="experiment list")
 
+    # Help messages for resources
+    help_parser = submit_parser.add_argument_group('advanced help options')
+    common.HelpAction.add_help(help_parser, '--help-list',
+                               'show help on --list option',
+                               help_msgs.SUBMIT_LIST_HELP)
+
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
         subparser, duration_required):

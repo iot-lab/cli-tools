@@ -17,6 +17,8 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.json'\
     -e 'AUTHORS' \
     -e 'COPYING' \
+    -e 'MANIFEST.in' \
+    -e 'iotlabcli/parser/help/*' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist

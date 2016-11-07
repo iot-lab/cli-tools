@@ -21,6 +21,20 @@
 
 """Help parser messages"""
 
+import os
+
+CUR_DIR = os.path.dirname(__file__)
+HELP_DIR = os.path.join(CUR_DIR, 'help')
+
+
+def _read_help_file(name):
+    """Read help file."""
+    help_file = os.path.join(HELP_DIR, name)
+
+    with open(help_file) as help_fd:
+        return help_fd.read()
+
+
 PARSER_EPILOG = """
 
 Authentication :
@@ -51,6 +65,8 @@ Examples:
         + 9,archi=m3:at86rf231+site=grenoble,gre.elf
         + 5,archi=m3:at86rf231+site=strasbourg,stras.elf
 """
+
+SUBMIT_LIST_HELP = _read_help_file('submit_list_help.md')
 
 WAIT_EPILOG = """
 Examples:

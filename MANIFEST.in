@@ -1,0 +1,2 @@
+# include help .md files
+include iotlabcli/parser/help/*
