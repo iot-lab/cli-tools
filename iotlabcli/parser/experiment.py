@@ -168,18 +168,22 @@ def parser_add_submit_subparser(subparsers):
         'submit', help='submit user experiment',
         epilog=help_msgs.SUBMIT_EPILOG, formatter_class=RawTextHelpFormatter)
 
-    submit_parser.add_argument('-l', '--list', action='append',
-                               dest='nodes_list', required=True,
-                               type=exp_resources_from_str,
-                               help="experiment list")
-
-    submit_parser.add_argument('-n', '--name', help='experiment name')
-
-    _parser_add_duration_and_reservation(submit_parser, duration_required=True)
-
     submit_parser.add_argument('-p', '--print',
                                dest='print_json', action='store_true',
                                help='print experiment submission')
+
+    # General experiment configuration
+    conf_parser = submit_parser.add_argument_group('experiment configuration')
+
+    conf_parser.add_argument('-n', '--name', help='experiment name')
+    _parser_add_duration_and_reservation(conf_parser, duration_required=True)
+
+    # Resources
+    res_parser = submit_parser.add_argument_group('resource configuration')
+    res_parser.add_argument('-l', '--list', action='append',
+                            dest='nodes_list', required=True,
+                            type=exp_resources_from_str,
+                            help="experiment list")
 
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
