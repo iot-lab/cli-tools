@@ -33,14 +33,17 @@ if version_info[0] == 2:  # pragma: no cover
     # python2
     from urllib2 import HTTPError
     import mock
+    from cStringIO import StringIO
 elif version_info[0:2] <= (3, 2):  # pragma: no cover
     # python3.2
     from urllib.error import HTTPError
     import mock
+    from io import StringIO
 elif version_info[0] == 3:  # pragma: no cover
     # python3
     from urllib.error import HTTPError
     from unittest import mock
+    from io import StringIO
 else:  # pragma: no cover
     raise ValueError('Unknown python version %r' % version_info)
 

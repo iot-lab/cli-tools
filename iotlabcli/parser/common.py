@@ -90,6 +90,39 @@ def add_expid_arg(parser, required=False):
                         help='experiment id submission')
 
 
+class HelpAction(argparse.Action):
+    """Action to provide a custom 'help' command."""
+
+    HELPMSG = None
+
+    def __init__(self, *args, **kwargs):
+        super(HelpAction, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(self.HELPMSG, end='')
+        parser.exit()
+
+    @classmethod
+    def for_message(cls, msg):
+        """Create action for help message."""
+        class HelpActionWithMessage(cls):
+            """Action with custom 'help' message."""
+            HELPMSG = msg
+        return HelpActionWithMessage
+
+    @classmethod
+    def add_help(cls, parser, name, description, msg):
+        """Method to add a custom help option.
+
+        :param parser: parser object to add to
+        :param name: attribute name
+        :param description: attribute help description
+        :param msg: help message to display
+        """
+        action = cls.for_message(msg)
+        parser.add_argument(name, action=action, nargs=0, help=description)
+
+
 def print_result(result, jmespath_expr=None, format_function=None):
     """ Print result vule """
     format_function = format_function or helpers.json_dumps

@@ -29,7 +29,7 @@ import argparse
 from iotlabcli.parser import common
 from iotlabcli.tests.my_mock import api_mock, api_mock_stop
 
-from .c23 import HTTPError, patch, Mock
+from .c23 import HTTPError, patch, Mock, StringIO
 
 BUILTIN = 'builtins' if sys.version_info[0] == 3 else '__builtin__'
 
@@ -204,3 +204,26 @@ class TestNodeSelectionParser(unittest.TestCase):
 
         self.assertRaises(argparse.ArgumentTypeError,
                           common.nodes_list_from_str, 'grenoble,m3_no_numbers')
+
+
+class TestHelpAction(unittest.TestCase):
+    """Test HelpAction class."""
+
+    def test_help_action(self):
+        """Test HelpAction method to add help."""
+        parser = argparse.ArgumentParser(add_help=True)
+        help_msg = 'Super Help Message for test.\n'
+        common.HelpAction.add_help(parser, '--help-test', 'help to test',
+                                   help_msg)
+
+        with patch('sys.stdout', StringIO()) as stdout:
+            # Test Help
+            self.assertRaises(SystemExit, parser.parse_args, ['--help'])
+            output = stdout.getvalue()
+            self.assertTrue(output.startswith('usage:'))
+            self.assertTrue(output.endswith('  --help-test  help to test\n'))
+
+        with patch('sys.stdout', StringIO()) as stdout:
+            # Test custom help
+            self.assertRaises(SystemExit, parser.parse_args, ['--help-test'])
+            self.assertEqual(stdout.getvalue(), help_msg)
