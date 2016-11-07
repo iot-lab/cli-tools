@@ -55,22 +55,8 @@ def parse_options():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True  # not required by default in Python3
 
-    submit_parser = subparsers.add_parser(
-        'submit', help='submit user experiment',
-        epilog=help_msgs.SUBMIT_EPILOG, formatter_class=RawTextHelpFormatter)
-
-    submit_parser.add_argument('-l', '--list', action='append',
-                               dest='nodes_list', required=True,
-                               type=exp_resources_from_str,
-                               help="experiment list")
-
-    submit_parser.add_argument('-n', '--name', help='experiment name')
-
-    _parser_add_duration_and_reservation(submit_parser, duration_required=True)
-
-    submit_parser.add_argument('-p', '--print',
-                               dest='print_json', action='store_true',
-                               help='print experiment submission')
+    # ####### SUBMIT PARSER ###############
+    parser_add_submit_subparser(subparsers)
 
     # ####### STOP PARSER ###############
     stop_parser = subparsers.add_parser('stop', help='stop user experiment')
@@ -174,6 +160,26 @@ def parse_options():
     parser_add_wait_subparser(subparsers, expid_required=False)
 
     return parser
+
+
+def parser_add_submit_subparser(subparsers):
+    """Add 'submit' subparser and return it."""
+    submit_parser = subparsers.add_parser(
+        'submit', help='submit user experiment',
+        epilog=help_msgs.SUBMIT_EPILOG, formatter_class=RawTextHelpFormatter)
+
+    submit_parser.add_argument('-l', '--list', action='append',
+                               dest='nodes_list', required=True,
+                               type=exp_resources_from_str,
+                               help="experiment list")
+
+    submit_parser.add_argument('-n', '--name', help='experiment name')
+
+    _parser_add_duration_and_reservation(submit_parser, duration_required=True)
+
+    submit_parser.add_argument('-p', '--print',
+                               dest='print_json', action='store_true',
+                               help='print experiment submission')
 
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
