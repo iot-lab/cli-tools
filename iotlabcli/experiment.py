@@ -32,6 +32,8 @@ from iotlabcli.associations import associationsmapdict_from_dict
 # static name for experiment file : rename by server-rest
 EXP_FILENAME = 'new_exp.json'
 
+NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
+
 
 def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
                       resources, start_time=None, print_json=False):
@@ -53,7 +55,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     exp_files = helpers.FilesDict()
     for res_dict in resources:
         experiment.add_exp_resources(res_dict)
-        exp_files.add_file(res_dict.get('firmware', None))  # firmware
+        exp_files.add_files_from_dict(NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict)
 
     if print_json:  # output experiment description
         return experiment
@@ -481,18 +483,23 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
 
         # register firmware
         if resources['firmware'] is not None:
-            firmware = basename(resources['firmware'])
-            self._firmwareassociations().extendvalues(firmware, nodes)
+            name = nodes_association_name('firmware', resources['firmware'])
+            self._firmwareassociations().extendvalues(name, nodes)
 
         # register profile, may be None
         if resources['profile'] is not None:
-            profile = resources['profile']
-            self._profileassociations().extendvalues(profile, nodes)
+            name = nodes_association_name('profile', resources['profile'])
+            self._profileassociations().extendvalues(name, nodes)
 
         # Add other associations
         associations = resources.get('associations', {})
         for assoctype, assocname in associations.items():
-            self._associations(assoctype).extendvalues(assocname, nodes)
+            self._add_nodes_association(nodes, assoctype, assocname)
+
+    def _add_nodes_association(self, nodes, assoctype, assocname):
+        """Add given association."""
+        name = nodes_association_name(assoctype, assocname)
+        self._associations(assoctype).extendvalues(name, nodes)
 
     def _nodes_to_assoc(self, nodes):
         """Returns nodes to use in association."""
@@ -529,6 +536,9 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
 
     def filenames(self):
         """Extract list of filenames required."""
+        # No need to check nodes associations if there is only 'firmware'
+        assert NODES_ASSOCIATIONS_FILE_ASSOCS == ('firmware',)
+
         files = []
         # Handle None attributes
         files += (self.firmwareassociations or {}).keys()
@@ -551,3 +561,23 @@ def _write_experiment_archive(exp_id, data):
     """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
     with open('%s.tar.gz' % exp_id, 'wb') as archive:
         archive.write(data)
+
+
+def nodes_association_name(assoctype, assocname):
+    """Adapt assocname depending of assoctype.
+
+    Return basename(assocname) if assoctype is a file-association.
+    """
+    return _basename_if_in(assocname, assoctype,
+                           NODES_ASSOCIATIONS_FILE_ASSOCS)
+
+
+def _basename_if_in(value, key, container, transform=basename):
+    """Return basename if in.
+
+    >>> _basename_if_in('a/b', 1, [1])
+    'b'
+    >>> _basename_if_in('a/b', 2, (1,))
+    'a/b'
+    """
+    return transform(value) if key in container else value
