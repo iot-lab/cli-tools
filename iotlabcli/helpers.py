@@ -183,6 +183,11 @@ class FilesDict(dict):
             return
         self[os.path.basename(file_path)] = read_file(file_path, 'b')
 
+    def add_files_from_dict(self, keys, files_dict):
+        """Add 'keys' files from 'files_dict' if present."""
+        for key in keys:
+            self.add_file(files_dict.get(key, None))
+
     add_firmware = add_file  # Deprecated
 
 

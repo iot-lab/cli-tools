@@ -84,3 +84,58 @@ class TestHelpers(unittest.TestCase):
             read_file_mock.side_effect = None
             read_file_mock.return_value = 'API_URL_CUSTOM'
             self.assertEqual('API_URL_CUSTOM', helpers.read_custom_api_url())
+
+
+class TestFilesDict(unittest.TestCase):
+    """Test FilesDict class."""
+
+    def test_no_overwrite(self):
+        """Test FilesDict values overriding."""
+        file_dict = helpers.FilesDict()
+        file_dict['a'] = 1
+        # Can re-add same value
+        file_dict['a'] = 1
+
+        # Cannot add a different valu
+        file_dict['b'] = 2
+        try:
+            file_dict['b'] = 3
+        except ValueError:
+            pass  # different value
+        else:
+            self.fail('No ValueError on different values')
+
+        # Check dict
+        self.assertEqual(file_dict, {'a': 1, 'b': 2})
+
+    @patch('iotlabcli.helpers.read_file')
+    def test_add_file_method(self, read_file):
+        """Test FilesDict add_file methods."""
+        def _read_file(name, *_):
+            """Read file mock."""
+            files = {
+                '1.elf': b'ELF32_1',
+                '2.elf': b'ELF32_2',
+                'prof.json': b'{}',
+            }
+            return files[name]
+        read_file.side_effect = _read_file
+
+        file_dict = helpers.FilesDict()
+
+        file_dict.add_file('1.elf')
+        self.assertEqual(file_dict['1.elf'], b'ELF32_1')
+
+        # Add some files
+        input_files_dict = {'firmware': '1.elf', 'profile': 'prof.json'}
+        file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
+                                      input_files_dict)
+        self.assertEqual(file_dict, {'1.elf': b'ELF32_1', 'prof.json': b'{}'})
+
+        # Add some other files
+        input_files_dict = {'firmware': '2.elf', 'scriptconfig': 'otherfile'}
+        file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
+                                      input_files_dict)
+        self.assertEqual(file_dict,
+                         {'1.elf': b'ELF32_1', '2.elf': b'ELF32_2',
+                          'prof.json': b'{}', })
