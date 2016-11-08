@@ -312,12 +312,13 @@ def site_association_from_str(site_assoc_str):
         raise argparse.ArgumentTypeError('Invalid site_association: %s' % err)
 
 
-RUN_SITE_ASSOCIATIONS_STR = ('script=script_path')
+RUN_SITE_ASSOCIATIONS_STR = ('script=script_path'
+                             '[,scriptconfig=scriptconfig_path]')
 RUN_SITE_ASSOCIATION_METAVAR = 'site,site,%s' % (RUN_SITE_ASSOCIATIONS_STR,)
 
 
 def _run_associations_arg_check(  # pylint:disable=unused-argument
-        script):
+        script, scriptconfig=None):
     """To be used with **associations to check given arguments."""
     pass
 

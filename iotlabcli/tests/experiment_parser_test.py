@@ -209,6 +209,7 @@ class TestMainInfoParser(MainMock):
         """Run experiment_parser.main.submit site associations."""
         script_sh = resource_file('script.sh')
         script_2_sh = resource_file('script_2.sh')
+        scriptconfig = resource_file('scriptconfig')
 
         submit_exp.return_value = {}
 
@@ -239,14 +240,16 @@ class TestMainInfoParser(MainMock):
             '--list', 'grenoble,m3,1',
             '--list', 'strasbourg,m3,1',
             '--site-association', 'grenoble,script=%s,ipv6=2001::' % script_sh,
-            '--site-association', 'strasbourg,script=%s' % script_2_sh,
+            '--site-association', 'strasbourg,script=%s,scriptconfig=%s' % (
+                script_2_sh, scriptconfig),
         ])
 
         sites_assocs = [
             experiment.site_association('grenoble.iot-lab.info',
                                         script=script_sh, ipv6='2001::'),
             experiment.site_association('strasbourg.iot-lab.info',
-                                        script=script_2_sh),
+                                        script=script_2_sh,
+                                        scriptconfig=scriptconfig),
         ]
 
         resources = [
@@ -343,6 +346,7 @@ class TestMainInfoParser(MainMock):
         """ Run experiment_parser.main.run """
         # Run script
         script_sh = resource_file('script.sh')
+        scriptconfig = resource_file('scriptconfig')
 
         script.return_value = {}
         experiment_parser.main(['script', '--run',
@@ -366,12 +370,14 @@ class TestMainInfoParser(MainMock):
         # Multiple sites associations
         script.return_value = {}
         experiment_parser.main(['script', '--run',
-                                'grenoble,script=%s' % script_sh,
+                                'grenoble,script=%s,scriptconfig=%s' % (
+                                    script_sh, scriptconfig),
                                 'strasbourg,script=%s' % script_sh])
         script.assert_called_with(
             self.api, 123, 'run',
             experiment.site_association('grenoble.iot-lab.info',
-                                        script=script_sh),
+                                        script=script_sh,
+                                        scriptconfig=scriptconfig),
             experiment.site_association('strasbourg.iot-lab.info',
                                         script=script_sh)
         )
@@ -536,6 +542,15 @@ class TestRunSiteAssociationParser(unittest.TestCase):
             *('grenoble.iot-lab.info', 'strasbourg.iot-lab.info'),
             **{'script': 'iotlabcli/tests/script.sh'})
 
+        # script and siteconfig in any order
+        self._test_run_site_assocs_from_str(
+            ('grenoble'
+             ',scriptconfig=iotlabcli/tests/scriptconfig'
+             ',script=iotlabcli/tests/script.sh'),
+            *('grenoble.iot-lab.info',),
+            **{'script': 'iotlabcli/tests/script.sh',
+               'scriptconfig': 'iotlabcli/tests/scriptconfig'})
+
     def test_run_site_assoctiation_from_str_invalid(self):
         """Test invalid run_site_association_from_str."""
         # Invalid association
@@ -544,7 +559,14 @@ class TestRunSiteAssociationParser(unittest.TestCase):
                           ('grenoble,script=iotlabcli/tests/script.sh'
                            ',ipv6=aaaa::1/64'))
 
-        # No 'script'
+        # No 'association'
         self.assertRaises(argparse.ArgumentTypeError,
                           experiment_parser.run_site_association_from_str,
                           'grenoble')
+
+        # 'scriptconfig' and no 'script'
+        self.assertRaises(
+            argparse.ArgumentTypeError,
+            experiment_parser.run_site_association_from_str,
+            'grenoble,scriptconfig=iotlabcli/tests/scriptconfig',
+        )

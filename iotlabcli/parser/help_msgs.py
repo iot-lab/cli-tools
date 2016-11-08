@@ -76,6 +76,8 @@ Examples:
     * Run many scripts scripts on different site
         $ experiment-cli script --run grenoble,lille,script=exp.sh \\
             strasbourg,script=exp2.sh
+    * Run script with a configuration file on grenoble:
+        $ experiment-cli script --run grenoble,script=exp.sh,scriptconfig=conf
     * Check and control script
         $ experiment-cli script --status
         $ experiment-cli script --kill

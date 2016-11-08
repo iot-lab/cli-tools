@@ -41,7 +41,7 @@ EXP_FILENAME = 'new_exp.json'
 RUN_FILENAME = 'script.json'
 
 NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
-SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', )
+SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', 'scriptconfig')
 
 
 def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments

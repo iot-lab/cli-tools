@@ -6,7 +6,7 @@ The argument can be specified multiple times.
 
     --site-association <site><,site>,<assocname=assocvalue><,assoc=val>
 
-Currently supported associations is 'script'.
+Currently supported associations are 'script' and 'scriptconfig'.
 
 
 Examples
@@ -14,4 +14,13 @@ Examples
 
 Same script and for two sites
 
-    --site-association grenoble,lille,script=experient.sh
+    experiment-cli submit ... \
+        --site-association grenoble,lille,script=experient.sh
+
+
+Same script but a different config for each site
+
+    experiment-cli submit ... \
+        --site-association grenoble,lille,script=experiment
+        --site-association grenoble,scriptconfig=grenoble.conf
+        --site-association lille,scriptconfig=lille.conf

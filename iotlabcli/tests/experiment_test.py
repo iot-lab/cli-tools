@@ -48,6 +48,9 @@ SCRIPTS = {
     'script_2.sh': (b'#! /bin/sh\n'
                     b'echo "script_2.sh"\n'),
 }
+SCRIPTCONFIG = {
+    'scriptconfig': b'PASSWORD=thesun\n',
+}
 
 
 class TestExperiment(unittest.TestCase):
@@ -255,6 +258,7 @@ class TestExperimentSubmit(CommandMock):
             experiment.site_association(
                 'strasbourg',
                 script=tests.resource_file('script_2.sh'),
+                scriptconfig=tests.resource_file('scriptconfig'),
             ),
         ]
 
@@ -281,6 +285,12 @@ class TestExperimentSubmit(CommandMock):
                         'sites': ['strasbourg']
                     },
                 ],
+                'scriptconfig': [
+                    {
+                        'scriptconfigname': 'scriptconfig',
+                        'sites': ['strasbourg']
+                    },
+                ],
                 'ipv6': [
                     {
                         'ipv6name': 'aaaa::/64',
@@ -292,8 +302,10 @@ class TestExperimentSubmit(CommandMock):
         self.assertEqual(expected, json.loads(files_dict['new_exp.json']))
         self.assertEqual(files_dict['script.sh'], SCRIPTS['script.sh'])
         self.assertEqual(files_dict['script_2.sh'], SCRIPTS['script_2.sh'])
+        self.assertEqual(files_dict['scriptconfig'],
+                         SCRIPTCONFIG['scriptconfig'])
 
-    def _read_file_for_load(self, file_path, *_):
+    def _read_file_for_load(self, file_path, *_):  # flake8: noqa
         """ read_file mock """
         expected = self.expected
         if file_path == experiment.EXP_FILENAME:
@@ -302,6 +314,8 @@ class TestExperimentSubmit(CommandMock):
             return 'elf32arm'
         elif file_path.endswith('.sh'):
             return '#!/bin/sh'
+        elif file_path.endswith('config'):
+            return 'KEY=value'
         raise ValueError(file_path)
 
     @patch('iotlabcli.helpers.read_file')
@@ -362,6 +376,10 @@ class TestExperimentSubmit(CommandMock):
                     "scriptname": "script.sh",
                     "sites": ['grenoble'],
                 }],
+                'scriptconfig': [{
+                    "scriptconfigname": "scriptconfig",
+                    "sites": ['grenoble'],
+                }],
             },
         }
         read_file_mock.side_effect = self._read_file_for_load
@@ -373,7 +391,7 @@ class TestExperimentSubmit(CommandMock):
         _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
         self.assertEqual(_files,
                          set((experiment.EXP_FILENAME,
-                              'firmware.elf', 'script.sh')))
+                              'firmware.elf', 'script.sh', 'scriptconfig')))
 
 
 class TestSiteAssociation(unittest.TestCase):
@@ -420,7 +438,8 @@ class TestExperimentScript(CommandMock):
         experiment.script_experiment(
             self.api, 123, 'run',
             experiment.site_association(
-                'grenoble', script=tests.resource_file('script.sh')),
+                'grenoble', script=tests.resource_file('script.sh'),
+                scriptconfig=tests.resource_file('scriptconfig')),
             experiment.site_association(
                 'strasbourg', script=tests.resource_file('script_2.sh')),
         )
@@ -430,11 +449,15 @@ class TestExperimentScript(CommandMock):
                 {'scriptname': 'script.sh', 'sites': ['grenoble']},
                 {'scriptname': 'script_2.sh', 'sites': ['strasbourg']},
             ],
+            'scriptconfig': [
+                {'scriptconfigname': 'scriptconfig', 'sites': ['grenoble']},
+            ],
         })
         expected_files = {
             'script.json': scripts_json,
             'script.sh': SCRIPTS['script.sh'],
             'script_2.sh': SCRIPTS['script_2.sh'],
+            'scriptconfig': SCRIPTCONFIG['scriptconfig'],
         }
         self.api.script_command.assert_called_with(123, 'run',
                                                    files=expected_files)

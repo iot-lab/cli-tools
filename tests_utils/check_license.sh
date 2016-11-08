@@ -21,6 +21,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e 'iotlabcli/parser/help/*' \
     -e 'iotlabcli/tests/script.sh' \
     -e 'iotlabcli/tests/script_2.sh' \
+    -e 'iotlabcli/tests/scriptconfig' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist
