@@ -78,8 +78,8 @@ def get_current_exp(exp_by_states, states):
     >>> get_current_exp({'Running': [123]}, ['Running'])
     123
 
-    >>> get_current_exp(\
-        {'Waiting': [10134, 10135], 'Launching': [10130]}, ACTIVE_STATES)
+    >>> get_current_exp({'Waiting': [10134, 10135],
+    ...                  'Launching': [10130]}, ACTIVE_STATES)
     10130
 
     >>> get_current_exp({'Running': [123, 234]}, ['Running'])
@@ -87,13 +87,16 @@ def get_current_exp(exp_by_states, states):
     ValueError: You have several experiments with state 'Running'
     Use option -i|--id and choose experiment id in: {'Running': [123, 234]}
 
-    >>> get_current_exp({'Waiting': [123], 'Launching': [121, 122]}, \
-        ACTIVE_STATES)  # doctest: +ELLIPSIS
+    >>> get_current_exp({'Waiting': [123],
+    ...                  'Launching': [121, 122]},
+    ...                 ACTIVE_STATES)
+    ...  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ValueError: You have several experiments with state 'Running, ..., Waiting'
     Use option -i|--id and choose experiment id in: {...}
 
-    >>> get_current_exp({}, ACTIVE_STATES)  # doctest: +ELLIPSIS
+    >>> get_current_exp({}, ACTIVE_STATES)
+    ...  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ValueError: You have no 'Running, ..., Waiting' experiment
 
