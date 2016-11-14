@@ -108,3 +108,19 @@ Setting the license to CeCILL v2.1
 + 2.1.0: Add a context manager for missing auth-cli
 + 2.2.0: Add 'custom' nodes profile creation in profile-cli
 + 2.2.1: Officially support python3.5, fix broken test and cleanup tox.ini
+
+2.3.0
+-----
+
+### Features ###
+
++ Add a 'get --experiments' command to get a summary of active experiments ids.
++ Add support to `reload` experiment by 'id' (as on the website)
++ Add an `admin-cli` script with a command to wait for any user experiment
+    * Required for `runscript`: allows waiting for an user experiment
+      without `auth-cli` having been run on the server.
+
+### Internal ###
+
++ Fixing docstrings
++ Refactoring internal code and tests
