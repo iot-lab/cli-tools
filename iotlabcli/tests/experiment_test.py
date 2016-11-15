@@ -36,7 +36,7 @@ from iotlabcli import rest
 from iotlabcli import tests
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
-from .c23 import patch, mock_open
+from .c23 import mock, patch, mock_open
 
 
 class TestExperiment(unittest.TestCase):
@@ -313,6 +313,35 @@ class TestExperimentGet(CommandMock):
 
         ret = experiment.get_experiment(self.api, 123, option='resources')
         self.assertEqual(ret, API_RET)
+
+
+@patch('iotlabcli.helpers.exps_by_states_dict')
+class TestGetActiveExperiment(unittest.TestCase):
+    """Test iotlabcli.experiment.get_active_experiments."""
+    def test_get_active_experiments(self, exps_by_states_dict):
+        """Test iotlabcli.experiment.get_active_experiments."""
+        api = mock.Mock()
+
+        # Running only no experiments
+        exps_by_states_dict.return_value = {}
+        ret = experiment.get_active_experiments(api)
+        self.assertEqual(ret, {})
+        exps_by_states_dict.assert_called_with(api, ['Running'])
+
+        # Running only one experiment
+        exps_by_states_dict.return_value = {'Running': [12345]}
+        ret = experiment.get_active_experiments(api, running_only=True)
+        self.assertEqual(ret, {'Running': [12345]})
+        exps_by_states_dict.assert_called_with(api, ['Running'])
+
+        # Active experiments
+        exps_by_states_dict.return_value = {'Waiting': [10134, 10135],
+                                            'Running': [10130]}
+        ret = experiment.get_active_experiments(api, running_only=False)
+        self.assertEqual(ret, {'Waiting': [10134, 10135],
+                               'Running': [10130]})
+        exps_by_states_dict.assert_called_with(
+            api, ['Running', 'Launching', 'toLaunch', 'Waiting'])
 
 
 @patch('iotlabcli.experiment.get_experiment')

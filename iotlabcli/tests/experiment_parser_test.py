@@ -117,6 +117,23 @@ class TestMainInfoParser(MainMock):
         get_exp.assert_called_with(self.api, 234, 'start')
         self.assertEqual('Unknown', ret['local_date'])
 
+    @patch('iotlabcli.experiment.get_active_experiments')
+    def test_get_experiments(self, get_active_experiments):
+        """Run experiment_parser.main.get 'experiments'"""
+        get_active_experiments.return_value = {
+            "Running": [11667], "Waiting": [11668],
+        }
+
+        experiment_parser.main(['get', '-e'])
+        self.assertEqual(1, get_active_experiments.call_count)
+        get_active_experiments.assert_called_with(self.api, running_only=True)
+        get_active_experiments.reset_mock()
+
+        experiment_parser.main(['get', '--experiments', '--active'])
+        self.assertEqual(1, get_active_experiments.call_count)
+        get_active_experiments.assert_called_with(self.api, running_only=False)
+        get_active_experiments.reset_mock()
+
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser(self, submit_exp):
         """ Run experiment_parser.main.submit """
