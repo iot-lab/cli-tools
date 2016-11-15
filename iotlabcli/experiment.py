@@ -100,6 +100,18 @@ def get_experiment(api, exp_id, option=''):
     return result
 
 
+def get_active_experiments(api, running_only=True):
+    """Get active experiments with it's state.
+
+    :param api: API Rest api object
+    :param running_only: if False search for a waiting/starting experiment
+    :returns: {'Running': [EXP_ID], 'Waiting': [EXP_ID, EXP_ID]}
+    """
+    states = ['Running'] if running_only else helpers.ACTIVE_STATES
+    exp_by_states = helpers.exps_by_states_dict(api, states)
+    return exp_by_states
+
+
 def load_experiment(api, exp_desc_path, firmware_list=()):
     """ Load and submit user experiment description with firmware(s)
 

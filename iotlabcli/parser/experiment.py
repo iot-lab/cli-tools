@@ -120,6 +120,14 @@ def parse_options():
 
     get_parser.add_argument('--state', help='experiment list state filter')
 
+    get_group.add_argument('-e', '--experiments', dest='get_cmd',
+                           action='store_const',
+                           const='experiments',
+                           help='get running experiments ids')
+    get_parser.add_argument(
+        '--active', action='store_true', default=False,
+        help='experiments: include waiting/starting experiments')
+
     # ####### LOAD PARSER ###############
     load_parser = subparsers.add_parser('load', epilog=help_msgs.LOAD_EPILOG,
                                         help='load and submit user experiment',
@@ -514,6 +522,9 @@ def get_experiment_parser(opts):
         timestamp = ret['start_time']
         ret['local_date'] = time.ctime(timestamp) if timestamp else 'Unknown'
         return ret
+    elif opts.get_cmd == 'experiments':
+        return experiment.get_active_experiments(api,
+                                                 running_only=not opts.active)
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         return experiment.get_experiment(api, exp_id, opts.get_cmd)
