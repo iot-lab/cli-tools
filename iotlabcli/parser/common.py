@@ -128,6 +128,10 @@ def catch_missing_auth_cli():
 def main_cli(function, parser, args=None):  # flake8: noqa
     """ Main command-line execution. """
     args = args or sys.argv[1:]
+    if len(args) == 0:
+        parser.print_usage()
+        return
+
     try:
         with catch_missing_auth_cli():
             parser_opts = parser.parse_args(args)
