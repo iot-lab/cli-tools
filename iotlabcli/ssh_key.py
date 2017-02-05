@@ -29,7 +29,7 @@ def fixup_ssh_keys(ssh_keys):
 
 
 def get_local_public_key():
-    key_files = os.environ["HOME"] + "/.ssh/id_{key_type}.pub"
+    key_files = os.path.expanduser("~/.ssh/id_{key_type}.pub")
     for key_type in [ "rsa", "dsa" ]:
         fname = key_files.format(key_type=key_type)
         if os.path.exists(fname):
