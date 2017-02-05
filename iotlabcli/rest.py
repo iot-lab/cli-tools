@@ -32,6 +32,7 @@ import sys
 import requests
 from requests.auth import HTTPBasicAuth
 from iotlabcli import helpers
+from iotlabcli import ssh_key
 # pylint: disable=import-error,no-name-in-module
 # pylint: disable=wrong-import-order
 try:  # pragma: no cover
@@ -204,6 +205,25 @@ class Api(object):  # pylint:disable=too-many-public-methods
             if err.code == 401:
                 return False
             raise  # pragma no cover
+
+    # ssh keys api
+
+    ssh_keys_url = "users/{login}/sshkeys"
+
+    def get_ssh_keys(self):
+        """ Get user's registered ssh keys """
+        url = self.ssh_keys_url.format(login=self.auth.username)
+        ret = self.method(url)
+        return ret
+
+    def set_ssh_keys(self, ssh_keys_json):
+        """ Set user's ssh keys """
+        url = self.ssh_keys_url.format(login=self.auth.username)
+        self.method(url, 'put', json=ssh_keys_json)
+
+    def install_ssh_key(self, key_file=ssh_key.KEY_FILE):
+        """ Install ssh key into user's iot-lab account """
+        ssh_key.install_ssh_key(self, key_file)
 
     # robot
 
