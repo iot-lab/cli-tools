@@ -21,6 +21,8 @@
 
 """ Authentication file management """
 
+from __future__ import print_function
+
 import os
 import os.path
 import getpass
@@ -85,3 +87,39 @@ def _read_password_file():
             return username, password
     except ValueError:
         raise ValueError('Bad password file format: %r' % RC_FILE)
+
+
+IDENTITY_FILE = os.path.expanduser('~/.ssh/id_rsa')
+
+
+def add_ssh_key(identity_file=None):
+    """Install ssh key into user's iot-lab account"""
+
+    if identity_file is None:
+        identity_file = IDENTITY_FILE
+
+    api = Api(*get_user_credentials())
+    keys_json = api.get_ssh_keys()
+    pub_key = identity_file + '.pub'
+    with open(pub_key) as key_fh:
+        key = key_fh.read().strip()
+
+    keys = keys_json['sshkeys']
+    if key in keys:
+        msg = 'Key is already configured:\n"{}"'.format(key)
+        raise ValueError(msg)
+
+    keys.append(key)
+
+    api.set_ssh_keys(keys_json)
+
+
+def ssh_keys():
+    """List ssh keys configured into user's iot-lab account"""
+
+    api = Api(*get_user_credentials())
+    keys_json = api.get_ssh_keys()
+
+    print("SSH keys:")
+    for key in keys_json['sshkeys']:
+        print(key)

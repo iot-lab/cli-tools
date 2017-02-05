@@ -262,7 +262,18 @@ class Api():  # pylint:disable=too-many-public-methods
                 return False
             raise  # pragma no cover
 
-# robot
+    # ssh keys api
+
+    def get_ssh_keys(self):
+        """ Get user's registered ssh keys """
+        ret = self.method('user/keys')
+        return ret
+
+    def set_ssh_keys(self, ssh_keys_json):
+        """ Set user's ssh keys """
+        self.method('user/keys', 'post', json=ssh_keys_json, raw=True)
+
+    # robot
 
     def robot_command(self, command, expid, nodes=()):
         """Run 'status' on user experiment robot list nodes.
