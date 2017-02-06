@@ -20,6 +20,18 @@ def test_clear_ssh_keys(api, save_orig_keys):
     res = res["sshkeys"]
     assert res[0] == ""
 
+def test_max_ssh_keys(api, save_orig_keys):
+    max_5_keys = {"sshkeys": [ "key-"+str(i) for i in range(5) ]}
+    api.set_ssh_keys(max_5_keys)
+    res = api.get_ssh_keys()
+    assert res == max_5_keys
+
+def test_ssh_keys_overflow(api, save_orig_keys):
+    max_5_keys = {"sshkeys": [ "key-"+str(i) for i in range(6) ]}
+    api.set_ssh_keys(max_5_keys)
+    res = api.get_ssh_keys()
+    max_5_keys["sshkeys"].pop()
+    assert res == max_5_keys
 
 @pytest.fixture
 def api():
