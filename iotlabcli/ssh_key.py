@@ -1,5 +1,4 @@
 import os
-import requests
 
 
 def install_ssh_key(api, key_file):
@@ -36,23 +35,3 @@ def get_local_public_key():
             return fname
 
 KEY_FILE = get_local_public_key()
-
-URL = "https://www.iot-lab.info/rest/users/{login}/sshkeys"
-
-class Api():
-
-    def __init__(self, user, password):
-        self.url = URL.format(login=user)
-        self.auth = (user, password)
-
-    def get_ssh_keys(self):
-        res = requests.get(self.url, auth=self.auth)
-        res.raise_for_status()
-        return res.json()
-    
-    def set_ssh_keys(self, keys_json):
-        res = requests.put(self.url, auth=self.auth,
-             headers={"content-type": "application/json"},
-             json=keys_json, 
-        )
-        res.raise_for_status()
