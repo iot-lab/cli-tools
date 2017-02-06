@@ -10,6 +10,8 @@ def test_get_ssh_keys(api):
 def test_set_ssh_keys(api):
     keys_json = api.get_ssh_keys()
     api.set_ssh_keys(keys_json)
+    new_keys = api.get_ssh_keys()
+    assert new_keys == keys_json
 
 def test_clear_ssh_keys(api):
     orig_keys = api.get_ssh_keys()
