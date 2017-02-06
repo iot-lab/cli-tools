@@ -23,13 +23,13 @@ def test_clear_ssh_keys(api):
     assert res[0] == ""
 
 def test_max_ssh_keys(api):
-    max_5_keys = {"sshkeys": [ "key-"+str(i) for i in range(5) ]}
+    max_5_keys = fake_ssh_keys(5)
     api.set_ssh_keys(max_5_keys)
     res = api.get_ssh_keys()
     assert res == max_5_keys
 
 def test_ssh_keys_overflow(api):
-    max_5_keys = {"sshkeys": [ "key-"+str(i) for i in range(6) ]}
+    max_5_keys = fake_ssh_keys(6)
     api.set_ssh_keys(max_5_keys)
     res = api.get_ssh_keys()
     max_5_keys["sshkeys"].pop()
@@ -59,7 +59,7 @@ def test_install_key_from_file(api, user_key):
     assert res[0] == user_key
 
 def test_install_key_round_robin(api, user_key):
-    max_5_keys = {"sshkeys": [ "key-"+str(i) for i in range(5) ]}
+    max_5_keys = fake_ssh_keys(5)
     api.set_ssh_keys(max_5_keys)
 
     api.install_ssh_key()
@@ -88,3 +88,6 @@ def clear_keys(api):
 @pytest.fixture
 def user_key():
     return open(rest.ssh_key.KEY_FILE).read()
+
+def fake_ssh_keys(nb):
+    return {"sshkeys": [ "key-"+str(i) for i in range(nb) ]}
