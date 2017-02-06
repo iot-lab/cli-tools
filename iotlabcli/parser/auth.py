@@ -29,6 +29,7 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli.parser import common
 import iotlabcli.auth
+import iotlabcli.ssh_key as ssh_key
 
 AUTH_PARSER = """
 
@@ -41,19 +42,37 @@ with username and password.
 
 def parse_options():
     """ Handle profile-cli command-line options with argparse """
-    parent_parser = common.base_parser(user_required=True)
+    parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
         description=AUTH_PARSER)
 
+    parser.add_argument('-k', '--user-key', action='store_true',
+               help="add user's ssh public key to iot-lab account")
+    parser.add_argument('--key', action='append', dest='key_file',
+               help="add specified ssh public key file")
+
     return parser
 
+def install_ssh_key(opt_key_file):
+    api = ssh_key.Api(* iotlabcli.auth.get_user_credentials())
+    if opt_key_file:
+        key_file = opt_key_file[0]
+    else:
+        key_file = ssh_key.get_local_public_key()
+    ssh_key.install_ssh_key(api, key_file)
 
 def auth_parse_and_run(opts):
     """ Parse namespace 'opts' object and execute requested command
     :returns: result object
     """
+    if opts.user_key or opts.key_file:
+        install_ssh_key(opts.key_file)
+        return ""
+    if not opts.username:
+        raise ValueError("username required")
+
     password = opts.password or getpass.getpass()
     if iotlabcli.auth.check_user_credentials(opts.username, password):
         iotlabcli.auth.write_password_file(opts.username, password)
