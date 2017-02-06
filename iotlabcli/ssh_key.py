@@ -5,7 +5,7 @@ def install_ssh_key(api, key_file):
     """Install ssh key into user's iot-lab account on www.iot-lab.info"""
 
     keys_json = api.get_ssh_keys()
-    the_key = open(key_file).read()
+    the_key = open(os.path.expanduser(key_file)).read()
 
     ssh_keys = keys_json["sshkeys"]
     if the_key in ssh_keys:
