@@ -270,8 +270,8 @@ class Api(object):  # pylint:disable=too-many-public-methods
         :param files: send as 'post' multipart data
         :param raw: Should data be loaded as json or not
         """
-        assert method in ('get', 'post', 'delete')
-        assert (method == 'post') or (files is None and json is None)
+        assert method in ('get', 'post', 'delete', 'put')
+        assert (method in ['post', 'put']) or (files is None and json is None)
 
         _url = urljoin(self.url, url)
 
