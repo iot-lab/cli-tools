@@ -219,7 +219,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
     def set_ssh_keys(self, ssh_keys_json):
         """ Set user's ssh keys """
         url = self.ssh_keys_url.format(login=self.auth.username)
-        self.method(url, 'put', json=ssh_keys_json)
+        self.method(url, 'put', json=ssh_keys_json, raw=True)
 
     def install_ssh_key(self, key_file=ssh_key.KEY_FILE):
         """ Install ssh key into user's iot-lab account """
