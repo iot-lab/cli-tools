@@ -23,8 +23,8 @@ def fixup_ssh_keys(ssh_keys):
     if "" in ssh_keys : # handle server peculiarity
         ssh_keys.remove("")
 
-    if len(ssh_keys) > 6: # round-robin on last 3 keys
-        ssh_keys.remove(ssh_keys[3])
+    if len(ssh_keys) > 5: # round-robin on last 2 keys
+        ssh_keys.pop(3)
 
 
 def get_local_public_key():
