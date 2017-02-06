@@ -70,7 +70,7 @@ def auth_parse_and_run(opts):
     """
     if opts.user_key or opts.key_file:
         install_ssh_key(opts.key_file)
-        return ""
+        return "Key installed"
     if not opts.username:
         raise ValueError("username required")
 
