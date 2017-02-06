@@ -29,8 +29,8 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli.parser import common
 import iotlabcli.auth
-import iotlabcli.ssh_key as ssh_key
-import iotlabcli.rest as rest
+from iotlabcli import ssh_key
+from iotlabcli import rest
 
 AUTH_PARSER = """
 
