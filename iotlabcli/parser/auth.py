@@ -30,6 +30,7 @@ from argparse import RawTextHelpFormatter
 from iotlabcli.parser import common
 import iotlabcli.auth
 import iotlabcli.ssh_key as ssh_key
+import iotlabcli.rest as rest
 
 AUTH_PARSER = """
 
@@ -56,7 +57,7 @@ def parse_options():
     return parser
 
 def install_ssh_key(opt_key_file):
-    api = ssh_key.Api(* iotlabcli.auth.get_user_credentials())
+    api = rest.Api(* iotlabcli.auth.get_user_credentials())
     if opt_key_file:
         key_file = opt_key_file[0]
     else:
