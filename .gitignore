@@ -13,6 +13,7 @@ coverage.xml
 nosetests.xml
 cover/
 htmlcov/
+.cache
 
 .eggs/
 .python-version
