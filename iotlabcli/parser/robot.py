@@ -39,9 +39,9 @@ def name_site(name_site_str):
     ('name', 'site')
 
     >>> name_site('name')
-    ... # doctest: +ELLIPSIS
+    ... # doctest: +ELLIPSIS +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
-    ValueError: need more than 1 value to unpack...
+    ValueError: not enough values to unpack...
 
     >>> name_site('name,site,extra')
     ... # doctest: +ELLIPSIS

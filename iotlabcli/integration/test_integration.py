@@ -44,13 +44,12 @@ import logging
 from tempfile import NamedTemporaryFile
 
 try:
-    # pylint:disable=I0011,F0401,E0611
     from mock import patch
+    # pylint:disable=I0011,F0401,E0611
     from cStringIO import StringIO
 except ImportError:  # pragma: no cover
     from unittest.mock import patch  # pylint:disable=I0011,F0401,E0611
     from io import StringIO
-
 
 LOGGER = logging.getLogger(__file__)
 LOGGER.setLevel(logging.INFO)
