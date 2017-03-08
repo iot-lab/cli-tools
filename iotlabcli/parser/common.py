@@ -187,11 +187,6 @@ def sites_list():
     return [site["site"] for site in sites_dict["items"]]
 
 
-def archis_list():
-    """Return the list of architectures."""
-    return ['m3', 'a8', 'wsn430', 'custom', 'des']
-
-
 def check_site_with_server(site_name, _sites_list=None):
     """ Check if the given site exists by requesting the server list.
     If sites_list is given, it is used instead of doing a remote request
@@ -232,36 +227,12 @@ def nodes_list_from_info(site, archi, nodes_str):
     >>> nodes_list_from_info('grenoble', 'wsn430', 'a-b')
     Traceback (most recent call last):
     ValueError: Invalid nodes list: a-b ([0-9+-])
-
-    >>> nodes_list_from_info('grenoble', 'inval_arch', '1-2')
-    ...  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-        ...
-    ValueError: Invalid node archi: 'inval_arch' not in [...]
     """
 
-    _check_archi(archi)
     nodes_list = nodes_id_list(archi, nodes_str)
     fmt = "%s.{site}.{domain}".format(site=site, domain=DOMAIN_DNS)
     nodes_url_list = [fmt % node for node in nodes_list]
     return nodes_url_list
-
-
-def _check_archi(archi):
-    """ Check that archi is valid
-    >>> [_check_archi(archi) for archi in ['wsn430', 'm3', 'a8']]
-    ['wsn430', 'm3', 'a8']
-
-    >>> _check_archi('msp430')  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ValueError: Invalid node archi: 'msp430' not in [...]
-
-    """
-    archis = archis_list()
-
-    if archi in archis:
-        return archi  # valid archi
-    raise ValueError("Invalid node archi: %r not in %s" % (archi, archis))
 
 
 def nodes_id_list(archi, nodes_list):
