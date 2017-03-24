@@ -88,6 +88,9 @@ def parse_options():
     cmd_group.add_argument(
         '-r', '--reset', help='reset command', const='reset',
         dest='command', action='store_const')
+    cmd_group.add_argument(
+        '--update-idle', help='flash idle firmware', const='update-idle',
+        dest='command', action='store_const')
 
     cmd_group.add_argument(
         '--debug-start', help='start debugger', const='debug-start',
