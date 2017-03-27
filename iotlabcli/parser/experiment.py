@@ -58,6 +58,9 @@ def parse_options():
     # ####### SUBMIT PARSER ###############
     parser_add_submit_subparser(subparsers)
 
+    # ####### SCRIPT PARSER ###############
+    parser_add_script_subparser(subparsers)
+
     # ####### STOP PARSER ###############
     stop_parser = subparsers.add_parser('stop', help='stop user experiment')
     common.add_expid_arg(stop_parser)
@@ -184,12 +187,18 @@ def parser_add_submit_subparser(subparsers):
                             dest='nodes_list', required=True,
                             type=exp_resources_from_str,
                             help="experiment list")
+    res_parser.add_argument('-s', '--site-association', action='append',
+                            type=site_association_from_str,
+                            help='sites associations')
 
     # Help messages for resources
     help_parser = submit_parser.add_argument_group('advanced help options')
     common.HelpAction.add_help(help_parser, '--help-list',
                                'show help on --list option',
                                help_msgs.SUBMIT_LIST_HELP)
+    common.HelpAction.add_help(help_parser, '--help-site-association',
+                               'show help on --site-association option',
+                               help_msgs.SUBMIT_SITE_ASSOC_HELP)
 
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
@@ -228,6 +237,29 @@ def parser_add_wait_subparser(subparsers, expid_required=False):
     return wait_parser
 
 
+def parser_add_script_subparser(subparsers):
+    """Add suparser for 'script'."""
+    _script_parser = subparsers.add_parser(
+        'script', help='run script on sites frontends',
+        epilog=help_msgs.SCRIPT_EPILOG, formatter_class=RawTextHelpFormatter)
+    common.add_expid_arg(_script_parser)
+
+    script_group = _script_parser.add_argument_group("Command")
+    script_group = script_group.add_mutually_exclusive_group(required=True)
+
+    script_group.add_argument('--run', type=run_site_association_from_str,
+                              metavar=RUN_SITE_ASSOCIATION_METAVAR,
+                              dest='run_script_site', nargs='+',
+                              help="sites association with 'script'")
+    script_group.add_argument('--kill', type=common.site_with_domain_checked,
+                              metavar='site', dest='kill_sites',
+                              nargs='*', help='sites list')
+    script_group.add_argument('--status', type=common.site_with_domain_checked,
+                              metavar='site', dest='status_sites',
+                              nargs='*', help='sites list')
+    return _script_parser
+
+
 def exp_infos_from_str(exp_str):
     """Extract nodes and associations."""
     try:
@@ -255,6 +287,59 @@ def exp_resources_from_str(exp_str):
     profile_name = associations.pop('profile', None)
     return experiment.exp_resources(nodes, firmware_path, profile_name,
                                     **associations)
+
+
+def site_association_from_str(site_assoc_str):
+    """Extract site_association from given string.
+
+    Format is:
+
+        site,name=value
+        site1,site2,site3,assoc_name=assoc_value,assoc2=assoc_val2
+
+    Sites validity is checked
+
+    :raises argparse.ArgumentTypeError: on invalid site_assoc_str
+    """
+    # Decode keywoard associations
+    try:
+        sites, kwassocs = _args_kwargs(site_assoc_str.split(','))
+
+        # Validate site and add domain
+        sites = [common.site_with_domain_checked(site) for site in sites]
+        return experiment.site_association(*sites, **kwassocs)
+    except ValueError as err:
+        raise argparse.ArgumentTypeError('Invalid site_association: %s' % err)
+
+
+RUN_SITE_ASSOCIATIONS_STR = ('script=script_path'
+                             '[,scriptconfig=scriptconfig_path]')
+RUN_SITE_ASSOCIATION_METAVAR = 'site,site,%s' % (RUN_SITE_ASSOCIATIONS_STR,)
+
+
+def _run_associations_arg_check(  # pylint:disable=unused-argument
+        script, scriptconfig=None):
+    """To be used with **associations to check given arguments."""
+    pass
+
+
+def run_site_association_from_str(site_assoc_str):
+    """Extract site_association and verify given associations.
+
+    'script' association is mandatory.
+    No other associations allowed.
+    """
+    site_association = site_association_from_str(site_assoc_str)
+
+    associations = site_association.associations
+    try:
+        _run_associations_arg_check(**associations)
+    except TypeError:
+        raise argparse.ArgumentTypeError(
+            'Invalid associations in %s should match %s' %
+            (site_assoc_str, RUN_SITE_ASSOCIATIONS_STR))
+
+    return site_association
 
 
 def _valid_param(param):
@@ -546,7 +631,36 @@ def submit_experiment_parser(opts):
 
     return experiment.submit_experiment(api, opts.name, opts.duration,
                                         opts.nodes_list, opts.reservation,
-                                        opts.print_json)
+                                        opts.print_json,
+                                        opts.site_association)
+
+
+def script_parser(opts):
+    """Parse namespace 'opts' and execute requestes 'run' command."""
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    exp_id = helpers.get_current_experiment(api, opts.experiment_id)
+
+    command, options = _script_command_options(opts)
+
+    return experiment.script_experiment(api, exp_id, command, *options)
+
+
+def _script_command_options(opts):
+    """Extract `command` and `options` from argparse 'opts'."""
+    if opts.run_script_site is not None:
+        command = 'run'
+        options = opts.run_script_site
+    elif opts.kill_sites is not None:
+        command = 'kill'
+        options = opts.kill_sites
+    elif opts.status_sites is not None:
+        command = 'status'
+        options = opts.status_sites
+    else:  # pragma: no cover
+        raise ValueError('Unknown request')
+
+    return command, options
 
 
 def stop_experiment_parser(opts):
@@ -630,6 +744,7 @@ def experiment_parse_and_run(opts):
     """
     command = {
         'submit': submit_experiment_parser,
+        'script': script_parser,
         'stop': stop_experiment_parser,
         'get': get_experiment_parser,
         'load': load_experiment_parser,

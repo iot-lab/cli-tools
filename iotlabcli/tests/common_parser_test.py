@@ -206,6 +206,40 @@ class TestNodeSelectionParser(unittest.TestCase):
                           common.nodes_list_from_str, 'grenoble,m3_no_numbers')
 
 
+class TestSiteChecking(unittest.TestCase):
+    """Test site checking functions."""
+
+    def setUp(self):
+        nodes_list = patch('iotlabcli.parser.common.sites_list').start()
+        nodes_list.return_value = ['grenoble', 'strasbourg', 'lille']
+
+    def tearDown(self):
+        patch.stopall()
+
+    def test_check_site_with_server(self):
+        """Test check_site_with_server."""
+        common.check_site_with_server('grenoble')
+
+        # Invalid site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          common.check_site_with_server, 'unknown')
+
+        # sites list can be provided
+        common.check_site_with_server('strasourg', ['gre', 'strasourg', 'lil'])
+
+    def test_site_with_domain_checked(self):
+        """Test site_with_domain_checked."""
+        self.assertEqual(common.site_with_domain_checked('grenoble'),
+                         'grenoble.iot-lab.info')
+
+        self.assertRaises(argparse.ArgumentTypeError,
+                          common.site_with_domain_checked, 'unknown')
+
+        # Override 'domain'
+        ret = common.site_with_domain_checked('grenoble', domain='localhost')
+        self.assertEqual(ret, 'grenoble.localhost')
+
+
 class TestHelpAction(unittest.TestCase):
     """Test HelpAction class."""
 

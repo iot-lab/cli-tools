@@ -48,8 +48,8 @@ SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
 
 INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
 if sys.version_info[0:2] == (2, 6):
-    # OrderedDict added in python2.7
-    INSTALL_REQUIRES.append('ordereddict')
+    # OrderedDict and Counter added in python2.7
+    INSTALL_REQUIRES.append('backport_collections')
 
 
 setup(

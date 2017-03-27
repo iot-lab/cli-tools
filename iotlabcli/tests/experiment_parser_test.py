@@ -21,9 +21,12 @@
 
 """ Test the iotlabcli.experiment_parser module """
 # pylint: disable=too-many-public-methods
+# pylint: disable=invalid-name
 
 import unittest
+import argparse
 
+from iotlabcli.tests import resource_file
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
@@ -149,14 +152,14 @@ class TestMainInfoParser(MainMock):
                 None, None)
         ]
         submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
-                                      314159, False)
+                                      314159, False, None)
 
         # print with simple options
         nodes = [experiment.exp_resources(['m3-1.grenoble.iot-lab.info'])]
         experiment_parser.main(
             ['submit', '-p', '-d', '20', '-l', 'grenoble,m3,1'])
         submit_exp.assert_called_with(self.api, None, 20, nodes,
-                                      None, True)
+                                      None, True, None)
 
         # Alias tests
         experiment_parser.main([
@@ -179,7 +182,7 @@ class TestMainInfoParser(MainMock):
         ]
 
         submit_exp.assert_called_with(self.api, None, 20, resources,
-                                      None, False)
+                                      None, False, None)
 
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser_assocs(self, submit_exp):
@@ -199,7 +202,62 @@ class TestMainInfoParser(MainMock):
                                      'm3.elf', None, **assocs)
         ]
         submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
-                                      None, False)
+                                      None, False, None)
+
+    @patch('iotlabcli.experiment.submit_experiment')
+    def test_main_submit_parser_site_assocs(self, submit_exp):
+        """Run experiment_parser.main.submit site associations."""
+        script_sh = resource_file('script.sh')
+        script_2_sh = resource_file('script_2.sh')
+        scriptconfig = resource_file('scriptconfig')
+
+        submit_exp.return_value = {}
+
+        # Groupped assocs
+        experiment_parser.main([
+            'submit', '--name', 'exp_name', '--duration', '20',
+            '--list', 'grenoble,m3,1',
+            '--list', 'strasbourg,m3,1',
+            '--site-association', 'grenoble,strasbourg,script=%s' % script_sh,
+        ])
+
+        sites_assocs = [
+            experiment.site_association('grenoble.iot-lab.info',
+                                        'strasbourg.iot-lab.info',
+                                        script=script_sh),
+        ]
+
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info']),
+            experiment.exp_resources(['m3-1.strasbourg.iot-lab.info']),
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
+                                      None, False, sites_assocs)
+
+        # Different assocs
+        experiment_parser.main([
+            'submit', '--name', 'exp_name', '--duration', '20',
+            '--list', 'grenoble,m3,1',
+            '--list', 'strasbourg,m3,1',
+            '--site-association', 'grenoble,script=%s,ipv6=2001::' % script_sh,
+            '--site-association', 'strasbourg,script=%s,scriptconfig=%s' % (
+                script_2_sh, scriptconfig),
+        ])
+
+        sites_assocs = [
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh, ipv6='2001::'),
+            experiment.site_association('strasbourg.iot-lab.info',
+                                        script=script_2_sh,
+                                        scriptconfig=scriptconfig),
+        ]
+
+        resources = [
+            experiment.exp_resources(['m3-1.grenoble.iot-lab.info']),
+            experiment.exp_resources(['m3-1.strasbourg.iot-lab.info']),
+        ]
+        submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
+                                      None, False, sites_assocs)
 
     def test_main_submit_parser_error(self):
         """ Run experiment_parser.main.submit with error"""
@@ -214,6 +272,17 @@ class TestMainInfoParser(MainMock):
             SystemExit, experiment_parser.main,
             ['submit', '--duration', '20', '-l', 'grenoble,m3,100-1'])
 
+    def test_main_submit_parser_site_assocs_error(self):
+        """ Run experiment_parser.main.submit with site assocs error"""
+        self.assertRaises(
+            SystemExit, experiment_parser.main,
+            ['submit', '--duration', '20', '-l', 'grenoble,m3,1',
+             '--site-association', 'invalid,script=test'])
+        self.assertRaises(
+            SystemExit, experiment_parser.main,
+            ['submit', '--duration', '20', '-l', 'grenoble,m3,1',
+             '--site-association', 'grenoble'])
+
     def test_main_submit_helps(self):
         """Run experiment_parser.main helps messages."""
         with patch('sys.stdout', StringIO()) as stdout:
@@ -221,6 +290,11 @@ class TestMainInfoParser(MainMock):
                               ['submit', '--help-list'])
             output = stdout.getvalue()
             self.assertTrue(output.startswith('Resources list\n'))
+        with patch('sys.stdout', StringIO()) as stdout:
+            self.assertRaises(SystemExit, experiment_parser.main,
+                              ['submit', '--help-site-association'])
+            output = stdout.getvalue()
+            self.assertTrue(output.startswith('Site associations\n'))
 
     @patch('iotlabcli.experiment.wait_experiment')
     def test_main_wait_parser(self, wait_exp):
@@ -266,6 +340,87 @@ class TestMainInfoParser(MainMock):
 
         # Exp id is required
         self.assertRaises(SystemExit, experiment_parser.main, ['reload'])
+
+    @patch('iotlabcli.experiment.script_experiment')
+    def test_main_script_parser(self, script):
+        """ Run experiment_parser.main.run """
+        # Run script
+        script_sh = resource_file('script.sh')
+        scriptconfig = resource_file('scriptconfig')
+
+        script.return_value = {}
+        experiment_parser.main(['script', '--run',
+                                'grenoble,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Multiple sites
+        experiment_parser.main(['script', '--run',
+                                'grenoble,strasbourg,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        'strasbourg.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Multiple sites associations
+        script.return_value = {}
+        experiment_parser.main(['script', '--run',
+                                'grenoble,script=%s,scriptconfig=%s' % (
+                                    script_sh, scriptconfig),
+                                'strasbourg,script=%s' % script_sh])
+        script.assert_called_with(
+            self.api, 123, 'run',
+            experiment.site_association('grenoble.iot-lab.info',
+                                        script=script_sh,
+                                        scriptconfig=scriptconfig),
+            experiment.site_association('strasbourg.iot-lab.info',
+                                        script=script_sh)
+        )
+
+        # Error no arguments
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run'])
+        # Unknown assoc
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run',
+                           'grenoble,script=%s,assoc=new' % script_sh])
+        # Error no script
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run', 'grenoble,assoc=test'])
+        self.assertRaises(SystemExit, experiment_parser.main,
+                          ['script', '--run', 'assoc=test'])
+
+        # kill script
+        experiment_parser.main(['script', '--kill'])
+        script.assert_called_with(self.api, 123, 'kill')
+
+        experiment_parser.main(['script', '--kill', 'grenoble'])
+        script.assert_called_with(self.api, 123, 'kill',
+                                  'grenoble.iot-lab.info')
+
+        experiment_parser.main(['script', '--kill', 'grenoble', 'strasbourg'])
+        script.assert_called_with(self.api, 123, 'kill',
+                                  'grenoble.iot-lab.info',
+                                  'strasbourg.iot-lab.info')
+
+        # Status script
+        experiment_parser.main(['script', '--status'])
+        script.assert_called_with(self.api, 123, 'status')
+
+        experiment_parser.main(['script', '--status', 'grenoble'])
+        script.assert_called_with(self.api, 123, 'status',
+                                  'grenoble.iot-lab.info')
+
+        experiment_parser.main(['script', '--status',
+                                'grenoble', 'strasbourg'])
+        script.assert_called_with(self.api, 123, 'status',
+                                  'grenoble.iot-lab.info',
+                                  'strasbourg.iot-lab.info')
 
 
 # pylint:disable=protected-access
@@ -322,3 +477,96 @@ class TestAssociationParser(unittest.TestCase):
         self._assert_fail_assoc(['m3.elf', 'mobility=JHall', 'batt'])
         self._assert_fail_assoc(['m3.elf', 'firmware=tuto.elf'])
         self._assert_fail_assoc(['val aue'])
+
+
+class TestSiteAssociationParser(unittest.TestCase):
+    """Test site_association_from_str parser."""
+
+    def _test_site_assocs_from_str(self, assoc_str, *sites, **kwassocs):
+        """Test if sites association is the expected one."""
+        self.assertEqual(
+            experiment_parser.site_association_from_str(assoc_str),
+            experiment.site_association(*sites, **kwassocs))
+
+    def test_site_assoctiations_from_str(self):
+        """Test site_association_from_str."""
+        # Multi site
+        self._test_site_assocs_from_str(
+            'grenoble,strasbourg,script=iotlabcli/tests/script.sh',
+            *('grenoble.iot-lab.info', 'strasbourg.iot-lab.info'),
+            **{'script': 'iotlabcli/tests/script.sh'})
+
+        # Multi associations
+        self._test_site_assocs_from_str(
+            'grenoble,script=iotlabcli/tests/script.sh,ipv6=2001::',
+            *('grenoble.iot-lab.info',),
+            **{'script': 'iotlabcli/tests/script.sh', 'ipv6': '2001::'})
+
+    def test_site_assoctiation_from_str_invalid(self):
+        """Test invalid site_association_from_str."""
+        # Invalid association
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'grenoble')
+
+        # Invalid site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'invalid,script=test')
+
+        # No site
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'script=test')
+
+        # Invalid args/kwargs with site after
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.site_association_from_str,
+                          'script=test,grenoble')
+
+
+class TestRunSiteAssociationParser(unittest.TestCase):
+    """Test run_site_association_from_str parser."""
+
+    def _test_run_site_assocs_from_str(self, assoc_str, *sites, **kwassocs):
+        """Test if sites association is the expected one."""
+        self.assertEqual(
+            experiment_parser.run_site_association_from_str(assoc_str),
+            experiment.site_association(*sites, **kwassocs))
+
+    def test_run_site_assoctiations_from_str(self):
+        """Test run_site_association_from_str."""
+        # Multi site
+        self._test_run_site_assocs_from_str(
+            'grenoble,strasbourg,script=iotlabcli/tests/script.sh',
+            *('grenoble.iot-lab.info', 'strasbourg.iot-lab.info'),
+            **{'script': 'iotlabcli/tests/script.sh'})
+
+        # script and siteconfig in any order
+        self._test_run_site_assocs_from_str(
+            ('grenoble'
+             ',scriptconfig=iotlabcli/tests/scriptconfig'
+             ',script=iotlabcli/tests/script.sh'),
+            *('grenoble.iot-lab.info',),
+            **{'script': 'iotlabcli/tests/script.sh',
+               'scriptconfig': 'iotlabcli/tests/scriptconfig'})
+
+    def test_run_site_assoctiation_from_str_invalid(self):
+        """Test invalid run_site_association_from_str."""
+        # Invalid association
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.run_site_association_from_str,
+                          ('grenoble,script=iotlabcli/tests/script.sh'
+                           ',ipv6=aaaa::1/64'))
+
+        # No 'association'
+        self.assertRaises(argparse.ArgumentTypeError,
+                          experiment_parser.run_site_association_from_str,
+                          'grenoble')
+
+        # 'scriptconfig' and no 'script'
+        self.assertRaises(
+            argparse.ArgumentTypeError,
+            experiment_parser.run_site_association_from_str,
+            'grenoble,scriptconfig=iotlabcli/tests/scriptconfig',
+        )
