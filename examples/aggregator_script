@@ -1,0 +1,8 @@
+#! /bin/bash -x
+
+# Redirect all nodes serial link to a file
+
+readonly OUTFILE="${HOME}/.iot-lab/${EXP_ID}/aggregator_log"
+
+rm -f ${OUTFILE}
+script --append --flush --command 'serial_aggregator -i ${EXP_ID}' ${OUTFILE}
