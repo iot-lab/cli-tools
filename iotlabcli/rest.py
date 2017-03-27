@@ -177,6 +177,18 @@ class Api(object):  # pylint:disable=too-many-public-methods
         return self.method('experiments/%s/nodes?update' % expid,
                            'post', files=files)
 
+    def node_profile_load(self, expid, files):
+        """Update profile with profile json on user
+        experiment list nodes
+
+        :param id: experiment id submission (e.g. OAR scheduler)
+        :param files: nodes list description and firmware
+        :type files: dict
+        :returns: dict
+        """
+        return self.method('experiments/%s/nodes?profile-load' % expid,
+                           'post', files=files)
+
     # script
     def script_command(self, expid, command, files=None, json=None):
         """Execute scripts on sites.

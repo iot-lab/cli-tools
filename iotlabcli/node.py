@@ -38,8 +38,10 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
                        Empty list runs on all nodes
     :param cmd_opt: Firmware path for update, profile name for profile
     """
-    assert command in ('update', 'profile', 'start', 'stop', 'reset',
-                       'update-idle', 'debug-start', 'debug-stop')
+    assert command in ('update', 'update-idle',
+                       'profile', 'profile-load',
+                       'start', 'stop', 'reset',
+                       'debug-start', 'debug-stop')
 
     result = None
     if command == 'update':
@@ -49,6 +51,13 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
         files.add_file(cmd_opt)
         files[NODE_FILENAME] = json.dumps(nodes_list)
         result = api.node_update(exp_id, files)
+    elif command == 'profile-load':
+        assert cmd_opt is not None, '`cmd_opt` required for update'
+        files = helpers.FilesDict()
+
+        files.add_file(cmd_opt)
+        files[NODE_FILENAME] = json.dumps(nodes_list)
+        result = api.node_profile_load(exp_id, files)
     elif command == 'profile':
         cmd_opt = '&name={0}'.format(cmd_opt)
         result = api.node_command(command, exp_id, nodes_list, cmd_opt)

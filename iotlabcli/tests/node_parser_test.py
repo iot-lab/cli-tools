@@ -105,3 +105,12 @@ class TestMainNodeParser(MainMock):
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
+
+        # profile-load
+        node_command.reset_mock()
+        args = ['--profile-load', 'profile.json']
+        list_nodes.return_value = []
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'profile-load', 123, [],
+                                        'profile.json')

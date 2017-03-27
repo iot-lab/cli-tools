@@ -107,6 +107,10 @@ def parse_options():
     cmd_group.add_argument('--profile', '--update-profile',
                            dest='profile_name', default=None,
                            help='change nodes current monitoring profile')
+    cmd_group.add_argument('--profile-load',
+                           dest='profile_path', default=None,
+                           help=('change nodes current monitoring profile'
+                                 ' with provided JSON'))
 
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)
@@ -149,6 +153,12 @@ def _node_parse_command_and_opt(**opts_dict):
     ...                             command='with_argument')
     ('profile', 'consumption')
 
+    >>> _node_parse_command_and_opt(firmware_path=None,
+    ...                             profile_name=None,
+    ...                             profile_path='/tmp/prof.json',
+    ...                             command='with_argument')
+    ('profile-load', '/tmp/prof.json')
+
     # Case where the command is not managed
     >>> _node_parse_command_and_opt(firmware_path=None,
     ...                             profile_name=None,
@@ -162,6 +172,7 @@ def _node_parse_command_and_opt(**opts_dict):
     commands_arguments = {
         'update': 'firmware_path',
         'profile': 'profile_name',
+        'profile-load': 'profile_path',
     }
 
     for command, argname in commands_arguments.items():

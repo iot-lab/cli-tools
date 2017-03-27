@@ -85,3 +85,19 @@ class TestNode(unittest.TestCase):
         res = node.node_command(api, 'update-idle', 123, nodes_list)
         self.assertEqual(my_mock.API_RET, res)
         api.node_command.assert_called_with('update-idle', 123, nodes_list)
+
+        # profile-load
+        read_file_mock.return_value = '{profilejson}'  # no local content check
+        json_file = {
+            'profile.json': '{profilejson}',
+            'nodes.json': '["m3-1", "m3-2", "m3-3"]',
+        }
+        api.reset_mock()
+        res = node.node_command(api, 'profile-load', 123, nodes_list,
+                                'profile.json')
+        self.assertEqual(my_mock.API_RET, res)
+        api.node_profile_load.assert_called_with(123, json_file)
+
+        # profile-load without profile
+        self.assertRaises(AssertionError, node.node_command,
+                          api, 'profile-load', 123, nodes_list)
