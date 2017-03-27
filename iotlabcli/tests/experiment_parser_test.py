@@ -32,7 +32,7 @@ from .c23 import patch
 
 
 class TestMainInfoParser(MainMock):
-    """Test experimen.parser."""
+    """Test experiment.parser."""
 
     def setUp(self):
         MainMock.setUp(self)
@@ -116,6 +116,23 @@ class TestMainInfoParser(MainMock):
         ret = experiment_parser.get_experiment_parser(args)
         get_exp.assert_called_with(self.api, 234, 'start')
         self.assertEqual('Unknown', ret['local_date'])
+
+    @patch('iotlabcli.experiment.get_active_experiments')
+    def test_get_experiments(self, get_active_experiments):
+        """Run experiment_parser.main.get 'experiments'"""
+        get_active_experiments.return_value = {
+            "Running": [11667], "Waiting": [11668],
+        }
+
+        experiment_parser.main(['get', '-e'])
+        self.assertEqual(1, get_active_experiments.call_count)
+        get_active_experiments.assert_called_with(self.api, running_only=True)
+        get_active_experiments.reset_mock()
+
+        experiment_parser.main(['get', '--experiments', '--active'])
+        self.assertEqual(1, get_active_experiments.call_count)
+        get_active_experiments.assert_called_with(self.api, running_only=False)
+        get_active_experiments.reset_mock()
 
     @patch('iotlabcli.experiment.submit_experiment')
     def test_main_submit_parser(self, submit_exp):
@@ -218,10 +235,26 @@ class TestMainInfoParser(MainMock):
         load_exp.assert_called_with(self.api, '../test_exp.json',
                                     ['~/firmware.elf', './firmware_2.elf'])
 
+    @patch('iotlabcli.experiment.reload_experiment')
+    def test_main_reload_parser(self, reload_exp):
+        """ Run experiment_parser.main.info """
+        reload_exp.return_value = {}
+
+        experiment_parser.main(['reload', '-i', '123'])
+        reload_exp.assert_called_with(self.api, 123, None, None)
+        experiment_parser.main(['reload',
+                                '--id', '123',
+                                '--duration', '120',
+                                '--reservation', '314159'])
+        reload_exp.assert_called_with(self.api, 123, 120, 314159)
+
+        # Exp id is required
+        self.assertRaises(SystemExit, experiment_parser.main, ['reload'])
+
 
 # pylint:disable=protected-access
 class TestAssociationParser(unittest.TestCase):
-    """Test experiment submit associations."""
+    """Test _extract_associations associations."""
 
     def _assert_assoc(self, params, expected):
         """Check given params return expected associations."""

@@ -19,11 +19,28 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-"""Tests for iotlabcli package."""
+"""Implement the 'admin' requests."""
+
+from iotlabcli import experiment
+from iotlabcli import rest
 
 
-def resource_file(file_path):
-    """Test Resource file path."""
-    import os.path
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.relpath(os.path.join(cur_dir, file_path))
+def wait_user_experiment(exp_id, user, states='Running',
+                         step=5, timeout=float('+inf')):
+    """Wait for the user experiment to be in `states`.
+
+    Also returns if Terminated or Error
+
+    :param exp_id: scheduler OAR id submission
+    :param user: owner of the experiment
+    :param states: Comma separated string of states to wait for
+    :param step: time to wait between each server check
+    :param timeout: timeout if wait takes too long
+    """
+    def _state_fct():
+        """Get user experiment state."""
+        return rest.Api.get_any_experiment_state(exp_id, user)['state']
+    exp_str = '%s/%s' % (exp_id, user)
+
+    # Wait experiment state
+    return experiment.wait_state(_state_fct, exp_str, states, step, timeout)

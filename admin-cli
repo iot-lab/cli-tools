@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 # This file is a part of IoT-LAB cli-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -19,11 +19,5 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-"""Tests for iotlabcli package."""
-
-
-def resource_file(file_path):
-    """Test Resource file path."""
-    import os.path
-    cur_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.relpath(os.path.join(cur_dir, file_path))
+import iotlabcli.parser.admin
+iotlabcli.parser.admin.main()

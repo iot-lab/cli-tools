@@ -44,7 +44,7 @@ def get_version(package):
 
 
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
-           'robot-cli']
+           'robot-cli', 'admin-cli']
 
 INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
 if sys.version_info[0:2] == (2, 6):
@@ -67,7 +67,12 @@ setup(
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Programming Language :: Python',
                  'Programming Language :: Python :: 2',
+                 'Programming Language :: Python :: 2.6',
+                 'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: 3',
+                 'Programming Language :: Python :: 3.3',
+                 'Programming Language :: Python :: 3.4',
+                 'Programming Language :: Python :: 3.5',
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],

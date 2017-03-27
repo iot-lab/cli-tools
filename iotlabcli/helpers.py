@@ -24,6 +24,7 @@
 import sys
 import os
 import json
+import itertools
 
 OAR_STATES = ["Waiting", "toLaunch", "Launching",
               "Running",
@@ -77,8 +78,8 @@ def get_current_exp(exp_by_states, states):
     >>> get_current_exp({'Running': [123]}, ['Running'])
     123
 
-    >>> get_current_exp(\
-        {'Waiting': [10134, 10135], 'Launching': [10130]}, ACTIVE_STATES)
+    >>> get_current_exp({'Waiting': [10134, 10135],
+    ...                  'Launching': [10130]}, ACTIVE_STATES)
     10130
 
     >>> get_current_exp({'Running': [123, 234]}, ['Running'])
@@ -86,13 +87,16 @@ def get_current_exp(exp_by_states, states):
     ValueError: You have several experiments with state 'Running'
     Use option -i|--id and choose experiment id in: {'Running': [123, 234]}
 
-    >>> get_current_exp({'Waiting': [123], 'Launching': [121, 122]}, \
-        ACTIVE_STATES)  # doctest: +ELLIPSIS
+    >>> get_current_exp({'Waiting': [123],
+    ...                  'Launching': [121, 122]},
+    ...                 ACTIVE_STATES)
+    ...  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ValueError: You have several experiments with state 'Running, ..., Waiting'
     Use option -i|--id and choose experiment id in: {...}
 
-    >>> get_current_exp({}, ACTIVE_STATES)  # doctest: +ELLIPSIS
+    >>> get_current_exp({}, ACTIVE_STATES)
+    ...  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ValueError: You have no 'Running, ..., Waiting' experiment
 
@@ -141,7 +145,7 @@ def node_url_sort_key(node_url):
     return site, node_type, int(num_str)
 
 
-class FilesDict(dict):  # pylint: disable=too-few-public-methods
+class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
     so __setitem__ is overriden to check that
@@ -173,11 +177,13 @@ class FilesDict(dict):  # pylint: disable=too-few-public-methods
         elif self[key] != val:
             raise ValueError('Has different values for same key %r' % key)
 
-    def add_firmware(self, firmware_path):
-        """ Add a firmwware to the dictionary. If None, do nothing """
-        if firmware_path is None:
+    def add_file(self, file_path):
+        """Add a file to the dictionary. If None, do nothing """
+        if file_path is None:
             return
-        self[os.path.basename(firmware_path)] = read_file(firmware_path, 'b')
+        self[os.path.basename(file_path)] = read_file(file_path, 'b')
+
+    add_firmware = add_file  # Deprecated
 
 
 def read_custom_api_url():
@@ -236,3 +242,12 @@ def json_dumps(obj):
         def default(self, obj):  # pylint: disable=method-hidden
             return obj.__dict__
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
+
+
+def flatten_list_list(list_list):
+    """Flatten given list of list.
+
+    >>> flatten_list_list([[1, 2, 3], [4], [5], [6, 7, 8]])
+    [1, 2, 3, 4, 5, 6, 7, 8]
+    """
+    return list(itertools.chain.from_iterable(list_list))

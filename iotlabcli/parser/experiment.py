@@ -66,12 +66,7 @@ def parse_options():
 
     submit_parser.add_argument('-n', '--name', help='experiment name')
 
-    submit_parser.add_argument('-d', '--duration', required=True, type=int,
-                               help='experiment duration in minutes')
-
-    submit_parser.add_argument('-r', '--reservation', type=int,
-                               help=('experiment schedule starting : seconds '
-                                     'since 1970-01-01 00:00:00 UTC'))
+    _parser_add_duration_and_reservation(submit_parser, duration_required=True)
 
     submit_parser.add_argument('-p', '--print',
                                dest='print_json', action='store_true',
@@ -125,6 +120,14 @@ def parse_options():
 
     get_parser.add_argument('--state', help='experiment list state filter')
 
+    get_group.add_argument('-e', '--experiments', dest='get_cmd',
+                           action='store_const',
+                           const='experiments',
+                           help='get running experiments ids')
+    get_parser.add_argument(
+        '--active', action='store_true', default=False,
+        help='experiments: include waiting/starting experiments')
+
     # ####### LOAD PARSER ###############
     load_parser = subparsers.add_parser('load', epilog=help_msgs.LOAD_EPILOG,
                                         help='load and submit user experiment',
@@ -136,6 +139,16 @@ def parse_options():
     load_parser.add_argument('-l', '--list', dest='firmware_list', default=[],
                              type=(lambda s: s.split(',')),
                              help='comma separated firmware(s) path list')
+
+    # ####### RELOAD PARSER ###############
+    reload_parser = subparsers.add_parser('reload',
+                                          epilog=help_msgs.RELOAD_EPILOG,
+                                          help='reload user experiment',
+                                          formatter_class=RawTextHelpFormatter)
+    common.add_expid_arg(reload_parser, required=True)
+
+    _parser_add_duration_and_reservation(reload_parser,
+                                         duration_required=False)
 
     # ####### INFO PARSER ###############
     info_parser = subparsers.add_parser('info', epilog=help_msgs.INFO_EPILOG,
@@ -153,11 +166,33 @@ def parse_options():
                                   '(EXP_LIST format : 1-34+72)'))
 
     # ####### WAIT PARSER ###############
+    parser_add_wait_subparser(subparsers, expid_required=False)
+
+    return parser
+
+
+def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
+        subparser, duration_required):
+    """Add a 'duration' and a 'reservation' argument to subparser.
+
+    :param subparser: subparser instance
+    :param duration_required: select if duration is required or optional
+    """
+    subparser.add_argument('-d', '--duration', required=duration_required,
+                           type=int, help='experiment duration in minutes')
+
+    subparser.add_argument('-r', '--reservation', type=int,
+                           help=('experiment schedule starting : seconds '
+                                 'since 1970-01-01 00:00:00 UTC'))
+
+
+def parser_add_wait_subparser(subparsers, expid_required=False):
+    """Add wait experiment subparser and return it."""
     wait_parser = subparsers.add_parser(
         'wait', help='wait user experiment started',
         epilog=help_msgs.WAIT_EPILOG, formatter_class=RawTextHelpFormatter)
 
-    common.add_expid_arg(wait_parser)
+    common.add_expid_arg(wait_parser, required=expid_required)
 
     wait_parser.add_argument(
         '--state', default='Running',
@@ -169,7 +204,7 @@ def parse_options():
         '--timeout', default=float('+inf'), type=float,
         help="Max time to wait in seconds")
 
-    return parser
+    return wait_parser
 
 
 def exp_infos_from_str(exp_str):
@@ -487,6 +522,9 @@ def get_experiment_parser(opts):
         timestamp = ret['start_time']
         ret['local_date'] = time.ctime(timestamp) if timestamp else 'Unknown'
         return ret
+    elif opts.get_cmd == 'experiments':
+        return experiment.get_active_experiments(api,
+                                                 running_only=not opts.active)
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         return experiment.get_experiment(api, exp_id, opts.get_cmd)
@@ -498,6 +536,14 @@ def load_experiment_parser(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
     return experiment.load_experiment(api, opts.path_file, opts.firmware_list)
+
+
+def reload_experiment_parser(opts):
+    """Parse namespace 'opts' object and execute requested 'reload' command."""
+    user, passwd = auth.get_user_credentials(opts.username, opts.password)
+    api = rest.Api(user, passwd)
+    return experiment.reload_experiment(api, opts.experiment_id,
+                                        opts.duration, opts.reservation)
 
 
 def info_experiment_parser(opts):
@@ -532,6 +578,7 @@ def experiment_parse_and_run(opts):
         'stop': stop_experiment_parser,
         'get': get_experiment_parser,
         'load': load_experiment_parser,
+        'reload': reload_experiment_parser,
         'info': info_experiment_parser,
         'wait': wait_experiment_parser,
     }[opts.command]

@@ -78,6 +78,17 @@ Examples:
         $ experiment-cli load -f 192.json
 """
 
+RELOAD_EPILOG = """
+
+Examples:
+    * Reload experiment for same duration as soon as possible:
+        $ experiment-cli reload --id 12345
+    * Reload experiment with duration set to two hours (120 minutes):
+        $ experiment-cli reload -i 12345 --duration 120
+    * Reload experiment with duration and a schedule timestamp:
+        $ experiment-cli reload -i 12345 -d 60 --reservation 1474984085
+"""
+
 GET_EPILOG = """
 
 Examples:

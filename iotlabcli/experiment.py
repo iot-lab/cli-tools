@@ -39,8 +39,8 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
     :param api: API Rest api object
     :param name: experiment name
-    :param duration: experiment duration in seconds
-    :param resources: list of 'exp_resources' which
+    :param duration: experiment duration in minutes
+    :param resources: list of 'exp_resources'
     :param print_json: select if experiment should be printed as json instead
         of submitted
     """
@@ -51,7 +51,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     exp_files = helpers.FilesDict()
     for res_dict in resources:
         experiment.add_exp_resources(res_dict)
-        exp_files.add_firmware(res_dict.get('firmware', None))  # firmware
+        exp_files.add_file(res_dict.get('firmware', None))  # firmware
 
     if print_json:  # output experiment description
         return experiment
@@ -100,6 +100,18 @@ def get_experiment(api, exp_id, option=''):
     return result
 
 
+def get_active_experiments(api, running_only=True):
+    """Get active experiments with it's state.
+
+    :param api: API Rest api object
+    :param running_only: if False search for a waiting/starting experiment
+    :returns: {'Running': [EXP_ID], 'Waiting': [EXP_ID, EXP_ID]}
+    """
+    states = ['Running'] if running_only else helpers.ACTIVE_STATES
+    exp_by_states = helpers.exps_by_states_dict(api, states)
+    return exp_by_states
+
+
 def load_experiment(api, exp_desc_path, firmware_list=()):
     """ Load and submit user experiment description with firmware(s)
 
@@ -139,6 +151,26 @@ def load_experiment(api, exp_desc_path, firmware_list=()):
     return api.submit_experiment(exp_files)
 
 
+def reload_experiment(api, exp_id, duration=None, start_time=None):
+    """Reload given experiment, duration and start_time can be adapted.
+
+    :param api: API Rest api object
+    :param exp_id: experiment id
+    :param duration: experiment duration in minutes. None for same duration.
+    :param start_time: experiment start time timestamp.
+        None for as soon as possible
+    """
+    exp_json = {}
+
+    # API needs strings and values shoud be absent if None
+    if duration is not None:
+        exp_json['duration'] = str(duration)
+    if start_time is not None:
+        exp_json['reservation'] = str(start_time)
+
+    return api.reload_experiment(exp_id, exp_json)
+
+
 def info_experiment(api, list_id=False, site=None):
     """ Print testbed information for user experiment submission:
     * resources description
@@ -154,34 +186,73 @@ def info_experiment(api, list_id=False, site=None):
 
 def wait_experiment(api, exp_id, states='Running',
                     step=5, timeout=float('+inf')):
-    """ Wait for the experiment to be in `states`
-    and also Terminated or Error
+    """Wait for the experiment to be in `states`.
+
+    Also returns if Terminated or Error
 
     :param api: API Rest api object
     :param exp_id: scheduler OAR id submission
     :param states: Comma separated string of states to wait for
     :param step: time to wait between each server check
     :param timeout: timeout if wait takes too long
-
     """
+    def _state_function():
+        """Get current user experiment state."""
+        return get_experiment(api, exp_id, 'state')['state']
+    exp_str = '%s' % (exp_id,)
 
+    return wait_state(_state_function, exp_str, states, step, timeout)
+
+
+def _states_from_str(states_str):
+    """Return list of states from comma separated string.
+
+    Also verify given states are valid.
+    """
+    return helpers.check_experiment_state(states_str).split(',')
+
+
+STOPPED_STATES = set(_states_from_str('Terminated,Error'))
+
+
+def wait_state(state_fct, exp_str, states='Running',
+               step=5, timeout=float('+inf')):
+    """Wait until `state_fct` returns a state in `states`
+    and also Terminated or Error
+
+    :param state_fct: function that returns current state
+    :param states: Comma separated string of states to wait for
+    :param step: time to wait between each server check
+    :param timeout: timeout if wait takes too long
+    """
+    expected_states = set(_states_from_str(states))
     start_time = time.time()
-    end_time = start_time + timeout
 
-    full_states = helpers.check_experiment_state(states + ',Terminated,Error')
+    while not _timeout(start_time, timeout):
+        state = state_fct()
 
-    while time.time() < end_time:  # timeout
-        state = get_experiment(api, exp_id, 'state')['state']
-        if state not in full_states:
-            time.sleep(step)
-            continue
-        if state in states:  # state was awaited
+        if state in expected_states:
             return state
-        # non wanted state, usually 'Terminated or Error'
-        raise RuntimeError(
-            "Experiment {0} already in state {1!r}".format(exp_id, str(state)))
 
-    raise RuntimeError("Timeout reached")
+        if state in STOPPED_STATES:
+            # Terminated or Error
+            err = "Experiment {0} already in state '{1!s}'"
+            raise RuntimeError(err.format(exp_str, state))
+
+        # Still wait
+        time.sleep(step)
+
+    raise RuntimeError('Timeout reached')
+
+
+def _timeout(start_time, timeout):
+    """Return if timeout is reached.
+
+    :param start_time: initial time
+    :param timeout: timeout
+    :param _now: allow overriding 'now' call
+    """
+    return time.time() > start_time + timeout
 
 
 def exp_resources(nodes, firmware_path=None, profile_name=None,

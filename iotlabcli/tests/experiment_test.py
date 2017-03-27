@@ -26,19 +26,17 @@
 # pylint >= 1.4
 # pylint:disable=too-few-public-methods
 # Pylint Mock issues
-# pylint: disable=no-member
+# pylint: disable=no-member,maybe-no-member
 
-import os.path
 import json
 import unittest
 
 from iotlabcli import experiment
 from iotlabcli import rest
+from iotlabcli import tests
 from iotlabcli.tests.my_mock import CommandMock, API_RET, RequestRet
 
-from .c23 import patch, mock_open
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+from .c23 import mock, patch, mock_open
 
 
 class TestExperiment(unittest.TestCase):
@@ -111,13 +109,13 @@ class TestExperimentSubmit(CommandMock):
         resources = [
             experiment.exp_resources(
                 experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware.elf', 'profile1'),
+                tests.resource_file('firmware.elf'), 'profile1'),
             experiment.exp_resources(
                 experiment.AliasNodes(2, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware.elf', 'profile1'),
+                tests.resource_file('firmware.elf'), 'profile1'),
             experiment.exp_resources(
                 experiment.AliasNodes(4, 'grenoble', 'm3:at86rf231', False),
-                CURRENT_DIR + '/firmware_2.elf', 'profile2'),
+                tests.resource_file('firmware_2.elf'), 'profile2'),
         ]
 
         experiment.submit_experiment(self.api, None, 20, resources)
@@ -180,7 +178,8 @@ class TestExperimentSubmit(CommandMock):
         nodes = ['m3-1.grenoble.iot-lab.info']
         assocs = {'mobility': 'controlled', 'kernel': 'linux'}
         resources = [
-            experiment.exp_resources(nodes, CURRENT_DIR + '/firmware.elf',
+            experiment.exp_resources(nodes,
+                                     tests.resource_file('firmware.elf'),
                                      None, **assocs),
         ]
 
@@ -212,7 +211,7 @@ class TestExperimentSubmit(CommandMock):
             ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
         resources.append(experiment.exp_resources(
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
-            CURRENT_DIR + '/firmware.elf', 'profile1'))
+            tests.resource_file('firmware.elf'), 'profile1'))
 
         self.assertRaises(ValueError, experiment.submit_experiment,
                           self.api, 'exp_name', 20, resources)
@@ -284,6 +283,20 @@ class TestExperimentStop(CommandMock):
         self.api.stop_experiment.assert_called_with(123)
 
 
+class TestExperimentReload(CommandMock):
+    """Test iotlabcli.experiment.reload_experiment """
+
+    def test_experiment_reload(self):
+        """Test reloading an experiment."""
+        experiment.reload_experiment(self.api, 123, None, None)
+        exp_files = {}
+        self.api.reload_experiment.assert_called_with(123, exp_files)
+
+        experiment.reload_experiment(self.api, 123, 120, 3124159)
+        exp_files = {'duration': '120', 'reservation': '3124159'}
+        self.api.reload_experiment.assert_called_with(123, exp_files)
+
+
 class TestExperimentGet(CommandMock):
     """ Test iotlabcli.experiment.get_experiment """
 
@@ -300,6 +313,35 @@ class TestExperimentGet(CommandMock):
 
         ret = experiment.get_experiment(self.api, 123, option='resources')
         self.assertEqual(ret, API_RET)
+
+
+@patch('iotlabcli.helpers.exps_by_states_dict')
+class TestGetActiveExperiment(unittest.TestCase):
+    """Test iotlabcli.experiment.get_active_experiments."""
+    def test_get_active_experiments(self, exps_by_states_dict):
+        """Test iotlabcli.experiment.get_active_experiments."""
+        api = mock.Mock()
+
+        # Running only no experiments
+        exps_by_states_dict.return_value = {}
+        ret = experiment.get_active_experiments(api)
+        self.assertEqual(ret, {})
+        exps_by_states_dict.assert_called_with(api, ['Running'])
+
+        # Running only one experiment
+        exps_by_states_dict.return_value = {'Running': [12345]}
+        ret = experiment.get_active_experiments(api, running_only=True)
+        self.assertEqual(ret, {'Running': [12345]})
+        exps_by_states_dict.assert_called_with(api, ['Running'])
+
+        # Active experiments
+        exps_by_states_dict.return_value = {'Waiting': [10134, 10135],
+                                            'Running': [10130]}
+        ret = experiment.get_active_experiments(api, running_only=False)
+        self.assertEqual(ret, {'Waiting': [10134, 10135],
+                               'Running': [10130]})
+        exps_by_states_dict.assert_called_with(
+            api, ['Running', 'Launching', 'toLaunch', 'Waiting'])
 
 
 @patch('iotlabcli.experiment.get_experiment')
