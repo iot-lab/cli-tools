@@ -143,7 +143,10 @@ class TestMainProfileParser(MainMock):
         self.api.get_profile.assert_called_with('profile_name')
 
         profile_parser.main(['get', '--list'])
-        self.api.get_profiles.assert_called_with()
+        self.api.get_profiles.assert_called_with(None)
+
+        profile_parser.main(['get', '--list', '--archi', 'm3'])
+        self.api.get_profiles.assert_called_with('m3')
 
     def test_main_del_parser(self):
         profile_parser.main(['del', '--name', 'profile_name'])

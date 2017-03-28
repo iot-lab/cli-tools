@@ -211,12 +211,15 @@ class Api(object):  # pylint:disable=too-many-public-methods
 
     # Profile methods
 
-    def get_profiles(self):
+    def get_profiles(self, archi=None):
         """ Get user's list profile description
 
         :returns JSONObject
         """
-        return self.method('profiles')
+        url = 'profiles'
+        if archi is not None:
+            url += '?archi={0}'.format(archi)
+        return self.method(url)
 
     def get_profile(self, name):
         """ Get user profile description.

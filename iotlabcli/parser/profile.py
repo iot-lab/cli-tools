@@ -160,6 +160,8 @@ def parse_options():
         '-l', '--list', action='store_true',
         help='print profile\'s list JSON representation')
 
+    get_parser.add_argument('--archi', help='only list profiles for archi')
+
     # Load Profile
     load_parser.add_argument(
         '-f', '--file', dest='path_file', required=True,
@@ -341,7 +343,7 @@ def get_profile_parser(api, opts):
     assert opts.list or opts.name is not None
 
     if opts.list:
-        profile_dict = api.get_profiles()
+        profile_dict = api.get_profiles(opts.archi)
     else:
         profile_dict = api.get_profile(opts.name)
 
