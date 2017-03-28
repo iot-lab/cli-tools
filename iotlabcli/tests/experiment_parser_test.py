@@ -47,9 +47,9 @@ class TestMainInfoParser(MainMock):
         info_exp.return_value = {}
 
         experiment_parser.main(['info', '--list'])
-        info_exp.assert_called_with(self.api, False, None)
+        info_exp.assert_called_with(self.api, False)
         experiment_parser.main(['info', '--list-id', '--site', 'grenoble'])
-        info_exp.assert_called_with(self.api, True, 'grenoble')
+        info_exp.assert_called_with(self.api, True, site='grenoble')
 
     @patch('iotlabcli.experiment.stop_experiment')
     def test_main_stop_parser(self, stop_exp):

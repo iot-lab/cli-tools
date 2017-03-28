@@ -212,7 +212,7 @@ def reload_experiment(api, exp_id, duration=None, start_time=None):
     return api.reload_experiment(exp_id, exp_json)
 
 
-def info_experiment(api, list_id=False, site=None):
+def info_experiment(api, list_id=False, site=None, **selections):
     """ Print testbed information for user experiment submission:
     * resources description
     * resources description in short mode
@@ -221,8 +221,9 @@ def info_experiment(api, list_id=False, site=None):
     :param list_id: By default, return full nodes list, if list_id
         return output in exp_list format '3-12+42'
     :param site: Restrict informations collection on site
+    :param **selections: other selections than site
     """
-    return api.get_resources(list_id, site)
+    return api.get_resources(list_id, site, **selections)
 
 
 def script_experiment(api, exp_id, command, *options):

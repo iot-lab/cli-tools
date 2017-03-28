@@ -77,15 +77,19 @@ class Api(object):  # pylint:disable=too-many-public-methods
         """
         self.auth = HTTPBasicAuth(username, password)
 
-    def get_resources(self, list_id=False, site=None):
+    def get_resources(self, list_id=False, site=None, **selections):
         """ Get testbed resources description
 
         :param list_id: return result in 'exp_list' format '3-12+35'
         :param site: restrict to site
+        :param **selections: other selections than site
         """
+        if site:
+            selections['site'] = site
+
         url = 'experiments?%s' % ('id' if list_id else 'resources')
-        if site is not None:
-            url += '&site=%s' % site
+        for selection, value in selections.items():
+            url += '&{0}={1}'.format(selection, value)
         return self.method(url)
 
     def submit_experiment(self, files):

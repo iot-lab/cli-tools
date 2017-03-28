@@ -149,7 +149,10 @@ def parse_options():
                                         help='resources description list',
                                         formatter_class=RawTextHelpFormatter)
 
-    info_parser.add_argument('--site', help='resources list filter by site')
+    info_parser.add_argument('--site',
+                             action='append', dest='info_selection',
+                             type=lambda x: ('site', x),
+                             help='resources list filter by site')
     # subcommand
     info_group = info_parser.add_mutually_exclusive_group(required=True)
     info_group.add_argument('-l', '--list', dest='list_id',
@@ -719,7 +722,9 @@ def info_experiment_parser(opts):
     """ Parse namespace 'opts' object and execute requested 'info' command """
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-    return experiment.info_experiment(api, opts.list_id, opts.site)
+
+    selection = dict(opts.info_selection or ())
+    return experiment.info_experiment(api, opts.list_id, **selection)
 
 
 def wait_experiment_parser(opts):
