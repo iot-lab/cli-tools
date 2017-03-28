@@ -88,7 +88,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
             selections['site'] = site
 
         url = 'experiments?%s' % ('id' if list_id else 'resources')
-        for selection, value in selections.items():
+        for selection, value in sorted(selections.items()):
             url += '&{0}={1}'.format(selection, value)
         return self.method(url)
 

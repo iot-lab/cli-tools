@@ -643,12 +643,16 @@ class TestExperimentInfo(CommandMock):
     """ Test iotlabcli.experiment.info_experiment """
 
     def test_info_experiment(self):
-        """ Test experiment.get_resources """
+        """Test experiment.get_resources."""
         experiment.info_experiment(self.api)
         self.api.get_resources.assert_called_with(False, None)
 
         experiment.info_experiment(self.api, list_id=True, site='grenoble')
         self.api.get_resources.assert_called_with(True, 'grenoble')
+
+        experiment.info_experiment(self.api, site='grenoble', archi='m3')
+        self.api.get_resources.assert_called_with(False, 'grenoble',
+                                                  archi='m3')
 
 
 class TestWriteExperimentArchive(unittest.TestCase):

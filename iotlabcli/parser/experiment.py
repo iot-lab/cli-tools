@@ -153,6 +153,14 @@ def parse_options():
                              action='append', dest='info_selection',
                              type=lambda x: ('site', x),
                              help='resources list filter by site')
+    info_parser.add_argument('--archi',
+                             action='append', dest='info_selection',
+                             type=lambda x: ('archi', x),
+                             help='resources list filter by architecture')
+    info_parser.add_argument('--state', action='append', dest='info_selection',
+                             type=lambda x: ('state', x),
+                             help='resources list filter by state')
+
     # subcommand
     info_group = info_parser.add_mutually_exclusive_group(required=True)
     info_group.add_argument('-l', '--list', dest='list_id',
