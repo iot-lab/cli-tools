@@ -114,3 +114,12 @@ class TestMainNodeParser(MainMock):
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'profile-load', 123, [],
                                         'profile.json')
+
+        # profile-reset
+        node_command.reset_mock()
+        args = ['--profile-reset']
+        list_nodes.return_value = []
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'profile-reset', 123, [],
+                                        None)

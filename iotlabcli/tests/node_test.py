@@ -101,3 +101,9 @@ class TestNode(unittest.TestCase):
         # profile-load without profile
         self.assertRaises(AssertionError, node.node_command,
                           api, 'profile-load', 123, nodes_list)
+
+        # profile-reset
+        api.reset_mock()
+        res = node.node_command(api, 'profile-reset', 123, nodes_list)
+        self.assertEqual(my_mock.API_RET, res)
+        api.node_command.assert_called_with('profile-reset', 123, nodes_list)

@@ -111,6 +111,10 @@ def parse_options():
                            dest='profile_path', default=None,
                            help=('change nodes current monitoring profile'
                                  ' with provided JSON'))
+    cmd_group.add_argument('--profile-reset',
+                           dest='command', const='profile-reset',
+                           action='store_const',
+                           help='reset to default no monitoring profile')
 
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)

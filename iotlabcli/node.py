@@ -39,7 +39,7 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
     :param cmd_opt: Firmware path for update, profile name for profile
     """
     assert command in ('update', 'update-idle',
-                       'profile', 'profile-load',
+                       'profile', 'profile-load', 'profile-reset',
                        'start', 'stop', 'reset',
                        'debug-start', 'debug-stop')
 
