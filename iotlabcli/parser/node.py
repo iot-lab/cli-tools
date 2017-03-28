@@ -117,25 +117,56 @@ def node_parse_and_run(opts):
     api = rest.Api(user, passwd)
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
-    command = opts.command
-    if opts.command != 'with_argument':
+    if opts.command == 'with_argument':
+        command, cmd_opt = _node_parse_command_and_opt(**vars(opts))
+    else:
         # opts.command has a real value
-        command = opts.command
-        cmd_opt = None
-    elif opts.firmware_path is not None:
-        # opts.command has default value
-        command = 'update'
-        cmd_opt = opts.firmware_path
-    elif opts.profile_name is not None:
-        # opts.command has default value
-        command = 'profile'
-        cmd_opt = opts.profile_name
-    else:  # pragma: no cover
-        assert False, "Unknown command %r" % opts.command
+        command, cmd_opt = (opts.command, None)
 
     nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                               opts.exclude_nodes_list)
     return iotlabcli.node.node_command(api, command, exp_id, nodes, cmd_opt)
+
+
+def _node_parse_command_and_opt(**opts_dict):
+    """Return 'command' and 'command_opt' from **opts_dict.
+
+
+    Find which command has a non null attribute and returns it.
+
+    >>> _node_parse_command_and_opt(firmware_path='/tmp/test',
+    ...                             profile_name=None,
+    ...                             profile_path=None,
+    ...                             command='with_argument')
+    ('update', '/tmp/test')
+
+    >>> _node_parse_command_and_opt(firmware_path=None,
+    ...                             profile_name='consumption',
+    ...                             profile_path=None,
+    ...                             command='with_argument')
+    ('profile', 'consumption')
+
+    # Case where the command is not managed
+    >>> _node_parse_command_and_opt(firmware_path=None,
+    ...                             profile_name=None,
+    ...                             profile_path=None,
+    ...                             command='with_argument')
+    Traceback (most recent call last):
+    ...
+    ValueError: Unknown command
+    """
+    # Mapping between 'command' and argparse option name
+    commands_arguments = {
+        'update': 'firmware_path',
+        'profile': 'profile_name',
+    }
+
+    for command, argname in commands_arguments.items():
+        cmd_opt = opts_dict.get(argname, None)
+        if cmd_opt is not None:
+            return command, cmd_opt
+
+    raise ValueError('Unknown command')
 
 
 def main(args=None):
