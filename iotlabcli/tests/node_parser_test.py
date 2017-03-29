@@ -37,8 +37,8 @@ class TestMainNodeParser(MainMock):
     def test_main(self, list_nodes, node_command):
         """ Run the parser.node.main function """
         node_command.return_value = {'result': 'test'}
-
         list_nodes.return_value = []
+
         # start
         args = ['--start']
         node_parser.main(args)
@@ -49,12 +49,6 @@ class TestMainNodeParser(MainMock):
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'stop', 123, [], None)
-
-        # profile update
-        args = ['--profile', 'profm3']
-        node_parser.main(args)
-        list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
 
         # debug-start
         args = ['--debug-start']
@@ -78,6 +72,11 @@ class TestMainNodeParser(MainMock):
         node_command.assert_called_with(
             self.api, 'reset', 123, ['m3-1', 'm3-2', 'm3-3'], None)
 
+    def test_main_update(self, list_nodes, node_command):
+        """Run the parser.node.main function regarding update."""
+        node_command.return_value = {'result': 'test'}
+        list_nodes.return_value = []
+
         # update with exclude list
         args = ['--update', 'tp.elf', '-e', 'grenoble,m3,1-2']
         list_nodes.return_value = ['m3-3']  # simplify
@@ -87,3 +86,14 @@ class TestMainNodeParser(MainMock):
             [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info']])
         node_command.assert_called_with(
             self.api, 'update', 123, ['m3-3'], 'tp.elf')
+
+    def test_main_profile(self, list_nodes, node_command):
+        """Run the parser.node.main function regarding profile."""
+        node_command.return_value = {'result': 'test'}
+        list_nodes.return_value = []
+
+        # profile update
+        args = ['--profile', 'profm3']
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
