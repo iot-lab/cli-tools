@@ -29,6 +29,12 @@ PACKAGE = 'iotlabcli'
 LICENSE = 'CeCILL v2.1'
 
 
+def cat(files, join_str=''):
+    """Concatenate `files` content with `join_str` between them."""
+    files_content = (open(f).read() for f in files)
+    return join_str.join(files_content)
+
+
 def get_version(package):
     """ Extract package version without importing file
     Importing cause issues with coverage,
@@ -46,6 +52,8 @@ def get_version(package):
 SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
            'robot-cli', 'admin-cli']
 
+LONG_DESCRIPTION_FILES = ['README.rst', 'CHANGELOG.rst']
+
 INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
 if sys.version_info[0:2] == (2, 6):
     # OrderedDict and Counter added in python2.7
@@ -56,6 +64,7 @@ setup(
     name=PACKAGE,
     version=get_version(PACKAGE),
     description='IoT-LAB testbed command-line client',
+    long_description=cat(LONG_DESCRIPTION_FILES, u'\n\n'),
     author='IoT-LAB Team',
     author_email='admin@iot-lab.info',
     url='http://www.iot-lab.info',

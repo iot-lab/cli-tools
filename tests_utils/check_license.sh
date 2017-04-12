@@ -12,6 +12,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e 'setup.cfg' \
     -e 'tox.ini' \
     -e '.md$' \
+    -e '.rst$' \
     -e '.elf' \
     -e '.hex' \
     -e '.json'\
