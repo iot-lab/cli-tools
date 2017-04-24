@@ -244,7 +244,8 @@ def json_dumps(obj):
     """ Dumps data to json """
     class _Encoder(json.JSONEncoder):  # pylint: disable=too-few-public-methods
         """ Encoder for serialization object python to JSON format """
-        def default(self, obj):  # pylint: disable=method-hidden
+        def default(self, obj):
+            # pylint: disable=method-hidden,arguments-differ
             return obj.__dict__
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
