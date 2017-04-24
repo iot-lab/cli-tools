@@ -23,3 +23,7 @@ test_auth_file
 *png
 
 *.tar.gz
+
+# pytest cache directory
+.cache/
+test-report.xml
