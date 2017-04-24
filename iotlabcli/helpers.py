@@ -107,7 +107,7 @@ def get_current_exp(exp_by_states, states):
         exps = exp_by_states.get(state, [])
         if len(exps) == 1:
             return exps[0]
-        elif len(exps) == 0:
+        elif not exps:
             continue
         raise ValueError(
             "You have several experiments with state {0!r}\n"
