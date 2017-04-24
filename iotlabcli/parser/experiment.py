@@ -20,6 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """ Experiment parser """
+# pylint:disable=protected-access
 
 import sys
 import time
@@ -690,8 +691,8 @@ def get_experiment_parser(opts):
     api = rest.Api(user, passwd)
 
     if opts.get_cmd == 'experiment_list':
-        return experiment.get_experiments_list(api, opts.state, opts.limit,
-                                               opts.offset)
+        ret = experiment.get_experiments_list(api, opts.state, opts.limit,
+                                              opts.offset)
     elif opts.get_cmd == 'start':
         exp_id = helpers.get_current_experiment(api, opts.experiment_id,
                                                 running_only=False)
@@ -700,13 +701,14 @@ def get_experiment_parser(opts):
         # Add a 'date' field
         timestamp = ret['start_time']
         ret['local_date'] = time.ctime(timestamp) if timestamp else 'Unknown'
-        return ret
     elif opts.get_cmd == 'experiments':
-        return experiment.get_active_experiments(api,
-                                                 running_only=not opts.active)
+        ret = experiment.get_active_experiments(api,
+                                                running_only=not opts.active)
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
-        return experiment.get_experiment(api, exp_id, opts.get_cmd)
+        ret = experiment.get_experiment(api, exp_id, opts.get_cmd)
+
+    return ret
 
 
 def load_experiment_parser(opts):
