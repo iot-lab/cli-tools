@@ -1,3 +1,0 @@
-# Drop support for python3.2
-# https://bitbucket.org/ned/coveragepy/issues/407/coverage-failing-on-python-325-using
-coverage < 4.0.0
