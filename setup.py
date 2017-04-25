@@ -48,8 +48,11 @@ def get_version(package):
                 return eval(line.split('=')[-1])  # pylint:disable=eval-used
 
 
-SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
-           'robot-cli', 'admin-cli']
+SCRIPTS = ['iotlab-auth', 'iotlab-experiment', 'iotlab-node', 'iotlab-profile',
+           'iotlab-robot', 'iotlab-admin']
+DEPRECATED_SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
+                      'robot-cli', 'admin-cli']
+SCRIPTS += DEPRECATED_SCRIPTS
 
 LONG_DESCRIPTION_FILES = ['README.rst', 'CHANGELOG.rst']
 

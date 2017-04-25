@@ -20,6 +20,4 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import iotlabcli.parser.admin
-from iotlabcli.helpers import deprecate_cmd
-
-deprecate_cmd(iotlabcli.parser.admin.main, "admin-cli", "iotlab-admin")
+iotlabcli.parser.admin.main()
