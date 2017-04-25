@@ -25,12 +25,17 @@ import sys
 import os
 import json
 import itertools
+import warnings
 
 OAR_STATES = ["Waiting", "toLaunch", "Launching",
               "Running",
               "Finishing",
               "Terminated", "Error"]
 ACTIVE_STATES = OAR_STATES[OAR_STATES.index('Running')::-1]
+
+DEPRECATION_MESSAGE = ("{old_cmd} command is deprecated and will be removed "
+                       "in next release. Please \033[1muse {new_cmd} "
+                       "instead\033[0m.\n\n")
 
 
 def get_current_experiment(api, experiment_id=None, running_only=True):
@@ -249,6 +254,7 @@ def json_dumps(obj):
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
 
+
 def flatten_list_list(list_list):
     """Flatten given list of list.
 
@@ -256,3 +262,11 @@ def flatten_list_list(list_list):
     [1, 2, 3, 4, 5, 6, 7, 8]
     """
     return list(itertools.chain.from_iterable(list_list))
+
+
+def deprecate_cmd(cmd_func, old_cmd, new_cmd):
+    """Display a deprecation warning message and run command."""
+    warnings.simplefilter('always', DeprecationWarning)
+    warnings.warn(DEPRECATION_MESSAGE.format(old_cmd=old_cmd, new_cmd=new_cmd),
+                  DeprecationWarning, stacklevel=3)
+    cmd_func()
