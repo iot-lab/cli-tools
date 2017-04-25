@@ -254,7 +254,6 @@ def json_dumps(obj):
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
 
-
 def flatten_list_list(list_list):
     """Flatten given list of list.
 

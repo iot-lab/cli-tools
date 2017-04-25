@@ -86,21 +86,20 @@ class TestHelpers(unittest.TestCase):
             read_file_mock.return_value = 'API_URL_CUSTOM'
             self.assertEqual('API_URL_CUSTOM', helpers.read_custom_api_url())
 
-
     def test_deprecate_command(self):
         """Test command deprecation."""
         def fake_cmd():
             """Dummy test function"""
             pass
 
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as warn:
             helpers.deprecate_cmd(fake_cmd, "old", "new")
 
-        assert len(w) == 1
-        assert issubclass(w[-1].category, DeprecationWarning)
-        assert helpers.DEPRECATION_MESSAGE.format(old_cmd="old",
-                                                  new_cmd="new") \
-            in str(w[-1].message)
+        self.assertEqual(len(warn), 1)
+        self.assertTrue(issubclass(warn[-1].category, DeprecationWarning))
+        self.assertTrue(helpers.DEPRECATION_MESSAGE.format(old_cmd="old",
+                                                           new_cmd="new")
+                        in str(warn[-1].message))
 
 
 class TestFilesDict(unittest.TestCase):
