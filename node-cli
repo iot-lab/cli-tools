@@ -20,4 +20,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import iotlabcli.parser.node
-iotlabcli.parser.node.main()
+from iotlabcli.helpers import deprecate_cmd
+
+deprecate_cmd(iotlabcli.parser.node.main, "node-cli", "iotlab-node")

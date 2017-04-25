@@ -24,6 +24,7 @@
 
 import unittest
 import sys
+import warnings
 
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
@@ -84,6 +85,22 @@ class TestHelpers(unittest.TestCase):
             read_file_mock.side_effect = None
             read_file_mock.return_value = 'API_URL_CUSTOM'
             self.assertEqual('API_URL_CUSTOM', helpers.read_custom_api_url())
+
+
+    def test_deprecate_command(self):
+        """Test command deprecation."""
+        def fake_cmd():
+            """Dummy test function"""
+            pass
+
+        with warnings.catch_warnings(record=True) as w:
+            helpers.deprecate_cmd(fake_cmd, "old", "new")
+
+        assert len(w) == 1
+        assert issubclass(w[-1].category, DeprecationWarning)
+        assert helpers.DEPRECATION_MESSAGE.format(old_cmd="old",
+                                                  new_cmd="new") \
+            in str(w[-1].message)
 
 
 class TestFilesDict(unittest.TestCase):

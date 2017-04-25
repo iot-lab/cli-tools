@@ -20,4 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import iotlabcli.parser.experiment
-iotlabcli.parser.experiment.main()
+from iotlabcli.helpers import deprecate_cmd
+
+deprecate_cmd(iotlabcli.parser.experiment.main,
+              "experiment-cli", "iotlab-experiment")
