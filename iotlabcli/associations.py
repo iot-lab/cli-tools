@@ -194,6 +194,7 @@ class _Association(collections.MutableMapping, dict):
         return _disabled_method(self)
 
     def __setitem__(self, *_):  # pragma: no cover
+        # pylint: disable=arguments-differ
         return _disabled_method(self)
 
 
