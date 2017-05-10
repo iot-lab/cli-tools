@@ -96,6 +96,7 @@ class HelpAction(argparse.Action):
     HELPMSG = None
 
     def __init__(self, *args, **kwargs):
+        # pylint: disable=useless-super-delegation
         super(HelpAction, self).__init__(*args, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
