@@ -107,7 +107,7 @@ def get_current_exp(exp_by_states, states):
         exps = exp_by_states.get(state, [])
         if len(exps) == 1:
             return exps[0]
-        elif len(exps) == 0:
+        elif not exps:
             continue
         raise ValueError(
             "You have several experiments with state {0!r}\n"
@@ -244,8 +244,9 @@ def json_dumps(obj):
     """ Dumps data to json """
     class _Encoder(json.JSONEncoder):  # pylint: disable=too-few-public-methods
         """ Encoder for serialization object python to JSON format """
-        def default(self, obj):  # pylint: disable=method-hidden
-            return obj.__dict__
+        def default(self, o):
+            # pylint: disable=method-hidden,arguments-differ
+            return o.__dict__
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
 
