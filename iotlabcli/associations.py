@@ -64,7 +64,7 @@ class _Association(collections.MutableMapping, dict):
     VALUE = None
     VALUE_SORT_KEY = None
 
-    def __init__(self, key, value):  # pylint:disable=super-init-not-called
+    def __init__(self, key, value):
         # Don't call 'dict' init, only used for json dumping
         self._concrete_class()
         self.key = key

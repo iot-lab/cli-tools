@@ -20,7 +20,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """ Experiment parser """
-# pylint:disable=protected-access
 
 import sys
 import time
