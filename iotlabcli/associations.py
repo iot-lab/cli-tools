@@ -206,6 +206,8 @@ class AssociationsMap(  # pylint:disable=too-many-public-methods
     """
 
     def __init__(self, assoctype, resource, sortkey=None):
+        # pylint:disable=super-init-not-called
+
         list.__init__(self)
         self.assoc_class = _Association.for_key_value(assoctype, resource,
                                                       sortkey)
