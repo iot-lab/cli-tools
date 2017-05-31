@@ -689,6 +689,7 @@ def get_experiment_parser(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
 
+    # pylint:disable=no-else-return
     if opts.get_cmd == 'experiment_list':
         return experiment.get_experiments_list(api, opts.state, opts.limit,
                                                opts.offset)

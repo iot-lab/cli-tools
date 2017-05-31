@@ -281,8 +281,8 @@ def _add_profile(api, name, profile, json_out=False):
     """ Add user profile. if json, dump json dict to stdout """
     if json_out:
         return profile
-    else:
-        return api.add_profile(name, profile)
+
+    return api.add_profile(name, profile)
 
 
 def add_profile_parser(api, opts):
