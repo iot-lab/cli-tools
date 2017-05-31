@@ -194,6 +194,7 @@ class _Association(collections.MutableMapping, dict):
         return _disabled_method(self)
 
     def __setitem__(self, *_):  # pragma: no cover
+        # pylint: disable=arguments-differ
         return _disabled_method(self)
 
 
@@ -205,6 +206,8 @@ class AssociationsMap(  # pylint:disable=too-many-public-methods
     """
 
     def __init__(self, assoctype, resource, sortkey=None):
+        # pylint:disable=super-init-not-called
+
         list.__init__(self)
         self.assoc_class = _Association.for_key_value(assoctype, resource,
                                                       sortkey)
