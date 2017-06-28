@@ -1,6 +1,19 @@
 Changelog
 =========
 
+2.4.1
+-----
+
+Features
+~~~~~~~~
+
+-  Remove ``archi`` names validation in AliasNodes association
+
+Internal
+~~~~~~~~
+
+-  Fixing pylint
+
 2.4.0
 -----
 
