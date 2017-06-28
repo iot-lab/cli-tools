@@ -49,14 +49,14 @@ Examples from iot-lab bash scripts
 Get nodes list per architecture
 -------------------------------
 
-### List all 'custom' archi nodes ###
+### List all 'samr21' archi nodes ###
 
-    experiment-cli --jmespath="items[?starts_with(@.archi, 'custom:')]" info -l
+    experiment-cli --jmespath="items[?starts_with(@.archi, 'samr21:')]" info -l
     [
         {
-            "archi": "custom:samr21:at86rf233",
+            "archi": "samr21:at86rf233",
             "mobile": 0,
-            "network_address": "custom-1.saclay.iot-lab.info",
+            "network_address": "samr21-1.saclay.iot-lab.info",
             ...
         }
     ]
@@ -66,20 +66,20 @@ Get nodes list per architecture
 
     experiment-cli --jmespath="items[?contains(@.archi, 'samr21')].network_address" info  -l
     [
-        "custom-1.saclay.iot-lab.info",
+        "samr21-1.saclay.iot-lab.info",
         ...
-        "custom-8.saclay.iot-lab.info"
+        "samr21-8.saclay.iot-lab.info"
     ]
 
 
 ### List nodes by exact archi ###
 
-    experiment-cli --jmespath="items[?archi=='custom:samr21:at86rf233'].network_address" info -l
+    experiment-cli --jmespath="items[?archi=='samr21:at86rf233'].network_address" info -l
     [
         {
-            "archi": "custom:samr21:at86rf233",
+            "archi": "samr21:at86rf233",
             "mobile": 0,
-            "network_address": "custom-1.saclay.iot-lab.info",
+            "network_address": "samr21-1.saclay.iot-lab.info",
             ...
         }
     ]

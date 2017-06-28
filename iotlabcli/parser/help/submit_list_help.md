@@ -26,7 +26,7 @@ Resources selection has two modes (a submit should only contain one mode):
     <site>,<short_archi>,<id_list>
 
     grenoble,m3,1-10+31-40 : grenoble m3 nodes 1..10 and 31..40
-    saclay,custom,1+2+3    : saclay custom nodes 1..3
+    saclay,samr21,1+2+3    : saclay samr21 nodes 1..3
 
 ### Alias selection ###
 
@@ -36,7 +36,7 @@ Resources selection has two modes (a submit should only contain one mode):
     properties == 'site=<site>+archi=<full_archi>[+mobile=0|1]' in any order
 
     1,site=grenoble+archi=m3:at86rf231+mobile=1 : one mobile m3 in Grenoble
-    2,archi=custom:samr21:at86rf233+site=saclay : two custom samr21 in saclay
+    2,archi=samr21:at86rf233+site=saclay : two custom samr21 in saclay
 
 
 Resources configuration
