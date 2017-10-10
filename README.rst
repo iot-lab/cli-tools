@@ -1,6 +1,8 @@
 IoT-Lab cli-tools
 =================
 
+|PyPI| |Travis|
+
 IoT-LAB cli-tools provide a basic set of operations for managing IoT-LAB
 experiments from the command-line.
 
@@ -55,3 +57,12 @@ Installing cli-tools automatically fetches additional dependencies as
 needed.
 
 Further documentation: https://github.com/iot-lab/iot-lab/wiki/CLI-Tools
+
+
+.. |PyPI| image:: https://badge.fury.io/py/iotlabcli.svg
+   :target: https://badge.fury.io/py/iotlabcli
+   :alt: PyPI package status
+
+.. |Travis| image:: https://travis-ci.org/iot-lab/cli-tools.svg?branch=master
+   :target: https://travis-ci.org/iot-lab/cli-tools
+   :alt: Travis build status
