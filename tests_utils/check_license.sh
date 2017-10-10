@@ -25,6 +25,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e 'iotlabcli/tests/scriptconfig' \
     -e 'examples/' \
     -e '.travis.yml' \
+    -e 'codecov.yml' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist
