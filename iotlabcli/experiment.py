@@ -528,6 +528,13 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
 
         experiment.type = exp_dict.pop('type')
         experiment.nodes = exp_dict.pop('nodes')
+
+        if 'profiles' in exp_dict:
+            del exp_dict['profiles']
+
+        if 'mobilities' in exp_dict:
+            del exp_dict['mobilities']
+
         experiment._load_assocs(**exp_dict)  # pylint:disable=protected-access
         # No checking
         return experiment
