@@ -497,6 +497,8 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         self.profileassociations = None
         self.associations = None
         self.siteassociations = None
+        self.profiles = None
+        self.mobilities = None
 
     def _firmwareassociations(self):
         """Init and return firmwareassociations."""
@@ -529,11 +531,11 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         experiment.type = exp_dict.pop('type')
         experiment.nodes = exp_dict.pop('nodes')
 
-        if 'profiles' in exp_dict:
-            del exp_dict['profiles']
+        if 'profiles' in exp_dict.keys():
+            experiment.profiles = exp_dict.pop('profiles')
 
-        if 'mobilities' in exp_dict:
-            del exp_dict['mobilities']
+        if 'mobilities' in exp_dict.keys():
+            experiment.mobilities = exp_dict.pop('mobilities')
 
         experiment._load_assocs(**exp_dict)  # pylint:disable=protected-access
         # No checking

@@ -109,6 +109,8 @@ class TestExperimentSubmit(CommandMock):
             'firmwareassociations': None,
             'associations': None,
             'siteassociations': None,
+            'profiles': None,
+            'mobilities': None,
         }
         self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
@@ -165,6 +167,8 @@ class TestExperimentSubmit(CommandMock):
             ],
             'associations': None,
             'siteassociations': None,
+            'profiles': None,
+            'mobilities': None,
         }
         self.assertEqual(expected, exp_desc)
         self.assertTrue('firmware.elf' in files_dict)
@@ -217,6 +221,8 @@ class TestExperimentSubmit(CommandMock):
                     {'kernelname': 'linux', 'nodes': nodes}],
             },
             'siteassociations': None,
+            'profiles': None,
+            'mobilities': None,
         }
         self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
 
@@ -298,6 +304,8 @@ class TestExperimentSubmit(CommandMock):
                     },
                 ],
             },
+            'profiles': None,
+            'mobilities': None,
         }
         self.assertEqual(expected, json.loads(files_dict['new_exp.json']))
         self.assertEqual(files_dict['script.sh'], SCRIPTS['script.sh'])
@@ -381,6 +389,8 @@ class TestExperimentSubmit(CommandMock):
                     "sites": ['grenoble'],
                 }],
             },
+            'profiles': None,
+            'mobilities': None,
         }
         read_file_mock.side_effect = self._read_file_for_load
 
