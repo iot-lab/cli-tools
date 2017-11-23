@@ -1,6 +1,15 @@
 Changelog
 =========
 
+2.4.2
+-----
+
+Bugs
+~~~~
+
+-  Fix load experiment with mobilities or profiles associations.
+
+
 2.4.1
 -----
 
