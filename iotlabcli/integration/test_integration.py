@@ -350,7 +350,7 @@ class TestCliToolsProfile(unittest.TestCase):
         """ Test creating M3 profiles and deleting them """
 
         profs = call_cli('profile-cli get -l')
-        profiles_names = set([p['profilename'] for p in profs])
+        profiles_names = {p['profilename'] for p in profs}
 
         self._add_prof('profile-cli addm3 -n {}', self.profile['m3'])
         profiles_names.add(self.profile['m3'])
@@ -368,7 +368,7 @@ class TestCliToolsProfile(unittest.TestCase):
 
         # check that profiles have been added
         profs = call_cli('profile-cli get -l')
-        profiles_names_new = set([p['profilename'] for p in profs])
+        profiles_names_new = {p['profilename'] for p in profs}
         self.assertEqual(profiles_names, profiles_names_new)
 
         self._del_prof(self.profile['m3'])
@@ -379,7 +379,7 @@ class TestCliToolsProfile(unittest.TestCase):
         """ Test creating wsn430 profiles and deleting them """
 
         profs = call_cli('profile-cli get -l')
-        profiles_names = set([p['profilename'] for p in profs])
+        profiles_names = {p['profilename'] for p in profs}
 
         self._add_prof('profile-cli addwsn430 -n {}', self.profile['wsn430'])
         profiles_names.add(self.profile['wsn430'])
@@ -393,7 +393,7 @@ class TestCliToolsProfile(unittest.TestCase):
 
         # check that profiles have been added
         profs = call_cli('profile-cli get -l')
-        profiles_names_new = set([p['profilename'] for p in profs])
+        profiles_names_new = {p['profilename'] for p in profs}
         self.assertEqual(profiles_names, profiles_names_new)
 
         self._del_prof(self.profile['wsn430'])
