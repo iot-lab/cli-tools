@@ -34,11 +34,6 @@ if version_info[0] == 2:  # pragma: no cover
     from urllib2 import HTTPError
     import mock
     from cStringIO import StringIO
-elif version_info[0:2] <= (3, 2):  # pragma: no cover
-    # python3.2
-    from urllib.error import HTTPError
-    import mock
-    from io import StringIO
 elif version_info[0] == 3:  # pragma: no cover
     # python3
     from urllib.error import HTTPError
