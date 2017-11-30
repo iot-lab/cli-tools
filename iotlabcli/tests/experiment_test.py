@@ -354,7 +354,7 @@ class TestExperimentSubmit(CommandMock):
             self.api, experiment.EXP_FILENAME, ['firmware.elf'])
 
         # read_file_calls
-        _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
+        _files = {_call[0][0] for _call in read_file_mock.call_args_list}
         self.assertEqual(_files,
                          set((experiment.EXP_FILENAME,
                               'firmware.elf', 'firmware_2.elf')))
@@ -398,7 +398,7 @@ class TestExperimentSubmit(CommandMock):
             self.api, experiment.EXP_FILENAME, ['script.sh'])
 
         # read_file_calls
-        _files = set([_call[0][0] for _call in read_file_mock.call_args_list])
+        _files = {_call[0][0] for _call in read_file_mock.call_args_list}
         self.assertEqual(_files,
                          set((experiment.EXP_FILENAME,
                               'firmware.elf', 'script.sh', 'scriptconfig')))
