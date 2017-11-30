@@ -178,7 +178,7 @@ def _files_with_filespath(files, filespath):
     ValueError: Filespath ['dir/c'] not in files list ['a', 'b']
     """
     # Change filespath to a dict by basename
-    filespathdict = dict(((basename(f), f) for f in filespath))
+    filespathdict = {basename(f): f for f in filespath}
 
     # Update to full filepath if provided
     updatedfiles = [filespathdict.pop(f, f) for f in set(files)]
