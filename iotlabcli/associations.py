@@ -59,7 +59,7 @@ class _Association(collections.MutableMapping, dict):
     Inherit from dict to be dumped as a dict by json.
     """
     __metaclass__ = abc.ABCMeta
-    KEYFMT = '{0}name'
+    KEYFMT = '{}name'
     KEY = None
     VALUE = None
     VALUE_SORT_KEY = None
@@ -136,7 +136,7 @@ class _Association(collections.MutableMapping, dict):
     @classmethod
     def for_key_value(cls, key, value, sortkey=None):
         """Create association class for assoctype."""
-        name = '{0}{1}Association'.format(key.title(), value.title())
+        name = '{}{}Association'.format(key.title(), value.title())
 
         class KeyValuesAssociation(cls):  # pylint:disable=too-many-ancestors
             """KeyValuesAssociation class->Nodes."""

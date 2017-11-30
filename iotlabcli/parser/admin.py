@@ -50,7 +50,7 @@ def wait_experiment_parser(opts):
     """ Parse namespace 'opts' object and execute requested 'wait' command """
 
     sys.stderr.write(
-        "Waiting that experiment {0}/{1} gets in state {2}\n".format(
+        "Waiting that experiment {}/{} gets in state {}\n".format(
             opts.experiment_id, opts.exp_user, opts.state))
 
     return admin.wait_user_experiment(opts.experiment_id, opts.exp_user,

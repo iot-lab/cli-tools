@@ -745,7 +745,7 @@ def wait_experiment_parser(opts):
     exp_id = helpers.get_current_experiment(
         api, opts.experiment_id, running_only=False)
 
-    sys.stderr.write("Waiting that experiment {0} gets in state {1}\n".format(
+    sys.stderr.write("Waiting that experiment {} gets in state {}\n".format(
         exp_id, opts.state))
 
     return experiment.wait_experiment(api, exp_id, opts.state,

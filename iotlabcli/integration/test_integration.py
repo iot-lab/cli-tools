@@ -100,7 +100,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._wait_state_or_finished()
 
         # Test get start-time
-        cmd = 'experiment-cli get --start-time -i {0}'.format(self.exp_id)
+        cmd = 'experiment-cli get --start-time -i {}'.format(self.exp_id)
         self.assertNotEqual(0, call_cli(cmd)['start_time'])
 
     def test_an_experiment_alias_multi_same_node(self):
@@ -156,7 +156,7 @@ class TestCliToolsExperiments(unittest.TestCase):
         """ Run an experiment on m3 nodes simple"""
         site = NODES['m3']
 
-        cmd = 'experiment-cli info -li --site {0}'.format(site)
+        cmd = 'experiment-cli info -li --site {}'.format(site)
 
         nodes = self._find_working_nodes(site, 'm3', 3)
         cmd = 'experiment-cli submit -d 5 -n test_cli -l {} '.format(nodes)
@@ -255,7 +255,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def _wait_state_or_finished(self, states='Error,Terminated'):
         """ Wait experiment get in state, or states error and terminated """
-        cmd = 'experiment-cli wait --state {0} --step 5 -i {1}'.format(
+        cmd = 'experiment-cli wait --state {} --step 5 -i {}'.format(
             states, self.exp_id)
         LOGGER.info(cmd)
         return call_cli(cmd)
