@@ -26,6 +26,7 @@ import sys
 import errno
 import argparse
 import contextlib
+from collections import OrderedDict
 
 # pylint: disable=wrong-import-order
 try:
@@ -34,12 +35,6 @@ try:
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
     from urllib2 import HTTPError
-try:
-    # pylint: disable=import-error,no-name-in-module
-    from collections import OrderedDict
-except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from backport_collections import OrderedDict
 
 import jmespath
 

@@ -21,7 +21,6 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 import os
-import sys
 from setuptools import setup, find_packages
 
 PACKAGE = 'iotlabcli'
@@ -54,11 +53,6 @@ SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
 
 LONG_DESCRIPTION_FILES = ['README.rst', 'CHANGELOG.rst']
 
-INSTALL_REQUIRES = ['argparse', 'requests>2.4.2', 'jmespath']
-if sys.version_info[0:2] == (2, 6):
-    # OrderedDict and Counter added in python2.7
-    INSTALL_REQUIRES.append('backport_collections')
-
 
 setup(
     name=PACKAGE,
@@ -77,12 +71,11 @@ setup(
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Programming Language :: Python',
                  'Programming Language :: Python :: 2',
-                 'Programming Language :: Python :: 2.6',
                  'Programming Language :: Python :: 2.7',
                  'Programming Language :: Python :: 3',
-                 'Programming Language :: Python :: 3.3',
                  'Programming Language :: Python :: 3.4',
                  'Programming Language :: Python :: 3.5',
+                 'Programming Language :: Python :: 3.6',
                  'Intended Audience :: End Users/Desktop',
                  'Environment :: Console',
                  'Topic :: Utilities', ],
@@ -91,5 +84,6 @@ setup(
         #     security.html#openssl-pyopenssl
         'secure': ['pyOpenSSL', 'ndg-httpsclient', 'pyasn1'],
     },
-    install_requires=INSTALL_REQUIRES,
+    install_requires=['requests>2.4.2', 'jmespath'],
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
 )
