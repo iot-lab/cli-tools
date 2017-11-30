@@ -326,7 +326,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
         :param **kwargs: requests.request additional arguments """
         try:
             return requests.request(method, url, **kwargs)
-        except:  # show issue with old requests versions
+        except Exception:  # show issue with old requests versions
             raise RuntimeError(sys.exc_info())
 
     @staticmethod
