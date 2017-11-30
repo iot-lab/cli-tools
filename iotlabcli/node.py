@@ -59,7 +59,7 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
         files[NODE_FILENAME] = json.dumps(nodes_list)
         result = api.node_profile_load(exp_id, files)
     elif command == 'profile':
-        cmd_opt = '&name={0}'.format(cmd_opt)
+        cmd_opt = '&name={}'.format(cmd_opt)
         result = api.node_command(command, exp_id, nodes_list, cmd_opt)
     else:
         result = api.node_command(command, exp_id, nodes_list)

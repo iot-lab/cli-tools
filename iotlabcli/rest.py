@@ -89,7 +89,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
 
         url = 'experiments?%s' % ('id' if list_id else 'resources')
         for selection, value in sorted(selections.items()):
-            url += '&{0}={1}'.format(selection, value)
+            url += '&{}={}'.format(selection, value)
         return self.method(url)
 
     def submit_experiment(self, files):
@@ -218,7 +218,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
         """
         url = 'profiles'
         if archi is not None:
-            url += '?archi={0}'.format(archi)
+            url += '?archi={}'.format(archi)
         return self.method(url)
 
     def get_profile(self, name):

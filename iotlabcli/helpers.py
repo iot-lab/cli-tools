@@ -204,7 +204,7 @@ def read_custom_api_url():
         api_url = os.getenv('IOTLAB_API_URL')
 
     if api_url:
-        sys.stderr.write("Using custom api_url: {0}\n".format(api_url))
+        sys.stderr.write("Using custom api_url: {}\n".format(api_url))
     return api_url
 
 

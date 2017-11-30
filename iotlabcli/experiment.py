@@ -484,7 +484,7 @@ _NODESMAPKWARGS = dict(resource='nodes', sortkey=helpers.node_url_sort_key)
 class _Experiment(object):  # pylint:disable=too-many-instance-attributes
     """ Class describing an experiment """
 
-    ASSOCATTR_FMT = '{0}associations'
+    ASSOCATTR_FMT = '{}associations'
 
     def __init__(self, name, duration, start_time=None):
         self.duration = duration
@@ -615,7 +615,7 @@ class _Experiment(object):  # pylint:disable=too-many-instance-attributes
         # Check that nodes are not already present
         _intersect = list(set(self.nodes) & set(nodes_list))
         if _intersect:
-            raise ValueError("Nodes specified multiple times {0}".format(
+            raise ValueError("Nodes specified multiple times {}".format(
                 _intersect))
 
         self.nodes.extend(nodes_list)
