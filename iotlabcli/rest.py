@@ -315,7 +315,7 @@ class Api(object):  # pylint:disable=too-many-public-methods
                             json=json, files=files)
         if requests.codes.ok == req.status_code:
             return req.content if raw else req.json()
-        self._raise_http_error(_url, req)
+        return self._raise_http_error(_url, req)
 
     @staticmethod
     def _request(url, method, **kwargs):

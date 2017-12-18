@@ -256,7 +256,8 @@ def _script_run_files_dict(*site_associations):
     """
 
     if not site_associations:
-        raise ValueError('Got empty site_associations %r', site_associations)
+        raise ValueError('Got empty site_associations: {}'
+                         .format(site_associations))
 
     _check_sites_uniq(*site_associations)
 
