@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.5.0
+-----
+
+-  Drop python 2.6 support
+-  Fixing issues raised by pylint 1.8
+-  Deprecate *-cli commands and add new iotlab-* commands
+
 2.4.2
 -----
 
