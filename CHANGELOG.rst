@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.5.1
+-----
+
+-  Fixing python 3 required version in setup.py
+
 2.5.0
 -----
 
