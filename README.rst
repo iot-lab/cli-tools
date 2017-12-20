@@ -20,15 +20,15 @@ The following commands are available:
 +------------------------------+---------------------------------------------+
 | Command                      | Functions                                   |
 +==============================+=============================================+
-| ``auth-cli``                 | configure account credentials               |
+| ``iotlab-auth``              | configure account credentials               |
 +------------------------------+---------------------------------------------+
-| ``experiment-cli``           | start, stop, query experiments              |
+| ``iotlab-experiment``        | start, stop, query experiments              |
 +------------------------------+---------------------------------------------+
-| ``node-cli``                 | start, stop, reset nodes, update firmwares  |
+| ``iotlab-node``              | start, stop, reset nodes, update firmwares  |
 +------------------------------+---------------------------------------------+
-| ``profile-cli``              | manage nodes configurations                 |
+| ``iotlab-profile``           | manage nodes configurations                 |
 +------------------------------+---------------------------------------------+
-| ``robot-cli``                | manage robot nodes                          |
+| ``iotlab-robot``             | manage robot nodes                          |
 +------------------------------+---------------------------------------------+
 
 Commands are self-documented, and usually have sub-commands which are
@@ -36,8 +36,8 @@ also self-documented. Use e.g:
 
 ::
 
-    node-cli --help
-    profile-cli add --help
+    iotlab-node --help
+    iotlab-profile add --help
 
 Description
 -----------
