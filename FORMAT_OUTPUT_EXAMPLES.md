@@ -10,13 +10,13 @@ Examples from iot-lab bash scripts
 
 ### Get Grenoble M3 alive nodes ###
 
-    experiment-cli --jmespath 'items[*].grenoble.m3.Alive|[0]' --format='str' info -li
+    iotlab-experiment --jmespath 'items[*].grenoble.m3.Alive|[0]' --format='str' info -li
     1-5+7+9+11-16+18-19+21-23+25-27+29-35+37-40+42-45+48-51+53-64+66-72+74-81+83-137+139-146+149+152-154+156-158+160-162+164-166+168-182+184+186-283+285-290+292-318+320-350+352-355+357-381
 
 
 ### New line seperated nodes list ###
 
-    experiment-cli --jp='items[].network_address' --fmt='"\n".join'  get -r
+    iotlab-experiment --jp='items[].network_address' --fmt='"\n".join'  get -r
     a8-6.grenoble.iot-lab.info
     a8-5.grenoble.iot-lab.info
     a8-9.grenoble.iot-lab.info
@@ -26,7 +26,7 @@ Examples from iot-lab bash scripts
 
 ### New line seperated open nodes list ###
 
-    experiment-cli --jp='items[].network_address' --fmt='lambda x: "\n".join(["node-"+n for n in x])'  get -r
+    iotlab-experiment --jp='items[].network_address' --fmt='lambda x: "\n".join(["node-"+n for n in x])'  get -r
     node-a8-6.grenoble.iot-lab.info
     node-a8-5.grenoble.iot-lab.info
     node-a8-9.grenoble.iot-lab.info
@@ -36,13 +36,13 @@ Examples from iot-lab bash scripts
 
 ### Successfully deployed nodes ###
 
-    experiment-cli --jp='deploymentresults."0"' --fmt='" ".join' get -p
+    iotlab-experiment --jp='deploymentresults."0"' --fmt='" ".join' get -p
     a8-5.grenoble.iot-lab.info a8-6.grenoble.iot-lab.info a8-7.grenoble.iot-lab.info a8-8.grenoble.iot-lab.info a8-9.grenoble.iot-lab.info
 
 
 ### Get experiment state ###
 
-    experiment-cli --jp=state --fmt=str get -i 29251 -s
+    iotlab-experiment --jp=state --fmt=str get -i 29251 -s
     Running
 
 
@@ -51,7 +51,7 @@ Get nodes list per architecture
 
 ### List all 'samr21' archi nodes ###
 
-    experiment-cli --jmespath="items[?starts_with(@.archi, 'samr21:')]" info -l
+    iotlab-experiment --jmespath="items[?starts_with(@.archi, 'samr21:')]" info -l
     [
         {
             "archi": "samr21:at86rf233",
@@ -64,7 +64,7 @@ Get nodes list per architecture
 
 ### List all saclay 'samr21' network addresses ###
 
-    experiment-cli --jmespath="items[?contains(@.archi, 'samr21')].network_address" info  -l
+    iotlab-experiment --jmespath="items[?contains(@.archi, 'samr21')].network_address" info  -l
     [
         "samr21-1.saclay.iot-lab.info",
         ...
@@ -74,7 +74,7 @@ Get nodes list per architecture
 
 ### List nodes by exact archi ###
 
-    experiment-cli --jmespath="items[?archi=='samr21:at86rf233'].network_address" info -l
+    iotlab-experiment --jmespath="items[?archi=='samr21:at86rf233'].network_address" info -l
     [
         {
             "archi": "samr21:at86rf233",
@@ -93,11 +93,11 @@ Get current experiment ID
 
 Get first one if multiple
 
-    experiment-cli --jp 'items[].id|[0]' get -l --state Running
+    iotlab-experiment --jp 'items[].id|[0]' get -l --state Running
     29251
 
     # Bash version
-    experiment-cli get -l --state Running | grep -m 1 '"id"' | grep -Eo '[[:digit:]]+'
+    iotlab-experiment get -l --state Running | grep -m 1 '"id"' | grep -Eo '[[:digit:]]+'
     29251
 
 
@@ -106,10 +106,10 @@ Get first one if multiple
 
 Maybe use the first with "deploymentresults" == 0 here instead.
 
-    experiment-cli --jp='items[0].network_address' --fmt=str get --resources
+    iotlab-experiment --jp='items[0].network_address' --fmt=str get --resources
     a8-6.grenoble.iot-lab.info
 
     # Bash version
-    experiment-cli get  --resources | grep -m 1 "network_address"  | sed 's/.*: "\(.*\)".*/\1/'
+    iotlab-experiment get  --resources | grep -m 1 "network_address"  | sed 's/.*: "\(.*\)".*/\1/'
     a8-6.grenoble.iot-lab.info
 
