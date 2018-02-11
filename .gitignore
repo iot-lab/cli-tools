@@ -26,4 +26,5 @@ test_auth_file
 
 # pytest cache directory
 .cache/
+.pytest_cache/
 test-report.xml
