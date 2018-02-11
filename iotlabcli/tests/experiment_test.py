@@ -365,6 +365,9 @@ class TestExperimentSubmit(CommandMock):
             self.api, experiment.EXP_FILENAME,
             ['firmware.elf', 'firmware_2.elf', 'firmware_3.elf'])
 
+        self.assertRaises(ValueError,
+                          self._read_file_for_load, 'invalid/file/path')
+
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load_with_script(self, read_file_mock):
         """Try experiment_load with script."""
