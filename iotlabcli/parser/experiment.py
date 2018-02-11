@@ -105,7 +105,7 @@ def parse_options():
                             help='experiment list start index')
 
     get_parser.add_argument('--limit', default=0, type=int,
-                            help='experiment list lenght')
+                            help='experiment list maximum length')
 
     get_parser.add_argument('--state', help='experiment list state filter')
 
