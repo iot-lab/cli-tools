@@ -147,9 +147,5 @@ class TestAssociation(unittest.TestCase):
         assocclass = associations._Association.for_key_value('firmware',
                                                              'nodes')
         assoc = assocclass('test.elf', ['m3-1', 'm3-2', 'm3-3'])
-        try:
-            assoc.update
-        except AttributeError:
-            pass
-        else:
-            self.assertRaises(AttributeError, assoc.update)
+        with self.assertRaises(AttributeError):
+            assoc.update()

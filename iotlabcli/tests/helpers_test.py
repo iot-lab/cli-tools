@@ -114,12 +114,9 @@ class TestFilesDict(unittest.TestCase):
 
         # Cannot add a different valu
         file_dict['b'] = 2
-        try:
+
+        with self.assertRaises(ValueError):
             file_dict['b'] = 3
-        except ValueError:
-            pass  # different value
-        else:
-            self.fail('No ValueError on different values')
 
         # Check dict
         self.assertEqual(file_dict, {'a': 1, 'b': 2})
