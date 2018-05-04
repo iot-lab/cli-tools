@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.5.3
+-----
+
+- Replace remaining occurences of *-cli with iotlab-*
+
 2.5.2
 -----
 
