@@ -36,7 +36,7 @@ from iotlabcli.profile import ProfileCustom
 
 PROFILE_PARSER = """
 
-profile-cli command-line manage profiles experimentation :
+iotlab-profile command-line manage profiles experimentation :
 store you favourite resources configuration with combination
 of a power supply mode and an automatic measure configuration
 (e.g. consumption, radio, ...)
@@ -45,7 +45,7 @@ of a power supply mode and an automatic measure configuration
 
 
 def parse_options():
-    """ Handle profile-cli command-line opts with argparse """
+    """ Handle iotlab-profile command-line opts with argparse """
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(

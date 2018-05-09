@@ -14,13 +14,13 @@ Examples
 
 Same script and for two sites
 
-    experiment-cli submit ... \
+    iotlab-experiment submit ... \
         --site-association grenoble,lille,script=experient.sh
 
 
 Same script but a different config for each site
 
-    experiment-cli submit ... \
+    iotlab-experiment submit ... \
         --site-association grenoble,lille,script=experiment
         --site-association grenoble,scriptconfig=grenoble.conf
         --site-association lille,scriptconfig=lille.conf

@@ -29,7 +29,8 @@ from iotlabcli import helpers
 from iotlabcli.parser import common
 import iotlabcli.robot
 
-ROBOT_PARSER = """robot-cli manages interaction with nodes on a turtlebot."""
+ROBOT_PARSER = """iotlab-robot manages interaction with nodes \
+on a turtlebot."""
 
 
 def name_site(name_site_str):
@@ -53,7 +54,7 @@ def name_site(name_site_str):
 
 
 def parse_options():
-    """ Handle node-cli command-line options with argparse """
+    """ Handle iotlab-robot command-line options with argparse """
 
     parent_parser = common.base_parser()
     # We create top level parser

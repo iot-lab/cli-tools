@@ -32,7 +32,7 @@ import iotlabcli.auth
 
 AUTH_PARSER = """
 
-auth-cli command-line store your credentials.
+iotlab-auth command-line store your credentials.
 It creates a file .iotlabrc in your home directory
 with username and password.
 
@@ -40,7 +40,7 @@ with username and password.
 
 
 def parse_options():
-    """ Handle profile-cli command-line options with argparse """
+    """ Handle iotlab-auth command-line options with argparse """
     parent_parser = common.base_parser(user_required=True)
     # We create top level parser
     parser = argparse.ArgumentParser(

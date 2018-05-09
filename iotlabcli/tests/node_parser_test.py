@@ -33,7 +33,7 @@ from .c23 import patch
 @patch('iotlabcli.node.node_command')
 @patch('iotlabcli.parser.common.list_nodes')
 class TestMainNodeParser(MainMock):
-    """ Test node-cli main parser """
+    """ Test iotlab-node main parser """
     def test_main(self, list_nodes, node_command):
         """ Run the parser.node.main function """
         node_command.return_value = {'result': 'test'}
