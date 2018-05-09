@@ -30,7 +30,7 @@ from iotlabcli import admin
 
 
 def parse_options():
-    """ Handle experiment-cli command-line options with argparse """
+    """ Handle iotlab-admin command-line options with argparse """
     parent_parser = common.base_parser()
 
     # We create top level parser
@@ -70,7 +70,7 @@ def admin_parse_and_run(opts):
 
 
 def main(args=None):
-    """'admin-cli' main function."""
+    """'iotlab-admin' main function."""
     args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(admin_parse_and_run, parser, args)

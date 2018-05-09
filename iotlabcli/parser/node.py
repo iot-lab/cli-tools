@@ -34,7 +34,7 @@ from iotlabcli.parser import common
 
 NODE_PARSER = """
 
-node-cli manages interaction with resources.
+iotlab-node manages interaction with resources.
 You can launch commands on your experiment's resources.
 
 """
@@ -43,22 +43,22 @@ NODE_EPILOG = """
 
 Examples:
     * update firmware on all experiment resources
-        $ node-cli --update /home/tp.hex
+        $ iotlab-node --update /home/tp.hex
         Note : with one experiment in the state Running
     * Launch command stop on experiment resources list
-        $ node-cli --sto -l grenoble,m3,1-5+10+12
+        $ iotlab-node --sto -l grenoble,m3,1-5+10+12
     * update firmware on all experiment resources except two
-        $ node-cli --update /home/tp.hex -e grenoble,m3,1-2
+        $ iotlab-node --update /home/tp.hex -e grenoble,m3,1-2
     * commmand list : site_name,archi,nodeid_list
-        $ node-cli --reset -l grenoble,wsn430,1-34+72
+        $ iotlab-node --reset -l grenoble,wsn430,1-34+72
     * command with several experiments with state Running
-        $ node-cli -i <expid> --reset
+        $ iotlab-node -i <expid> --reset
 
 """
 
 
 def parse_options():
-    """ Handle node-cli command-line options with argparse """
+    """ Handle iotlab-node command-line options with argparse """
 
     parent_parser = common.base_parser()
     # We create top level parser

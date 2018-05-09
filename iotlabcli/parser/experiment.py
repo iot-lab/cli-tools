@@ -35,13 +35,13 @@ from iotlabcli.parser import common, help_msgs
 
 EXPERIMENT_PARSER = """
 
-experiment-cli command-line manages experiments on testbed.
+iotlab-experiment command-line manages experiments on testbed.
 
 """
 
 
 def parse_options():
-    """ Handle experiment-cli command-line options with argparse """
+    """ Handle iotlab-experiment command-line options with argparse """
     parent_parser = common.base_parser()
 
     # We create top level parser
@@ -614,7 +614,7 @@ def _extract_firmware_nodes_list(param_list):
         * ['grenoble', 'm3', '1-4+8-12+7', ...]  Physical type
     """
 
-    # list in experiment-cli (alias or physical)
+    # list in iotlab-experiment (alias or physical)
     if param_list[0].isdigit():  # alias selection
         # extract parameters
         nb_nodes, properties_str = param_list[0:2]

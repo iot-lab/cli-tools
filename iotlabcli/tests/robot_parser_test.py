@@ -32,7 +32,7 @@ from .c23 import patch
 
 
 class TestMainRobotParser(MainMock):
-    """Test the robot-cli main parser."""
+    """Test the iotlab-robot main parser."""
 
     @patch('iotlabcli.robot.robot_command')
     @patch('iotlabcli.parser.common.list_nodes')

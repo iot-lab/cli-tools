@@ -98,7 +98,7 @@ class TestCommonParser(unittest.TestCase):
     def test_main_cli_jmespath_fmt():
         """ Run main_cli with --jmespath and --format options
 
-        Test getting deployed nodes from 'experiment-cli get -p'"""
+        Test getting deployed nodes from 'iotlab-experiment get -p'"""
         function = Mock(return_value={
             "deploymentresults": {
                 "0": [
@@ -132,7 +132,7 @@ class TestCommonParser(unittest.TestCase):
                           ' a8-8.grenoble.iot-lab.info'
                           ' a8-9.grenoble.iot-lab.info')
 
-        # like experiment-cli get --print
+        # like iotlab-experiment get --print
         parser = common.base_parser()
         args = ['--jmespath', 'deploymentresults."0"', '--format', '" ".join']
         # No need to add 'exp-cli get -p' function is mocked

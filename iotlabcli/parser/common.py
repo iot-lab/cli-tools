@@ -137,7 +137,7 @@ def print_result(result, jmespath_expr=None, format_function=None):
 
 @contextlib.contextmanager
 def catch_missing_auth_cli():
-    """Catch HTTPError 401 and display a message on missing auth-cli."""
+    """Catch HTTPError 401 and display a message on missing iotlab-auth."""
 
     auth_cli_err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
                     "\tRegister your login:password using `iotlab-auth`\n")
