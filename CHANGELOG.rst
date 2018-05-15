@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.5.4
+-----
+
+- Replace remaining occurences of *-cli with iotlab-* in commands help
+- Use new command names in integration tests
+
 2.5.3
 -----
 

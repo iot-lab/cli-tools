@@ -26,4 +26,4 @@ from iotlabcli.rest import Api
 from iotlabcli.helpers import get_current_experiment
 
 
-__version__ = '2.5.3'
+__version__ = '2.5.4'
