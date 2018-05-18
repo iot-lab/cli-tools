@@ -266,6 +266,118 @@ _iotlab_auth() {
     esac
 }
 
+_iotlab_profile() {
+    local cur prev words cword
+    _init_completion || return
+
+    case $prev in
+        -v|--version|-h|--help)
+            return 0
+            ;;
+        -u|--user|-p|--password)
+            return 0
+            ;;
+    esac
+
+    # Look for the command name
+    local subcword cmd
+    for (( subcword=1; subcword < ${#words[@]}-1; subcword++ )); do
+        [[ ${words[subcword]} != -* && \
+            ! ${words[subcword-1]} =~ -+(jmespath|jp|format|fmt|u(ser)?|p(assword)) ]] && \
+                { cmd=${words[subcword]}; break; }
+    done
+
+    if [[ -z $cmd ]]; then
+        case $cur in
+            -*)
+                # No command name, complete with generic flags
+                COMPREPLY=($(compgen -W '-h --help -u --user -p --password -v --version --jmespath --jp --format --fmt' -- "$cur" ))
+                return 0
+                ;;
+            *)
+                # Complete with a command name
+                COMPREPLY=($(compgen -W 'addwsn430 addm3 adda8 addcustom del get load' -- "$cur"))
+                return 0
+                ;;
+        esac
+    fi
+
+    # Complete command arguments
+    case $cmd in
+        addwsn430)
+            case "$prev" in
+                -n|--name)
+                    # We don't need to complete there
+                    ;;
+                -p|--power)
+                    # FIXME: I don't know if there is preffered values there…
+                    ;;
+                -cfreq)
+                    COMPREPLY=($(compgen -W '5000 1000 500 100 70' -- "$cur" ))
+                    ;;
+                -rfreq)
+                    COMPREPLY=($(compgen -W '5000 1000 500' -- "$cur" ))
+                    ;;
+                -sfreq)
+                    COMPREPLY=($(compgen -W '30000 10000 5000 1000' -- "$cur" ))
+                    ;;
+                *)
+                    COMPREPLY=($(compgen -W '-h --help -n --name -j --json -p --power -cfreq -power -voltage -current -rfreq -sfreq -temperature -luminosity' -- "$cur" ))
+            esac
+            ;;
+        addm3|adda8|addcustom)
+            case "$prev" in
+                -n|--name|-num|-rperiod)
+                    # We don't need to complete there
+                    ;;
+                -p|--power)
+                    # FIXME: I don't know if there is preffered values there…
+                    ;;
+                -period)
+                    COMPREPLY=($(compgen -W '140 204 332 588 1100 2116 4156 8244' -- "$cur" ))
+                    ;;
+                -avg)
+                    COMPREPLY=($(compgen -W '1 4 16 64 128 256 512 1024' -- "$cur" ))
+                    ;;
+                -channels)
+                    COMPREPLY=($(compgen -W "$(seq 11 26)" -- "$cur" ))
+                    ;;
+                *)
+                    COMPREPLY=($(compgen -W '-h --help -n --name -j --json -p --power -current -voltage -power -period -avg -rssi -sniffer -channels -num -rperiod' -- "$cur" ))
+            esac
+            ;;
+        del)
+            case "$prev" in
+                -n|--name)
+                    # We don't need to complete there
+                    ;;
+                *)
+                    COMPREPLY=($(compgen -W '-h --help -n --name' -- "$cur" ))
+            esac
+            ;;
+        get)
+            case "$prev" in
+                -n|--name)
+                    # We don't need to complete there
+                    ;;
+                --archi)
+                    COMPREPLY=($(compgen -W "${_iotlab_archis[*]}" -- "$cur"))
+                    ;;
+                *)
+                    COMPREPLY=($(compgen -W '-h --help --n --name -l --list --archi' -- "$cur" ))
+            esac
+            ;;
+        load)
+            case "$prev" in
+                -f|--file)
+                    _filedir json
+                    ;;
+                *)
+                    COMPREPLY=($(compgen -W '-h --help -f --file' -- "$cur" ))
+            esac
+    esac
+}
+
 complete -F _iotlab_admin iotlab-admin
 complete -F _iotlab_admin admin-cli
 complete -F _iotlab_auth iotlab-auth
@@ -274,9 +386,9 @@ complete -F _iotlab_experiment iotlab-experiment
 complete -F _iotlab_experiment experiment-cli
 complete -F _iotlab_node iotlab-node
 complete -F _iotlab_node node-cli
+complete -F _iotlab_profile iotlab-profile
+complete -F _iotlab_profile profile-cli
 # TODO
-#complete -F _iotlab_profile iotlab-profile
-#complete -F _iotlab_profile profile-cli
 #complete -F _iotlab_robot iotlab-robot
 #complete -F _iotlab_robot robot-cli
 #complete -F _iotlab_ssh iotlab-ssh
