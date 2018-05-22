@@ -2,12 +2,12 @@
 
 ## Bash-completion
 
-The script `iotlab-cli-tools-bash-completion.sh` is available to complete the
+The script `iotlabcli-bash-completion.sh` is available to complete the
 `iotlab-*` commands.  It is compatible with the standard bash-completion
 mechanism, as many commands are in [https://github.com/scop/bash-completion].
 The scripts only needs to be sourced at runtime from command-line:
 
-    source iotlab-cli-tools-bash-completion.sh
+    source iotlabcli-bash-completion.sh
 
 Then, bash is able to autocomplete the iotlab-* commands:
 
@@ -17,7 +17,7 @@ Then, bash is able to autocomplete the iotlab-* commands:
 One also wants to install it on a whole system, to be automatically available
 for all users:
 
-    sudo install -m644 iotlab-cli-tools-bash-completion.sh /usr/share/bash-completion/completions/iotlab-experiment
+    sudo install -m644 iotlabcli-bash-completion.sh /usr/share/bash-completion/completions/iotlab-experiment
     for command_name in iotlab-admin admin-cli  \
                         iotlab-auth auth-cli  \
                         experiment-cli  \
