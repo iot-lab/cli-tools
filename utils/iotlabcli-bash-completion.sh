@@ -20,7 +20,7 @@ _iotlab_experiment_id() {
     COMPREPLY=()
 }
 
-_iotlab_profile() {
+_iotlab_profiles() {
     # TODO: complete e.g. `iotlab-node -l grenoble,m3,64 --profile <tab>`
     # Warning: we should use the IoT-lab API, but this might be slow…
     COMPREPLY=()
@@ -192,7 +192,7 @@ _iotlab_node() {
             _filedir
             ;;
         --profile|--update-profile)
-            _iotlab_profile
+            _iotlab_profiles
             ;;
         --profile-load)
             _filedir json
