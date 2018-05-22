@@ -23,8 +23,7 @@ for all users:
                         experiment-cli  \
                         iotlab-node node-cli  \
                         iotlab-profile profile-cli  \
-                        iotlab-robot robot-cli  \
-                        iotlab-ssh ssh-cli; do
+                        iotlab-robot robot-cli; do
         sudo ln -s iotlab-experiment "/usr/share/bash-completion/completions/$command_name"
     done
 
