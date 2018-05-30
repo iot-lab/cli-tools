@@ -28,3 +28,6 @@ test_auth_file
 .cache/
 .pytest_cache/
 test-report.xml
+
+# IDE
+.idea/
