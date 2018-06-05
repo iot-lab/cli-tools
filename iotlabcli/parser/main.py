@@ -31,10 +31,68 @@ import iotlabcli.parser.node
 import iotlabcli.parser.profile
 import iotlabcli.parser.robot
 
+# from aggregation-tools
+try:
+    from iotlabaggregator.serial import main as aggregator_serial_main
+    from iotlabaggregator.sniffer import main as aggregator_sniffer_main
+    AGGREGATION_TOOLS = True
+except ImportError:
+    AGGREGATION_TOOLS = False
+
+# from ssh-cli-tools
+try:
+    from iotlabsshcli.parser.open_a8_parser import main as ssh_main
+    SSH_TOOLS = True
+except ImportError:
+    SSH_TOOLS = False
+
+# from oml-plot-tools
+try:
+    from oml_plot_tools.consum import main as oml_plot_consum_main
+    from oml_plot_tools.radio import main as oml_plot_radio_main
+    from oml_plot_tools.traj import main as oml_plot_traj_main
+    OMLPLOT_TOOLS = True
+except ImportError:
+    OMLPLOT_TOOLS = False
+
+
+def parse_subcommands(commands, args=None):
+    """ common function to parse `iotlab` or other with subcommands """
+    args = args or sys.argv[1:]
+
+    parser = ArgumentParser()
+    parser.add_argument('command', nargs='?',
+                        choices=commands.keys(), default='help')
+    commands['help'] = lambda args: parser.print_help()
+
+    opts, args = parser.parse_known_args(args)
+
+    return commands[opts.command](args)
+
+
+def aggregator(args):
+    """'iotlab aggregator' main function."""
+
+    commands = {
+        'sniffer': aggregator_sniffer_main,
+        'serial': aggregator_serial_main
+    }
+    parse_subcommands(commands, args)
+
+
+def oml_plot(args):
+    """'iotlab oml-plot' main function."""
+
+    commands = {
+        'consum': oml_plot_consum_main,
+        'radio': oml_plot_radio_main,
+        'traj': oml_plot_traj_main
+    }
+    parse_subcommands(commands, args)
+
 
 def main(args=None):
     """'iotlab' main function."""
-    args = args or sys.argv[1:]
 
     commands = {
         'auth': iotlabcli.parser.auth.main,
@@ -45,12 +103,11 @@ def main(args=None):
         'robot': iotlabcli.parser.robot.main,
         'help': None
     }
+    if AGGREGATION_TOOLS:
+        commands['aggregator'] = aggregator
+    if OMLPLOT_TOOLS:
+        commands['oml-plot'] = oml_plot
+    if SSH_TOOLS:
+        commands['ssh'] = ssh_main
 
-    parser = ArgumentParser()
-    parser.add_argument('command', nargs='?',
-                        choices=commands.keys(), default='help')
-    commands['help'] = lambda args: parser.print_help()
-
-    opts, args = parser.parse_known_args(args)
-
-    return commands[opts.command](args)
+    return parse_subcommands(commands, args)
