@@ -21,18 +21,18 @@
 
 """ Test the iotlabcli.experiment_parser module """
 import argparse
+import os
 import sys
 
 import pytest
-from mock import Mock, mock
+from pytest import skip
 
 import iotlabcli.parser.main as main_parser
 
-from .c23 import patch
-try:
-    from importlib import reload
-except ImportError:
-    pass
+from .c23 import patch, version_info
+
+
+PY3 = version_info[0] == 3
 
 
 @pytest.mark.parametrize('entry',
@@ -65,98 +65,67 @@ def test_help(argv, exc):
         argparser_print_help.assert_called()
 
 
+test_tools = 'TEST_IOTLAB_TOOLS' in os.environ  # pylint: disable=invalid-name
+
+with_tools = pytest.mark.skipif(  # pylint: disable=invalid-name
+    not test_tools,
+    reason="needs TEST_IOTLAB_TOOLS env. variable set to run")
+
+without_tools = pytest.mark.skipif(  # pylint: disable=invalid-name
+    test_tools,
+    reason="needs TEST_IOTLAB_TOOLS env. variable not set to run")
+
+
+@with_tools
 def test_main_parser_aggregator():
     """ Experiment parser """
+    if PY3:
+        skip('aggregation-tools not py3 compatible')
     entry = 'aggregator'
-    with patch('iotlabcli.parser.main.aggregator') as entrypoint_func, \
-            patch('iotlabcli.parser.main.AGGREGATION_TOOLS', True):
+    with patch('iotlabcli.parser.main.aggregator') as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
 
 
-def test_main_parser_no_aggregator():
-    """ Experiment parser """
-    with patch('iotlabcli.parser.main.AGGREGATION_TOOLS', False):
-        pytest.raises(SystemExit,
-                      lambda: main_parser.main(['aggregator']))
-
-
+@with_tools
 def test_main_parser_oml_plot():
     """ Experiment parser """
     entry = 'oml-plot'
-    with patch('iotlabcli.parser.main.oml_plot') as entrypoint_func, \
-            patch('iotlabcli.parser.main.OMLPLOT_TOOLS', True):
+    with patch('iotlabcli.parser.main.oml_plot') as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
 
 
-def test_main_parser_no_oml_plot():
-    """ Experiment parser """
-    with patch('iotlabcli.parser.main.OMLPLOT_TOOLS', False):
-        pytest.raises(SystemExit,
-                      lambda: main_parser.main(['oml-plot']))
+@without_tools
+def test_main_parser_no_tools():
+    """tools subcommands returning"""
+    pytest.raises(SystemExit,
+                  lambda: main_parser.main(['ssh']))
+    pytest.raises(SystemExit,
+                  lambda: main_parser.main(['aggregator']))
+    pytest.raises(SystemExit,
+                  lambda: main_parser.main(['oml-plot']))
 
 
-def get_mock_import(func):
-    """factory for mock_import functions"""
-    original_import = __import__
+@with_tools
+def test_detect_tools_installed():
+    """
+    tests that we detect the tools modules correctly
+    only run in the tox env where the tools are installed
+    """
 
-    def mock_import(name, *args, **kwargs):
-        """if package matches, then call the function"""
-        for package in ('iotlabsshcli', 'iotlabaggregator', 'oml_plot_tools'):
-            if package in name:
-                return func()
-
-        return original_import(name, *args, **kwargs)
-
-    return mock_import
-
-
-ENTRIES = [['ssh'], ['aggregator', 'serial'], ['aggregator', 'sniffer'],
-           ['oml-plot', 'consum'], ['oml-plot', 'traj'], ['oml-plot', 'radio']]
-
-BUILTIN_IMPORT = '%s.__import__' % mock.builtin
-
-
-@pytest.mark.parametrize('entry', ENTRIES, ids=' '.join)
-@patch('iotlabcli.parser.main.AGGREGATION_TOOLS', True)
-@patch('iotlabcli.parser.main.OMLPLOT_TOOLS', True)
-@patch('iotlabcli.parser.main.SSH_TOOLS', True)
-def test_main_parser_mocked_import(entry):
-    """ Experiment parser """
-    module_mock = Mock()
-
-    with patch(BUILTIN_IMPORT, get_mock_import(lambda: module_mock)):
-        reload(main_parser)
-        main_parser.main(entry + ['-i', '123'])
-        module_mock.main.assert_called_with(['-i', '123'])
-
-
-def test_main_parser_no_ssh():
-    """ Experiment parser """
-    with patch('iotlabcli.parser.main.SSH_TOOLS', False):
-        pytest.raises(SystemExit,
-                      lambda: main_parser.main(['ssh']))
-
-
-def test_mock_import():
-    """ whether we detect the installed modules correctly """
-    with patch(BUILTIN_IMPORT, get_mock_import(Mock)):
-        reload(main_parser)
+    if not PY3:
         assert main_parser.AGGREGATION_TOOLS
-        assert main_parser.OMLPLOT_TOOLS
-        assert main_parser.SSH_TOOLS
+    assert main_parser.OMLPLOT_TOOLS
+    assert main_parser.SSH_TOOLS
 
 
-def test_mock_import_not_installed():
-    """ whether we detect the non installed modules correctly """
+@without_tools
+def test_detect_tools_not_installed():
+    """
+    tests that we detect the non installed modules correctly
+    """
 
-    def raising_import_error():
-        """raises ImportError"""
-        raise ImportError
-
-    with patch(BUILTIN_IMPORT, get_mock_import(raising_import_error)):
-        reload(main_parser)
-        assert not main_parser.AGGREGATION_TOOLS
-        assert not main_parser.OMLPLOT_TOOLS
-        assert not main_parser.SSH_TOOLS
+    assert not main_parser.AGGREGATION_TOOLS
+    assert not main_parser.OMLPLOT_TOOLS
+    assert not main_parser.SSH_TOOLS

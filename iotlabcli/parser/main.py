@@ -36,7 +36,8 @@ try:
     from iotlabaggregator.serial import main as aggregator_serial_main
     from iotlabaggregator.sniffer import main as aggregator_sniffer_main
     AGGREGATION_TOOLS = True
-except ImportError:
+except (ImportError, TypeError):
+    # TypeError for aggregation-tools, not py3 compatible yet
     AGGREGATION_TOOLS = False
 
 # from ssh-cli-tools
