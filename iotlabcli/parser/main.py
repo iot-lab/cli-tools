@@ -53,7 +53,7 @@ try:
     from oml_plot_tools.radio import main as oml_plot_radio_main
     from oml_plot_tools.traj import main as oml_plot_traj_main
     OMLPLOT_TOOLS = True
-except ImportError:
+except (ImportError, SyntaxError, TypeError):
     OMLPLOT_TOOLS = False
 
 

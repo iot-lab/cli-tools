@@ -21,18 +21,14 @@
 
 """ Test the iotlabcli.experiment_parser module """
 import argparse
-import os
+
 import sys
 
 import pytest
-from pytest import skip
 
 import iotlabcli.parser.main as main_parser
 
 from .c23 import patch, version_info
-
-
-PY3 = version_info[0] == 3
 
 
 @pytest.mark.parametrize('entry',
@@ -65,29 +61,69 @@ def test_help(argv, exc):
         argparser_print_help.assert_called()
 
 
-test_tools = 'TEST_IOTLAB_TOOLS' in os.environ  # pylint: disable=invalid-name
-
-with_tools = pytest.mark.skipif(  # pylint: disable=invalid-name
-    not test_tools,
-    reason="needs TEST_IOTLAB_TOOLS env. variable set to run")
-
-without_tools = pytest.mark.skipif(  # pylint: disable=invalid-name
-    test_tools,
-    reason="needs TEST_IOTLAB_TOOLS env. variable not set to run")
+try:
+    import iotlabsshcli
+except ImportError:
+    iotlabsshcli = None
 
 
-@with_tools
+try:
+    import iotlabaggregator
+    if version_info[0] != 2:
+        # pylint: disable=invalid-name
+        iotlabaggregator = None  # noqa
+except (ImportError, TypeError):
+    iotlabaggregator = None
+
+try:
+    import oml_plot_tools
+    if version_info[0] != 2:
+        # pylint: disable=invalid-name
+        oml_plot_tools = None  # noqa
+except ImportError:
+    oml_plot_tools = None
+
+
+def with_ssh_tools(function):
+    """decorator, skip test if iotlabsshcli is not installed"""
+    return pytest.mark.skipif(
+        iotlabsshcli is None,
+        reason="iotlabsshcli is required")(function)
+
+
+def with_aggregator_tools(function):
+    """decorator, skip test if iotlabaggregator is not installed"""
+    return pytest.mark.skipif(
+        iotlabaggregator is None,
+        reason="iotlabaggregator is required")(function)
+
+
+def with_oml_plot_tools(function):
+    """decorator, skip test if oml_plot_tools not installed"""
+    return pytest.mark.skipif(
+        oml_plot_tools is None,
+        reason="oml_plot_tools is required")(function)
+
+
+def without_tools(function):
+    """decorator, skip test if any tool is installed"""
+    return pytest.mark.skipif(
+        oml_plot_tools is not None or
+        iotlabaggregator is not None or
+        iotlabsshcli is not None,
+        reason="No tools should be installed")(function)
+
+
+@with_aggregator_tools
 def test_main_parser_aggregator():
     """ Experiment parser """
-    if PY3:
-        skip('aggregation-tools not py3 compatible')
     entry = 'aggregator'
     with patch('iotlabcli.parser.main.aggregator') as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
 
 
-@with_tools
+@with_oml_plot_tools
 def test_main_parser_oml_plot():
     """ Experiment parser """
     entry = 'oml-plot'
@@ -107,16 +143,27 @@ def test_main_parser_no_tools():
                   lambda: main_parser.main(['oml-plot']))
 
 
-@with_tools
-def test_detect_tools_installed():
+@with_aggregator_tools
+def test_aggregator_tools_detect():
     """
-    tests that we detect the tools modules correctly
-    only run in the tox env where the tools are installed
+    tests that we detect the aggregator-tools correctly
     """
+    assert main_parser.AGGREGATION_TOOLS
 
-    if not PY3:
-        assert main_parser.AGGREGATION_TOOLS
+
+@with_oml_plot_tools
+def test_oml_plot_tools_detect():
+    """
+    tests that we detect the oml-plot-tools correctly
+    """
     assert main_parser.OMLPLOT_TOOLS
+
+
+@with_ssh_tools
+def test_ssh_tools_detect():
+    """
+    tests that we detect the ssh-cli-tools correctly
+    """
     assert main_parser.SSH_TOOLS
 
 
