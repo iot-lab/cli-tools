@@ -1,0 +1,1721 @@
+openapi: 3.0.0
+info:
+  title: IoT-LAB REST API
+  description: 'REST API documentation of [IoT-LAB](http://www.iot-lab.info) testbed .'
+  version: 0.1.0
+servers:
+  - url: 'https://www.iot-lab.info/api'
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Deployment:
+      type: object
+      properties:
+        0:
+          type: array
+          items:
+            type: string
+            format: hostname
+        1:
+          type: array
+          items:
+            type: string
+            format: hostname
+    SitesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              site:
+                type: string
+    SitesDetailsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              site:
+                type: string
+              archis:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    archi:
+                      type: string
+                    mobile:
+                      type: integer
+                    total:
+                      type: integer
+    NodesIdsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              site:
+                type: string
+              archis:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    archi:
+                      type: string
+                    states:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          state:
+                            type: string
+                            enum:
+                              - Alive
+                              - Busy
+                              - Suspected
+                              - Dead
+                          ids:
+                            type: string
+    #TODO: not valid
+    StatusResponse:
+      type: object
+      properties:
+        site:
+          type: string
+          enum:
+            - Idle
+            - Running
+    StopResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+    TotalResponse:
+      type: object
+      properties:
+        running:
+          type: integer
+        terminated:
+          type: integer
+        upcoming:
+          type: integer
+    ExperimentsResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum:
+            - physical
+            - alias
+        name:
+          type: string
+        user:
+          type: string
+          format: '^[a-z][0-9a-z]{3,19}$'
+          minLength: 4
+          maxLength: 20
+        nb_nodes:
+          type: integer
+        state:
+          type: string
+          enum:
+            - Running
+            - Launching
+            - Waiting
+            - Stopped
+            - Finishing
+            - Terminated
+        submitted_duration:
+          type: integer
+        effective_duration:
+          type: integer
+        scheduled_date:
+          type: string
+          format: dateTime
+        start_date:
+          type: string
+          format: dateTime
+        stop_date:
+          type: string
+          format: dateTime
+        submission_date:
+          type: string
+          format: dateTime
+    ScriptAssociations:
+      type: object
+      properties:
+        script:
+          type: array
+          items:
+            type: object
+            properties:
+              scriptname:
+                type: string
+              sites:
+                type: array
+                items:
+                  type: string
+                  format: hostname
+        scriptconfig:
+          type: array
+          items:
+            type: object
+            properties:
+              scriptconfigname:
+                type: string
+              sites:
+                type: array
+                items:
+                  type: string
+                  format: hostname
+    SiteAssociations:
+      type: object
+      properties:
+        siteassociations:
+          $ref: '#/components/schemas/ScriptAssociations'
+    FirmwareAssociations:
+      type: object
+      properties:
+        firmwareassociations:
+          type: array
+          items:
+            type: object
+            properties:
+              firmwarename:
+                type: string
+              nodes:
+                type: array
+                items:
+                  type: string
+                  format: hostname
+    ProfileAssociations:
+      type: object
+      properties:
+        profileassociations:
+          type: array
+          items:
+            type: object
+            properties:
+              profilename:
+                type: string
+              nodes:
+                type: array
+                items:
+                  type: string
+                  format: hostname
+    ExperimentResponse:
+      allOf:
+      - $ref: '#/components/schemas/ExperimentsResponse'
+      - $ref: '#/components/schemas/FirmwareAssociations'
+      - $ref: '#/components/schemas/ProfileAssociations'
+      - $ref: '#/components/schemas/SiteAssociations'
+    Profile:
+      type: object
+      properties:
+        profilename:
+          type: string
+        nodearch:
+          type: string
+          enum:
+            - m3
+            - a8
+            - custom
+        power:
+          type: string
+          enum:
+            - dc
+        consumption:
+          type: object
+          properties:
+            current:
+              type: boolean
+            power:
+              type: boolean
+            voltage:
+              type: boolean
+            period:
+              type: integer
+              enum:
+                - 140
+                - 204
+                - 332
+                - 588
+                - 1100
+                - 2116
+                - 4156
+                - 8244
+            average:
+              type: integer
+              enum:
+                - 1
+                - 4
+                - 16
+                - 64
+                - 128
+                - 256
+                - 512
+                - 1024
+        radio:
+          type: object
+          properties:
+            mode:
+              type: string
+              enum:
+                - rssi
+                - sniffer
+            num_per_channel:
+              type: integer
+              minimum: 0
+              maximum: 255
+            period:
+              type: integer
+              minimum: 1
+              maximum: 65535
+            channels:
+              type: array
+              items:
+                type: integer
+                minimum: 11
+                maximum: 26
+    UserSshKeys:
+      type: object
+      properties:
+        sshkeys:
+          type: array
+          items:
+            type: string
+    Reload:
+      type: object
+      properties:
+        duration:
+          type: integer
+        reservation:
+          type: integer
+    Node:
+      type: object
+      properties:
+        archi:
+          type: string
+        mobile:
+          type: string
+        mobility_type:
+          type: string
+        network_address:
+          type: string
+        site:
+          type: string
+        state:
+          type: string
+          enum:
+            - Alive
+            - Busy
+            - Suspected
+            - Dead
+        uid:
+          type: string
+        x:
+          type: string
+        y:
+          type: string
+        z:
+          type: string
+    NodesRequest:
+      type: array
+      items:
+        type: string
+        format: hostname
+    NodesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+    UpdatePasswordRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+        confirm_new_password:
+          type: string
+    ActivateUserRequest:
+      type: object
+      properties:
+        hash:
+          type: string
+          format: '^[A-Fa-f0-9]{64}$'
+    SendEmailRequest:
+      type: object
+      properties:
+        recipients:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+        body:
+          type: string
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+    UserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        country:
+          type: string
+        organization:
+          type: string
+        motivations:
+          type: string
+        city:
+          type: string
+        category:
+          type: string
+          enum:
+            - Student
+            - Academic
+            - Startup
+            - Business
+    UserResponse:
+      type: object
+      properties:
+        created:
+          type: string
+          format: dateTime
+        firstName:
+          type: string
+        lastName:
+          type: string
+        login:
+          type: string
+          format: '^[a-z][0-9a-z]{3,19}$'
+          minLength: 4
+          maxLength: 20
+        email:
+          type: string
+        country:
+          type: string
+        organization:
+          type: string
+        motivations:
+          type: string
+        city:
+          type: string
+        category:
+          type: string
+        admin:
+          type: boolean
+        status:
+          type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+      required:
+        - code
+        - message
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+paths:
+  /users:
+    get:
+      summary: Returns list of users.
+      security:
+        - BasicAuth: []
+      parameters:
+        - in: query
+          name: isadmin
+          schema:
+            type: boolean
+            default: false
+          required: false
+          description: Filter with admin credentials
+        - in: query
+          name: status
+          schema:
+            type: string
+            default: pending
+            enum:
+              - pending
+              - active
+          required: false
+          description: Filter with status
+        - in: query
+          name: search
+          schema:
+            type: string
+          required: false
+          description: Filter with string
+      responses:
+        '200':
+          description: Users list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Add user.
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: The user has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{login}:
+    get:
+      summary: Get user.
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: login
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+      responses:
+        '200':
+          description: User response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      summary: Modify user.
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: login
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: The user has been successfully modified.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Delete user.
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: login
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+      responses:
+        '204':
+          description: The user has been successfully deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/reset_password:
+    post:
+      summary: Reset user password.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: The password has been successfully reseted.
+  /users/email:
+    post:
+      summary: Send email to users.
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailRequest'
+      responses:
+        '200':
+          description: The email has been successfully sended.
+  /users/activate:
+    post:
+      summary: Activate user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateUserRequest'
+      responses:
+        '200':
+          description: The user has been successfully activated.
+  /user:
+    get:
+      summary: Get user
+      security:
+        - BasicAuth: []
+      responses:
+        '200':
+          description: User response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      summary: Modify user
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: The user has been successfully modified.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Delete user.
+      security:
+        - BasicAuth: []
+      responses:
+        '204':
+          description: The user has been successfully deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /user/password:
+    put:
+      summary: Update user password.
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePasswordRequest'
+      responses:
+        '200':
+          description: The password has been successfully updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /user/keys:
+    get:
+      summary: Get user ssh keys.
+      security:
+        - BasicAuth: []
+      responses:
+        '200':
+          description: User ssh keys response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSshKeys'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Add user ssh keys.
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSshKeys'
+      responses:
+        '200':
+          description: The user ssh keys has been successfully created.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /user/keys/{id}:
+    delete:
+      summary: Delete user ssh key.
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The user ssh key has been deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/total/all:
+    get:
+      summary: Returns total of testbed experiments
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Total Experiments response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/total/users/{user}:
+    get:
+      summary: Returns total of user experiments
+      security:
+        - basicAuth: []
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+      responses:
+        '200':
+          description: Total Experiments response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/total:
+    get:
+      summary: Returns total of experiments
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Total Experiments response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/all:
+    get:
+      summary: Returns list of testbed experiments
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            default: "Running,Terminated,Stopped,Waiting"
+          required: false
+          description: Filter with state
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 500
+          required: false
+          description: Filter with number
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: Filter with index
+      responses:
+        '200':
+          description: Experiments list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/users/{user}:
+    get:
+      summary: Returns list of user experiments
+      security:
+        - basicAuth: []
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+        - in: query
+          name: state
+          schema:
+            type: string
+            default: "Running,Terminated,Stopped,Waiting"
+          required: false
+          description: Filter with state
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 500
+          required: false
+          description: Filter with number
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: Filter with index
+      responses:
+        '200':
+          description: Experiments list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments:
+    get:
+      summary: Returns list of experiments
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+            default: "Running,Terminated,Stopped,Waiting"
+          required: false
+          description: Filter with state
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 500
+          required: false
+          description: Filter with number
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: Filter with index
+      responses:
+        '200':
+          description: Experiments list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Submit an experiment
+      security:
+        - basicAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                # The property name 'file' will be used for all files.
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Submit experiment response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{user}:
+    post:
+      summary: Submit an experiment as user.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+            format: '^[a-z][0-9a-z]{3,19}$'
+            minLength: 4
+            maxLength: 20
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                # The property name 'file' will be used for all files.
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Submit experiment response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}:
+    get:
+      summary: Returns experiment description.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Experiment description
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Stop experiment
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Stop Experiment response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes:
+    get:
+      summary: Get experiment nodes description.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Experiment nodes response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes_ids:
+    get:
+      summary: Get experiment nodes id description.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Experiment nodes id response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesIdsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/reload:
+    post:
+      summary: Restart experiment.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reload'
+      responses:
+        '200':
+          description: Experiment reload response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/data:
+    get:
+      summary: Get experiment archive.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Experiment archive response.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/deployment:
+    get:
+      summary: Get experiment deployment information.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Experiment deployment response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes/{cmd}:
+    post:
+      summary: Send command.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: cmd
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+            - start
+            - stop
+            - reset
+            - update-idle
+            - debug-start
+            - debug-stop
+            - profile-reset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodesRequest'
+      responses:
+        '200':
+          description: Send command response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes/flash:
+    post:
+      summary: Send flash firmware.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                # The property name 'file' will be used for all files.
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Send flash firmware response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes/monitoring/{name}:
+    post:
+      summary: Send update monitoring.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodesRequest'
+      responses:
+        '200':
+          description: Send update monitoring response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/nodes/monitoring:
+    post:
+      summary: Send load monitoring.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                # The property name 'file' will be used for all files.
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Load monitoring response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/scripts/run:
+    post:
+      summary: Send run scripts.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                # The property name 'file' will be used for all files.
+                file:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Run scripts response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/scripts/kill:
+    post:
+      summary: Send kill scripts.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodesRequest'
+      responses:
+        '200':
+          description: Kill scripts response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /experiments/{id}/scripts/status:
+    post:
+      summary: Get status scripts.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodesRequest'
+      responses:
+        '200':
+          description: Status scripts response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /monitoring:
+    get:
+      summary: Returns list of monitoring profiles.
+      security:
+        - BasicAuth: []
+      parameters:
+        - in: query
+          name: archi
+          schema:
+            type: string
+          required: false
+          description: Filter by archi
+      responses:
+        '200':
+          description: Monitoring profiles list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Create monitoring profile.
+      security:
+        - BasicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          description: The profile has been successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /monitoring/{name}:
+    get:
+      summary: Get monitoring profile description.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Monitoring profile description
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Delete profile monitoring.
+      security:
+        - basicAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The monitoring profile has been successfully deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /firmwares/checker:
+    post:
+      summary: Send check firwmare.
+      security:
+        - basicAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Check firmware response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format:
+                    type: string
+                    enum:
+                      - elf
+                      - hex
+                      - unknown
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sites:
+    get:
+      summary: Get sites information.
+      responses:
+        '200':
+          description: Sites response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SitesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /sites/details:
+    get:
+      summary: Get sites details information.
+      responses:
+        '200':
+          description: Sites details response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SitesDetailsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /oar/prologue:
+    post:
+      summary: OAR prologue script execution.
+      security:
+        - basicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobid:
+                  type: integer
+      responses:
+        '200':
+          description: The prologue script has been successfully executed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /oar/epilogue:
+    post:
+      summary: OAR epilogue script execution.
+      security:
+        - basicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jobid:
+                  type: integer
+      responses:
+        '200':
+          description: The epilogue script has been successfully executed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /nodes:
+    get:
+      summary: Get nodes description.
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: site
+          schema:
+            type: string
+            default: all
+          required: false
+          description: Filter by site
+        - in: query
+          name: archi
+          schema:
+            type: string
+          required: false
+          description: Filter by archi
+        - in: query
+          name: state
+          schema:
+            type: string
+            enum:
+              - Alive
+              - Busy
+              - Suspected
+              - Dead
+          required: false
+          description: Filter by state
+      responses:
+        '200':
+          description: Get nodes response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      summary: Update nodes properties.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: The nodes properties have been successfully updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /nodes/ids:
+    get:
+      summary: Get nodes ids information.
+      responses:
+        '200':
+          description: Nodes ids response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodesIdsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /statistics:
+    put:
+      summary: Update statistics.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: The statistics have been successfully updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /statistics/users:
+    get:
+      summary: Get users list.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Users list response.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /statistics/experiments/offset:
+    get:
+      summary: Get experiments offset list.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Get offset list.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  offset:
+                    type: array
+                    items:
+                      type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /statistics/experiments:
+    get:
+      summary: Get experiments list.
+      security:
+        - basicAuth: []
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          required: true
+          description: Experiments offset index
+      responses:
+        '200':
+          description: Get experiments list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExperimentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+

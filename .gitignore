@@ -31,3 +31,6 @@ test-report.xml
 
 # IDE
 .idea/
+
+# auto-generated code
+iotlabclient/
