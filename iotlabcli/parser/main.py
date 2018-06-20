@@ -43,16 +43,16 @@ except (ImportError, TypeError):
 # from ssh-cli-tools
 try:
     from iotlabsshcli.parser.open_a8_parser import main as ssh_main
-    SSH_TOOLS = True
+    SSH_TOOLS = True  # pragma: nocover
 except ImportError:
     SSH_TOOLS = False
 
 # from oml-plot-tools
 try:
     from oml_plot_tools.consum import main as oml_plot_consum_main
-    from oml_plot_tools.radio import main as oml_plot_radio_main
-    from oml_plot_tools.traj import main as oml_plot_traj_main
-    OMLPLOT_TOOLS = True
+    from oml_plot_tools.radio import main as oml_plot_radio_main  # noqa # pragma: nocover
+    from oml_plot_tools.traj import main as oml_plot_traj_main  # noqa # pragma: nocover
+    OMLPLOT_TOOLS = True  # pragma: nocover
 except (ImportError, SyntaxError, TypeError):
     OMLPLOT_TOOLS = False
 
