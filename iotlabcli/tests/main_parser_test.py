@@ -35,7 +35,7 @@ from .c23 import patch, version_info
                          ['auth', 'admin', 'experiment',
                           'node', 'profile', 'robot'])
 def test_main_parser(entry):
-    """ Experiment parser """
+    """ test main parser dispatching """
     with patch('iotlabcli.parser.%s.main' % entry) as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
@@ -66,9 +66,9 @@ try:
 except ImportError:
     iotlabsshcli = None
 
-
 try:
     import iotlabaggregator
+
     if version_info[0] != 2:
         # pylint: disable=invalid-name
         iotlabaggregator = None  # noqa
@@ -77,6 +77,7 @@ except (ImportError, TypeError):
 
 try:
     import oml_plot_tools
+
     if version_info[0] != 2:
         # pylint: disable=invalid-name
         oml_plot_tools = None  # noqa
@@ -112,6 +113,31 @@ def without_tools(function):
         iotlabaggregator is not None or
         iotlabsshcli is not None,
         reason="No tools should be installed")(function)
+
+
+ENTRIES = ()
+if oml_plot_tools is not None:
+    ENTRIES += ((['oml-plot', 'consum'], 'oml_plot_consum_main'),
+                (['oml-plot', 'traj'], 'oml_plot_traj_main'),
+                (['oml-plot', 'radio'], 'oml_plot_radio_main'))
+if iotlabaggregator is not None:
+    ENTRIES += ((['aggregator', 'serial'], 'aggregator_serial_main'),
+                (['aggregator', 'sniffer'], 'aggregator_sniffer_main'))
+if iotlabsshcli is not None:
+    ENTRIES += ((['ssh'], 'ssh_main'),)
+
+
+@with_aggregator_tools
+@with_oml_plot_tools
+@with_ssh_tools
+@pytest.mark.parametrize('entry,module', ENTRIES,
+                         ids=' '.join)
+def test_main_parser_subcommands(entry, module):
+    """ test main parser dispatching for subcommands"""
+
+    with patch('iotlabcli.parser.main.%s' % module) as entrypoint_func:
+        main_parser.main(entry + ['-i', '123'])
+        entrypoint_func.assert_called_with(['-i', '123'])
 
 
 @with_aggregator_tools
