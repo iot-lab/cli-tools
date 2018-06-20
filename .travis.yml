@@ -12,10 +12,12 @@ matrix:
       env: TOXENV="py36-tests,cli"
 
 before_install:
+  - make generate
   - pip install tox
 
 install:
   - pip install .
+  - pip install iotlabclient
 
 script:
   - tox
