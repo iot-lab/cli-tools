@@ -36,19 +36,19 @@ try:
     import iotlabaggregator
 except (ImportError, TypeError):
     # TypeError for aggregation-tools, not py3 compatible yet
-    iotlabaggregator = None
+    iotlabaggregator = None  # pylint:disable=invalid-name
 
 # from ssh-cli-tools
 try:
     import iotlabsshcli.parser.open_a8_parser
 except ImportError:
-    iotlabsshcli = None
+    iotlabsshcli = None  # pylint:disable=invalid-name
 
 # from oml-plot-tools
 try:
     import oml_plot_tools
 except (ImportError, SyntaxError, TypeError):
-    oml_plot_tools = None
+    oml_plot_tools = None  # pylint:disable=invalid-name
 
 
 def parse_subcommands(commands, args=None):

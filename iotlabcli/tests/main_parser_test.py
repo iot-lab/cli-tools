@@ -115,35 +115,36 @@ def without_tools(function):
         reason="No tools should be installed")(function)
 
 
-ENTRIES = ()
-if oml_plot_tools is not None:
-    ENTRIES += ((['oml-plot', 'consum'], 'oml_plot_tools',
-                 lambda m: m.consum.main),
-                (['oml-plot', 'traj'], 'oml_plot_tools',
-                 lambda m: m.traj.main),
-                (['oml-plot', 'radio'], 'oml_plot_tools',
-                 lambda m: m.radio.main))
-if iotlabaggregator is not None:
-    ENTRIES += ((['aggregator', 'serial'], 'iotlabaggregator',
-                 lambda m: m.serial.main),
-                (['aggregator', 'sniffer'], 'iotlabaggregator',
-                 lambda m: m.sniffer.main))
-if iotlabsshcli is not None:
-    ENTRIES += ((['ssh'], 'iotlabsshcli',
-                 lambda m: m.parser.open_a8_parser.main),)
-
-
 @with_aggregator_tools
-@with_oml_plot_tools
-@with_ssh_tools
-@pytest.mark.parametrize('entry,module, func', ENTRIES,
-                         ids=' '.join)
-def test_main_parser_subcommands(entry, module, func):
+@pytest.mark.parametrize('entry', ('serial', 'sniffer'))
+def test_aggregator_main(entry):
     """ test main parser dispatching for subcommands"""
 
-    with patch('iotlabcli.parser.main.%s' % module) as mocked_module:
-        main_parser.main(entry + ['-i', '123'])
-        func(mocked_module).assert_called_with(['-i', '123'])
+    with patch('iotlabcli.parser.main.iotlabaggregator') as mocked_module:
+        mocked_main = getattr(mocked_module, entry).main
+        main_parser.main(['aggregator', entry, '-i', '123'])
+        mocked_main.assert_called_with(['-i', '123'])
+
+
+@with_oml_plot_tools
+@pytest.mark.parametrize('entry', ('consum', 'traj', 'radio'))
+def test_oml_main(entry):
+    """ test main parser dispatching for subcommands"""
+
+    with patch('iotlabcli.parser.main.oml_plot_tools') as mocked_module:
+        mocked_main = getattr(mocked_module, entry).main
+        main_parser.main(['oml-plot', entry, '-i', '123'])
+        mocked_main.assert_called_with(['-i', '123'])
+
+
+@with_ssh_tools
+def test_ssh_main():
+    """ test main parser dispatching for subcommands"""
+
+    with patch('iotlabcli.parser.main.iotlabsshcli') as mocked_module:
+        mocked_main = mocked_module.parser.open_a8_parser.main
+        main_parser.main(['ssh', '-i', '123'])
+        mocked_main.assert_called_with(['-i', '123'])
 
 
 @with_aggregator_tools
