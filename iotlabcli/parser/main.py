@@ -33,28 +33,22 @@ import iotlabcli.parser.robot
 
 # from aggregation-tools
 try:
-    from iotlabaggregator.serial import main as aggregator_serial_main
-    from iotlabaggregator.sniffer import main as aggregator_sniffer_main
-    AGGREGATION_TOOLS = True
+    import iotlabaggregator
 except (ImportError, TypeError):
     # TypeError for aggregation-tools, not py3 compatible yet
-    AGGREGATION_TOOLS = False
+    iotlabaggregator = None
 
 # from ssh-cli-tools
 try:
-    from iotlabsshcli.parser.open_a8_parser import main as ssh_main
-    SSH_TOOLS = True  # pragma: nocover
+    import iotlabsshcli.parser.open_a8_parser
 except ImportError:
-    SSH_TOOLS = False
+    iotlabsshcli = None
 
 # from oml-plot-tools
 try:
-    from oml_plot_tools.consum import main as oml_plot_consum_main
-    from oml_plot_tools.radio import main as oml_plot_radio_main  # noqa # pragma: nocover
-    from oml_plot_tools.traj import main as oml_plot_traj_main  # noqa # pragma: nocover
-    OMLPLOT_TOOLS = True  # pragma: nocover
+    import oml_plot_tools
 except (ImportError, SyntaxError, TypeError):
-    OMLPLOT_TOOLS = False
+    oml_plot_tools = None
 
 
 def parse_subcommands(commands, args=None):
@@ -75,8 +69,8 @@ def aggregator(args):
     """'iotlab aggregator' main function."""
 
     commands = {
-        'sniffer': aggregator_sniffer_main,
-        'serial': aggregator_serial_main
+        'sniffer': iotlabaggregator.sniffer.main,
+        'serial': iotlabaggregator.serial.main
     }
     parse_subcommands(commands, args)
 
@@ -85,9 +79,9 @@ def oml_plot(args):
     """'iotlab oml-plot' main function."""
 
     commands = {
-        'consum': oml_plot_consum_main,
-        'radio': oml_plot_radio_main,
-        'traj': oml_plot_traj_main
+        'consum': oml_plot_tools.consum.main,
+        'radio': oml_plot_tools.radio.main,
+        'traj': oml_plot_tools.traj.main
     }
     parse_subcommands(commands, args)
 
@@ -104,11 +98,11 @@ def main(args=None):
         'robot': iotlabcli.parser.robot.main,
         'help': None
     }
-    if AGGREGATION_TOOLS:
+    if iotlabaggregator:
         commands['aggregator'] = aggregator
-    if OMLPLOT_TOOLS:
+    if oml_plot_tools:
         commands['oml-plot'] = oml_plot
-    if SSH_TOOLS:
-        commands['ssh'] = ssh_main
+    if iotlabsshcli:
+        commands['ssh'] = iotlabsshcli.parser.open_a8_parser.main
 
     return parse_subcommands(commands, args)

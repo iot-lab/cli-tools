@@ -117,27 +117,33 @@ def without_tools(function):
 
 ENTRIES = ()
 if oml_plot_tools is not None:
-    ENTRIES += ((['oml-plot', 'consum'], 'oml_plot_consum_main'),
-                (['oml-plot', 'traj'], 'oml_plot_traj_main'),
-                (['oml-plot', 'radio'], 'oml_plot_radio_main'))
+    ENTRIES += ((['oml-plot', 'consum'], 'oml_plot_tools',
+                 lambda m: m.consum.main),
+                (['oml-plot', 'traj'], 'oml_plot_tools',
+                 lambda m: m.traj.main),
+                (['oml-plot', 'radio'], 'oml_plot_tools',
+                 lambda m: m.radio.main))
 if iotlabaggregator is not None:
-    ENTRIES += ((['aggregator', 'serial'], 'aggregator_serial_main'),
-                (['aggregator', 'sniffer'], 'aggregator_sniffer_main'))
+    ENTRIES += ((['aggregator', 'serial'], 'iotlabaggregator',
+                 lambda m: m.serial.main),
+                (['aggregator', 'sniffer'], 'iotlabaggregator',
+                 lambda m: m.sniffer.main))
 if iotlabsshcli is not None:
-    ENTRIES += ((['ssh'], 'ssh_main'),)
+    ENTRIES += ((['ssh'], 'iotlabsshcli',
+                 lambda m: m.parser.open_a8_parser.main),)
 
 
 @with_aggregator_tools
 @with_oml_plot_tools
 @with_ssh_tools
-@pytest.mark.parametrize('entry,module', ENTRIES,
+@pytest.mark.parametrize('entry,module, func', ENTRIES,
                          ids=' '.join)
-def test_main_parser_subcommands(entry, module):
+def test_main_parser_subcommands(entry, module, func):
     """ test main parser dispatching for subcommands"""
 
-    with patch('iotlabcli.parser.main.%s' % module) as entrypoint_func:
+    with patch('iotlabcli.parser.main.%s' % module) as mocked_module:
         main_parser.main(entry + ['-i', '123'])
-        entrypoint_func.assert_called_with(['-i', '123'])
+        func(mocked_module).assert_called_with(['-i', '123'])
 
 
 @with_aggregator_tools
@@ -174,7 +180,7 @@ def test_aggregator_tools_detect():
     """
     tests that we detect the aggregator-tools correctly
     """
-    assert main_parser.AGGREGATION_TOOLS
+    assert main_parser.iotlabaggregator
 
 
 @with_oml_plot_tools
@@ -182,7 +188,7 @@ def test_oml_plot_tools_detect():
     """
     tests that we detect the oml-plot-tools correctly
     """
-    assert main_parser.OMLPLOT_TOOLS
+    assert main_parser.oml_plot_tools
 
 
 @with_ssh_tools
@@ -190,7 +196,7 @@ def test_ssh_tools_detect():
     """
     tests that we detect the ssh-cli-tools correctly
     """
-    assert main_parser.SSH_TOOLS
+    assert main_parser.iotlabsshcli
 
 
 @without_tools
@@ -199,6 +205,6 @@ def test_detect_tools_not_installed():
     tests that we detect the non installed modules correctly
     """
 
-    assert not main_parser.AGGREGATION_TOOLS
-    assert not main_parser.OMLPLOT_TOOLS
-    assert not main_parser.SSH_TOOLS
+    assert not main_parser.iotlabaggregator
+    assert not main_parser.oml_plot_tools
+    assert not main_parser.iotlabsshcli
