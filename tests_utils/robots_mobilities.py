@@ -62,7 +62,7 @@ pprint.pprint(api.method('mobilities/', method='post', files=files))
 
 experiments = get_active_experiments(api)
 
-nodes_list = ['m3-%u.%s.iot-lab.info' % (num, site) for num in [202]]
+nodes_list = ['m3-%u.%s.iot-lab.info' % (num, site) for num in [205]]
 
 if 'Running' in experiments:
     exp_id = experiments['Running'][0]
