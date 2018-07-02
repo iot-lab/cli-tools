@@ -33,7 +33,8 @@ import iotlabcli.parser.robot
 
 # from aggregation-tools
 try:
-    import iotlabaggregator
+    import iotlabaggregator.serial
+    import iotlabaggregator.sniffer
 except (ImportError, TypeError):
     # TypeError for aggregation-tools, not py3 compatible yet
     iotlabaggregator = None  # pylint:disable=invalid-name
@@ -65,16 +66,6 @@ def parse_subcommands(commands, args=None):
     return commands[opts.command](args)
 
 
-def aggregator(args):
-    """'iotlab aggregator' main function."""
-
-    commands = {
-        'sniffer': iotlabaggregator.sniffer.main,
-        'serial': iotlabaggregator.serial.main
-    }
-    parse_subcommands(commands, args)
-
-
 def oml_plot(args):
     """'iotlab oml-plot' main function."""
 
@@ -99,9 +90,10 @@ def main(args=None):
         'help': None
     }
     if iotlabaggregator:
-        commands['aggregator'] = aggregator
+        commands['serial'] = iotlabaggregator.serial.main
+        commands['sniffer'] = iotlabaggregator.sniffer.main
     if oml_plot_tools:
-        commands['oml-plot'] = oml_plot
+        commands['plot'] = oml_plot
     if iotlabsshcli:
         commands['ssh'] = iotlabsshcli.parser.open_a8_parser.main
 

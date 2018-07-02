@@ -122,7 +122,7 @@ def test_aggregator_main(entry):
 
     with patch('iotlabcli.parser.main.iotlabaggregator') as mocked_module:
         mocked_main = getattr(mocked_module, entry).main
-        main_parser.main(['aggregator', entry, '-i', '123'])
+        main_parser.main([entry, '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
 
 
@@ -133,7 +133,7 @@ def test_oml_main(entry):
 
     with patch('iotlabcli.parser.main.oml_plot_tools') as mocked_module:
         mocked_main = getattr(mocked_module, entry).main
-        main_parser.main(['oml-plot', entry, '-i', '123'])
+        main_parser.main(['plot', entry, '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
 
 
@@ -147,19 +147,10 @@ def test_ssh_main():
         mocked_main.assert_called_with(['-i', '123'])
 
 
-@with_aggregator_tools
-def test_main_parser_aggregator():
-    """ Experiment parser """
-    entry = 'aggregator'
-    with patch('iotlabcli.parser.main.aggregator') as entrypoint_func:
-        main_parser.main([entry, '-i', '123'])
-        entrypoint_func.assert_called_with(['-i', '123'])
-
-
 @with_oml_plot_tools
 def test_main_parser_oml_plot():
     """ Experiment parser """
-    entry = 'oml-plot'
+    entry = 'plot'
     with patch('iotlabcli.parser.main.oml_plot') as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
