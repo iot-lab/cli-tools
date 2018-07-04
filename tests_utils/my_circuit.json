@@ -1,0 +1,28 @@
+{
+    "name":"my_circuit",
+    "coordinates": {
+        "A": {
+            "theta": 1.57,
+            "x": 22,
+            "y": 7
+        },
+        "B": {
+            "theta": 0,
+            "x": 24,
+            "y": 7
+        },
+        "C": {
+            "theta": -1.57,
+            "x": 24,
+            "y": 4
+        },
+        "D": {
+            "theta": 3.14,
+            "x": 22,
+            "y": 4
+        }
+    },
+    "points":[ "A", "B", "C", "D" ],
+    "loop": true,
+    "site":"devlille"
+}

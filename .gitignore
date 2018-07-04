@@ -19,7 +19,6 @@ htmlcov/
 test_auth_file
 *log
 
-*json
 *png
 
 *.tar.gz
@@ -29,5 +28,4 @@ test_auth_file
 .pytest_cache/
 test-report.xml
 
-# IDE
-.idea/
+\.idea/
