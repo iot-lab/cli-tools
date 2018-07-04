@@ -86,7 +86,7 @@ setup(
         #     security.html#openssl-pyopenssl
         'secure': ['pyOpenSSL', 'ndg-httpsclient', 'pyasn1'],
     },
-    install_requires=["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil",
-                      'requests>2.4.2', 'jmespath'],
+    install_requires=["urllib3 >= 1.15", "six >= 1.10", "certifi",
+                      "python-dateutil", 'requests>2.4.2', 'jmespath'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
 )
