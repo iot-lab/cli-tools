@@ -4,7 +4,7 @@ generate:
 	rm -rf iotlabclient 2>/dev/null
 	rm -rf /tmp/iotlab_client 2>/dev/null
 	docker build -t open-api-generator generator
-ifeq (,$(wildcard $TM_SWAGGER))
+ifneq (,$(wildcard $TM_SWAGGER))
 	cp $(TM_SWAGGER) .
 else
 	wget http://api.iot-lab.info/swagger.yaml -O swagger.yaml
