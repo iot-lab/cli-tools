@@ -169,20 +169,20 @@ class TestGetAnyExperimentState(unittest.TestCase):
         _method.assert_called_with('experiments/123?anystate&user=harter')
 
 
-class TestGetResourcesSelection(unittest.TestCase):
-    """Test get_resources selection."""
+class TestGetNodesSelection(unittest.TestCase):
+    """Test get_nodes selection."""
     # pylint:disable=no-self-use
 
     @patch('iotlabcli.rest.Api.method')
-    def test_get_resources_selection(self, _method):
+    def test_get_nodes_selection(self, _method):
         """Test get_resources selection."""
         _method.return_value = {'state': 'Running'}
         api = rest.Api(None, None)
 
-        api.get_resources(False, 'grenoble', archi='m3', state='Alive')
-        _method.assert_called_with('experiments?resources'
+        api.get_nodes(False, 'grenoble', archi='m3', state='Alive')
+        _method.assert_called_with('nodes?'
                                    '&archi=m3&site=grenoble&state=Alive')
 
-        api.get_resources(True, archi='a8', state='Busy', site='lille')
-        _method.assert_called_with('experiments?id'
-                                   '&archi=a8&site=lille&state=Busy')
+        api.get_nodes(True, archi='a8', state='Busy', site='lille')
+        _method.assert_called_with('nodes/ids'
+                                   '?archi=a8&site=lille&state=Busy')

@@ -277,12 +277,12 @@ def _custom_profile(opts):
     return _m3_a8_profile(opts, ProfileCustom)
 
 
-def _add_profile(api, name, profile, json_out=False):
+def _add_profile(api, profile, json_out=False):
     """ Add user profile. if json, dump json dict to stdout """
     if json_out:
         return profile
 
-    return api.add_profile(name, profile)
+    return api.add_profile(profile)
 
 
 def add_profile_parser(api, opts):
@@ -301,7 +301,7 @@ def add_profile_parser(api, opts):
 
     try:
         profile = profile_func_d[opts.command](opts)
-        return _add_profile(api, opts.name, profile, opts.json)
+        return _add_profile(api, profile, opts.json)
     except AssertionError as err:   # pragma: no cover
         raise ValueError(str(err))
 

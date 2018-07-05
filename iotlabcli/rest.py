@@ -35,10 +35,12 @@ from iotlabcli import helpers
 # pylint: disable=import-error,no-name-in-module
 # pylint: disable=wrong-import-order
 try:  # pragma: no cover
+    from urllib import urlencode
     from urllib.parse import urljoin
     from urllib.error import HTTPError
 except ImportError:  # pragma: no cover
     # pylint: disable=import-error,no-name-in-module
+    from urllib.parse import urlencode
     from urlparse import urljoin
     from urllib2 import HTTPError
 
@@ -67,7 +69,7 @@ except ImportError:
 class Api():  # pylint:disable=too-many-public-methods
     """ IoT-Lab REST API """
     _cache = {}
-    url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'
+    url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/api/'
 
     def __init__(self, username, password):
         """
@@ -77,7 +79,7 @@ class Api():  # pylint:disable=too-many-public-methods
         """
         self.auth = HTTPBasicAuth(username, password)
 
-    def get_resources(self, list_id=False, site=None, **selections):
+    def get_nodes(self, list_id=False, site=None, **selections):
         """ Get testbed resources description
 
         :param list_id: return result in 'exp_list' format '3-12+35'
@@ -87,9 +89,9 @@ class Api():  # pylint:disable=too-many-public-methods
         if site:
             selections['site'] = site
 
-        url = 'experiments?%s' % ('id' if list_id else 'resources')
-        for selection, value in sorted(selections.items()):
-            url += '&{}={}'.format(selection, value)
+        url = 'nodes%s' % ("/ids" if list_id else '')
+        if selections:
+            url += '?' + urlencode(selections)
         return self.method(url)
 
     def submit_experiment(self, files):
@@ -113,17 +115,15 @@ class Api():  # pylint:disable=too-many-public-methods
         :param expid: experiment id submission (e.g. OAR scheduler)
         :param option: Restrict to some values:
             * '':          experiment submission
-            * 'resources': resources list
-            * 'id':        resources id list: (1-34+72 format)
-            * 'state':     experiment state
+            * 'nodes':     nodes list
+            * 'nodes_ids': nodes id list: (1-34+72 format)
             * 'data':      experiment tar.gz with description and firmwares
-            * 'start':     expected start time
         """
-        assert option in ('', 'resources', 'id', 'state', 'data', 'start')
+        assert option in ('', 'nodes', 'nodes_ids', 'data')
 
         url = 'experiments/%s' % expid
         if option:
-            url += '?%s' % option
+            url += '/%s' % option
         return self.method(url, raw=(option == 'data'))
 
     @classmethod
@@ -151,7 +151,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :param exp_json: experiment duration and reservation configuration
         :returns JSONObject
         """
-        url = 'experiments/%d?reload' % expid
+        url = 'experiments/%d/reload' % expid
         return self.method(url, 'post', json=exp_json)
 
     # Node commands
@@ -161,13 +161,13 @@ class Api():  # pylint:disable=too-many-public-methods
 
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
-        :param opt: additional string to pass as option in the query string
+        :param opt: additional string to pass as option in the url
         :returns: dict
         """
-        option = option or ''  # case of None
-        return self.method(
-            'experiments/%s/nodes?%s%s' % (expid, command, option),
-            'post', json=nodes)
+        url = 'experiments/%s/nodes/%s' % (expid, command)
+        if option:
+            url += '/%s' % option
+        return self.method(url, 'post', json=nodes)
 
     def node_update(self, expid, files):
         """ Launch update command (flash firmware) on user
@@ -178,7 +178,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :type files: dict
         :returns: dict
         """
-        return self.method('experiments/%s/nodes?update' % expid,
+        return self.method('experiments/%s/nodes/flash' % expid,
                            'post', files=files)
 
     def node_profile_load(self, expid, files):
@@ -190,7 +190,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :type files: dict
         :returns: dict
         """
-        return self.method('experiments/%s/nodes?profile-load' % expid,
+        return self.method('experiments/%s/nodes/monitoring' % expid,
                            'post', files=files)
 
     # script
@@ -206,7 +206,7 @@ class Api():  # pylint:disable=too-many-public-methods
         assert json is not None or command in ('run',)
         assert files is not None or command in ('kill', 'status',)
 
-        url = 'experiments/%s/script?%s' % (expid, command)
+        url = 'experiments/%s/scripts/%s' % (expid, command)
         return self.method(url, 'post', files=files, json=json)
 
     # Profile methods
@@ -216,7 +216,7 @@ class Api():  # pylint:disable=too-many-public-methods
 
         :returns JSONObject
         """
-        url = 'profiles'
+        url = 'monitoring'
         if archi is not None:
             url += '?archi={}'.format(archi)
         return self.method(url)
@@ -228,9 +228,9 @@ class Api():  # pylint:disable=too-many-public-methods
         :type name: string
         :returns JSONObject
         """
-        return self.method('profiles/%s' % name)
+        return self.method('monitoring/%s' % name)
 
-    def add_profile(self, name, profile):
+    def add_profile(self, profile):
         """ Add user profile
 
         :param profile: profile description
@@ -239,7 +239,7 @@ class Api():  # pylint:disable=too-many-public-methods
         # dict has no __dict__ and load_profile gives a dict
         # requests wants a 'simple' type like dict
         profile = profile if isinstance(profile, dict) else profile.__dict__
-        ret = self.method('profiles/%s' % name, 'post', json=profile)
+        ret = self.method('monitoring', 'post', json=profile)
         return ret
 
     def del_profile(self, name):
@@ -248,20 +248,20 @@ class Api():  # pylint:disable=too-many-public-methods
         :param profile_name: name
         :type profile_name: string
         """
-        ret = self.method('profiles/%s' % name, 'delete')
+        ret = self.method('monitoring/%s' % name, 'delete')
         return ret
 
     def check_credential(self):
         """ Check that the credentials are valid """
         try:
-            self.method('users/%s?login' % self.auth.username, raw=True)
+            self.method('user')
             return True
         except HTTPError as err:
             if err.code == 401:
                 return False
             raise  # pragma no cover
 
-    # robot
+# robot
 
     def robot_command(self, command, expid, nodes=()):
         """Run 'status' on user experiment robot list nodes.
@@ -359,7 +359,7 @@ class Api():  # pylint:disable=too-many-public-methods
 
         :returns JSONObject
         """
-        return cls._get_with_cache('experiments?sites')
+        return cls._get_with_cache('sites')
 
     @classmethod
     def _get_with_cache(cls, url):
