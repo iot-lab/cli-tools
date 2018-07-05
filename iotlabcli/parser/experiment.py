@@ -76,22 +76,15 @@ def parse_options():
 
     get_group = get_parser.add_mutually_exclusive_group(required=True)
     get_group.add_argument(
-        '-r', '--resources', dest='get_cmd', action='store_const',
-        const='resources', help='get an experiment resources list')
+        '-n', '--nodes', dest='get_cmd', action='store_const',
+        const='nodes', help='get an experiment nodes list')
     get_group.add_argument(
-        '-ri', '--resources-id', dest='get_cmd', action='store_const',
-        const='id', help=('get an experiment resources id list '
-                          '(EXP_LIST format : 1-34+72)'))
-
-    get_group.add_argument(
-        '-s', '--exp-state', dest='get_cmd', action='store_const',
-        const='state', help='get an experiment state')
-    get_group.add_argument(
-        '-st', '--start-time', dest='get_cmd', action='store_const',
-        const='start', help='get expected experiment start time')
+        '-ni', '--nodes-id', dest='get_cmd', action='store_const',
+        const='nodes_ids', help=('get an experiment nodes id list '
+                                 '(EXP_LIST format : 1-34+72)'))
     get_group.add_argument(
         '-p', '--print', dest='get_cmd', action='store_const',
-        const='', help='get an experiment submission')
+        const='', help='get an experiment description')
     get_group.add_argument(
         '-a', '--archive', dest='get_cmd', action='store_const',
         const='data', help='get an experiment archive (tar.gz)')
@@ -100,7 +93,20 @@ def parse_options():
     get_group.add_argument(
         '-l', '--list', dest='get_cmd', action='store_const',
         const='experiment_list', help='get user\'s experiment list')
-
+    get_group.add_argument(
+        '-r', '--resources', dest='get_cmd', action='store_const',
+        const='nodes', help='DEPRECATED: use -n option')
+    get_group.add_argument(
+        '-ri', '--resources-id', dest='get_cmd', action='store_const',
+        const='nodes_ids',
+        help=('DEPRECATED: use -ni option'))
+    get_group.add_argument(
+        '-s', '--exp-state', dest='get_cmd', action='store_const',
+        const='state', help='DEPRECATED: use -p option')
+    get_group.add_argument(
+        '-st', '--start-time', dest='get_cmd', action='store_const',
+        const='start_date',
+        help='DEPRECATED: use -p option')
     get_parser.add_argument('--offset', default=0, type=int,
                             help='experiment list start index')
 
@@ -146,28 +152,28 @@ def parse_options():
 
     # ####### INFO PARSER ###############
     info_parser = subparsers.add_parser('info', epilog=help_msgs.INFO_EPILOG,
-                                        help='resources description list',
+                                        help='nodes description list',
                                         formatter_class=RawTextHelpFormatter)
 
     info_parser.add_argument('--site',
                              action='append', dest='info_selection',
                              type=lambda x: ('site', x),
-                             help='resources list filter by site')
+                             help='nodes list filter by site')
     info_parser.add_argument('--archi',
                              action='append', dest='info_selection',
                              type=lambda x: ('archi', x),
-                             help='resources list filter by architecture')
+                             help='nodes list filter by architecture')
     info_parser.add_argument('--state', action='append', dest='info_selection',
                              type=lambda x: ('state', x),
-                             help='resources list filter by state')
+                             help='nodes list filter by state')
 
     # subcommand
     info_group = info_parser.add_mutually_exclusive_group(required=True)
     info_group.add_argument('-l', '--list', dest='list_id',
-                            action='store_false', help='list resources')
+                            action='store_false', help='nodes list')
     info_group.add_argument('-li', '--list-id', dest='list_id',
                             action='store_true',
-                            help=('resources id list by archi and state '
+                            help=('nodes id list by archi and state '
                                   '(EXP_LIST format : 1-34+72)'))
 
     # ####### WAIT PARSER ###############
@@ -688,26 +694,35 @@ def get_experiment_parser(opts):
 
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
-
     # pylint:disable=no-else-return
     if opts.get_cmd == 'experiment_list':
         return experiment.get_experiments_list(api, opts.state, opts.limit,
                                                opts.offset)
-    elif opts.get_cmd == 'start':
-        exp_id = helpers.get_current_experiment(api, opts.experiment_id,
-                                                running_only=False)
-        ret = experiment.get_experiment(api, exp_id, opts.get_cmd)
-
-        # Add a 'date' field
-        timestamp = ret['start_time']
-        ret['local_date'] = time.ctime(timestamp) if timestamp else 'Unknown'
-        return ret
+    elif opts.get_cmd == 'start_date' or opts.get_cmd == 'state':
+        return _get_experiment_attr(api, opts)
     elif opts.get_cmd == 'experiments':
         return experiment.get_active_experiments(api,
                                                  running_only=not opts.active)
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         return experiment.get_experiment(api, exp_id, opts.get_cmd)
+
+
+def _get_experiment_attr(api, opts):
+    """ Return start_time or state experiment attribute with old api format"""
+    assert opts.get_cmd in ('state', 'start_date',)
+    exp_id = helpers.get_current_experiment(api, opts.experiment_id,
+                                            running_only=False)
+    ret = experiment.get_experiment(api, exp_id, '')
+    if opts.get_cmd == 'state':
+        return {opts.get_cmd: ret[opts.get_cmd]}
+    elif opts.get_cmd == 'start_date':
+        from datetime import datetime
+        utc_date = datetime.strptime(ret[opts.get_cmd],
+                                     '%Y-%m-%dT%H:%M:%SZ')
+        timestamp = (utc_date - datetime(1970, 1, 1)).total_seconds()
+        return {'start_time': int(timestamp),
+                'local_date': time.ctime(timestamp)}
 
 
 def load_experiment_parser(opts):
