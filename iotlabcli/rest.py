@@ -35,13 +35,12 @@ from iotlabcli import helpers
 # pylint: disable=import-error,no-name-in-module
 # pylint: disable=wrong-import-order
 try:  # pragma: no cover
-    from urllib import urlencode
-    from urllib.parse import urljoin
+    from urllib.parse import urljoin, urlencode
     from urllib.error import HTTPError
 except ImportError:  # pragma: no cover
-    # pylint: disable=import-error,no-name-in-module
-    from urllib.parse import urlencode
+    # pylint: disable=import-error,no-name-in-module,ungrouped-imports
     from urlparse import urljoin
+    from urllib import urlencode
     from urllib2 import HTTPError
 
 
