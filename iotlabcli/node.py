@@ -38,13 +38,13 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
                        Empty list runs on all nodes
     :param cmd_opt: Firmware path for update, profile name for profile
     """
-    assert command in ('update', 'update-idle',
+    assert command in ('flash', 'flash-idle',
                        'profile', 'profile-load', 'profile-reset',
                        'start', 'stop', 'reset',
                        'debug-start', 'debug-stop')
 
     result = None
-    if command == 'update':
+    if command == 'flash':
         assert cmd_opt is not None, '`cmd_opt` required for update'
         files = helpers.FilesDict()
 

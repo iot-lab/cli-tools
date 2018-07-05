@@ -138,7 +138,7 @@ class TestMainProfileParser(MainMock):
 
     def test__add_profile(self):
         ret = profile_parser._add_profile(  # pylint: disable=protected-access
-            self.api, 'name', {'test_profile': 1}, json_out=True)
+            self.api, {'test_profile': 1}, json_out=True)
         self.assertEqual(ret, {'test_profile': 1})
         self.assertFalse(self.api.add_profile.called)
 

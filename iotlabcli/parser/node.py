@@ -43,12 +43,12 @@ NODE_EPILOG = """
 
 Examples:
     * update firmware on all experiment resources
-        $ iotlab-node --update /home/tp.hex
+        $ iotlab-node --flash /home/tp.hex
         Note : with one experiment in the state Running
     * Launch command stop on experiment resources list
         $ iotlab-node --sto -l grenoble,m3,1-5+10+12
     * update firmware on all experiment resources except two
-        $ iotlab-node --update /home/tp.hex -e grenoble,m3,1-2
+        $ iotlab-node --flash /home/tp.hex -e grenoble,m3,1-2
     * commmand list : site_name,archi,nodeid_list
         $ iotlab-node --reset -l grenoble,wsn430,1-34+72
     * command with several experiments with state Running
@@ -65,7 +65,7 @@ def parse_options():
     parser = argparse.ArgumentParser(
         description=NODE_PARSER,
         parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--update') +
+        epilog=(help_msgs.PARSER_EPILOG.format(cli='node', option='--flash') +
                 NODE_EPILOG),
     )
 
@@ -88,22 +88,18 @@ def parse_options():
     cmd_group.add_argument(
         '-r', '--reset', help='reset command', const='reset',
         dest='command', action='store_const')
+    cmd_group.add_argument('-fl', '--flash',
+                           dest='firmware_path', default=None,
+                           help='flash firmware command with path file')
     cmd_group.add_argument(
-        '--update-idle', help='flash idle firmware', const='update-idle',
+        '--flash-idle', help='flash idle firmware', const='flash-idle',
         dest='command', action='store_const')
-
     cmd_group.add_argument(
         '--debug-start', help='start debugger', const='debug-start',
         dest='command', action='store_const')
-
     cmd_group.add_argument(
         '--debug-stop', help='stop debugger', const='debug-stop',
         dest='command', action='store_const')
-
-    cmd_group.add_argument('-up', '--update',
-                           dest='firmware_path', default=None,
-                           help='flash firmware command with path file')
-
     cmd_group.add_argument('--profile', '--update-profile',
                            dest='profile_name', default=None,
                            help='change nodes current monitoring profile')
@@ -115,7 +111,12 @@ def parse_options():
                            dest='command', const='profile-reset',
                            action='store_const',
                            help='reset to default no monitoring profile')
-
+    cmd_group.add_argument(
+        '--update-idle', help='DEPRECATED: use --flash-idle',
+        const='flash-idle', dest='command', action='store_const')
+    cmd_group.add_argument('-up', '--update',
+                           dest='firmware_path', default=None,
+                           help='DEPRECATED: use -fl or --flash option')
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)
 
@@ -174,7 +175,7 @@ def _node_parse_command_and_opt(**opts_dict):
     """
     # Mapping between 'command' and argparse option name
     commands_arguments = {
-        'update': 'firmware_path',
+        'flash': 'firmware_path',
         'profile': 'profile_name',
         'profile-load': 'profile_path',
     }

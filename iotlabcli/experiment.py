@@ -112,8 +112,8 @@ def get_experiment(api, exp_id, option=''):
     :param exp_id: experiment id
     :param option: Restrict to some values
             * '':          experiment submission
-            * 'resources': resources list
-            * 'id':        resources id list: (1-34+72 format)
+            * 'nodes':     nodes list
+            * 'nodes_ids': nodes id list: (1-34+72 format)
             * 'state':     experiment state
             * 'data':      experiment tar.gz with description and firmwares
             * 'start':     expected start time
@@ -226,7 +226,7 @@ def info_experiment(api, list_id=False, site=None, **selections):
     :param site: Restrict informations collection on site
     :param **selections: other selections than site
     """
-    return api.get_resources(list_id, site, **selections)
+    return api.get_nodes(list_id, site, **selections)
 
 
 def script_experiment(api, exp_id, command, *options):
@@ -324,7 +324,7 @@ def wait_experiment(api, exp_id, states='Running',
     """
     def _state_function():
         """Get current user experiment state."""
-        return get_experiment(api, exp_id, 'state')['state']
+        return get_experiment(api, exp_id, '')['state']
     exp_str = '%s' % (exp_id,)
 
     return wait_state(_state_function, exp_str, states, step, timeout)
