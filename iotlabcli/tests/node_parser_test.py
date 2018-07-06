@@ -78,22 +78,22 @@ class TestMainNodeParser(MainMock):
         list_nodes.return_value = []
 
         # update with exclude list
-        args = ['--update', 'tp.elf', '-e', 'grenoble,m3,1-2']
+        args = ['--flash', 'tp.elf', '-e', 'grenoble,m3,1-2']
         list_nodes.return_value = ['m3-3']  # simplify
         node_parser.main(args)
         list_nodes.assert_called_with(
             self.api, 123, None,
             [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info']])
         node_command.assert_called_with(
-            self.api, 'update', 123, ['m3-3'], 'tp.elf')
+            self.api, 'flash', 123, ['m3-3'], 'tp.elf')
 
         # update idle
         node_command.reset_mock()
-        args = ['--update-idle']
+        args = ['--flash-idle']
         list_nodes.return_value = []
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'update-idle', 123, [], None)
+        node_command.assert_called_with(self.api, 'flash-idle', 123, [], None)
 
     def test_main_profile(self, list_nodes, node_command):
         """Run the parser.node.main function regarding profile."""

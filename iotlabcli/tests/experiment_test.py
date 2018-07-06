@@ -610,7 +610,7 @@ class TestExperimentGet(CommandMock):
         ret = experiment.get_experiment(self.api, 123)
         self.assertEqual(ret, API_RET)
 
-        ret = experiment.get_experiment(self.api, 123, option='resources')
+        ret = experiment.get_experiment(self.api, 123, option='nodes')
         self.assertEqual(ret, API_RET)
 
 
@@ -702,13 +702,13 @@ class TestExperimentInfo(CommandMock):
     def test_info_experiment(self):
         """Test experiment.get_resources."""
         experiment.info_experiment(self.api)
-        self.api.get_resources.assert_called_with(False, None)
+        self.api.get_nodes.assert_called_with(False, None)
 
         experiment.info_experiment(self.api, list_id=True, site='grenoble')
-        self.api.get_resources.assert_called_with(True, 'grenoble')
+        self.api.get_nodes.assert_called_with(True, 'grenoble')
 
         experiment.info_experiment(self.api, site='grenoble', archi='m3')
-        self.api.get_resources.assert_called_with(False, 'grenoble',
+        self.api.get_nodes.assert_called_with(False, 'grenoble',
                                                   archi='m3')
 
 
