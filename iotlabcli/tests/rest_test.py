@@ -180,8 +180,8 @@ class TestGetNodesSelection(unittest.TestCase):
         api = rest.Api(None, None)
 
         api.get_nodes(False, 'grenoble', archi='m3', state='Alive')
-        _method.assert_called_with('nodes?'
-                                   '&archi=m3&site=grenoble&state=Alive')
+        _method.assert_called_with('nodes'
+                                   '?archi=m3&site=grenoble&state=Alive')
 
         api.get_nodes(True, archi='a8', state='Busy', site='lille')
         _method.assert_called_with('nodes/ids'

@@ -150,7 +150,7 @@ def _node_parse_command_and_opt(**opts_dict):
     ...                             profile_name=None,
     ...                             profile_path=None,
     ...                             command='with_argument')
-    ('update', '/tmp/test')
+    ('flash', '/tmp/test')
 
     >>> _node_parse_command_and_opt(firmware_path=None,
     ...                             profile_name='consumption',
