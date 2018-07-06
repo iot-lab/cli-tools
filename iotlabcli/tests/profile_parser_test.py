@@ -160,8 +160,7 @@ class TestMainProfileParser(MainMock):
     def test_main_load_parser(self, read_file_mock):
         read_file_mock.return_value = '{"profilename": "prof_name"}'
         profile_parser.main(['load', '--file', 'prof.json'])
-        self.api.add_profile.assert_called_with('prof_name',
-                                                {'profilename': "prof_name"})
+        self.api.add_profile.assert_called_with({'profilename': "prof_name"})
         # invalid profile file
         self.api.add_profile.reset_mock()
         read_file_mock.return_value = '{"not_profilename_field": null}'

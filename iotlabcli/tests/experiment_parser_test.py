@@ -76,7 +76,7 @@ class TestMainInfoParser(MainMock):
         get_exp.return_value = {}
         get_exp_list.return_value = {}
 
-        get_exp.return_value = {'start_time': 1423131729}
+        get_exp.return_value = {'start_date': "2018-01-19T14:54:15Z"}
         experiment_parser.main(['get', '--start-time'])
         get_exp.assert_called_with(self.api, 234, 'start')
 
@@ -117,14 +117,14 @@ class TestMainInfoParser(MainMock):
         cmd = ['-u', 'test', '-p', 'password', 'get', '--start-time']
         args = experiment_parser.parse_options().parse_args(cmd)
 
-        get_exp.return_value = {'start_time': 1423131729}
+        get_exp.return_value = {'start_date': "2018-01-19T14:54:15Z"}
         ret = experiment_parser.get_experiment_parser(args)
         get_exp.assert_called_with(self.api, 234, 'start')
         # don't expect anything on local time
-        self.assertTrue('2015' in ret['local_date'])
+        self.assertTrue('2018' in ret['local_date'])
 
         # No start_time
-        get_exp.return_value = {'start_time': 0}
+        get_exp.return_value = {'start_date': "1970-01-01T00:00:00Z"}
         ret = experiment_parser.get_experiment_parser(args)
         get_exp.assert_called_with(self.api, 234, 'start')
         self.assertEqual('Unknown', ret['local_date'])

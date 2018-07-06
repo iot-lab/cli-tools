@@ -68,7 +68,7 @@ class TestNode(unittest.TestCase):
                                             '&name=p_m3')
 
         api.reset_mock()
-        res = node.node_command(api, 'update', 123, nodes_list,
+        res = node.node_command(api, 'flash', 123, nodes_list,
                                 '~/../filename.elf')
         self.assertEqual(my_mock.API_RET, res)
         self.assertEqual(1, api.node_update.call_count)
@@ -79,12 +79,12 @@ class TestNode(unittest.TestCase):
 
         # no firmware for update command
         self.assertRaises(AssertionError, node.node_command,
-                          api, 'update', 123, nodes_list)
+                          api, 'flash', 123, nodes_list)
 
         api.reset_mock()
-        res = node.node_command(api, 'update-idle', 123, nodes_list)
+        res = node.node_command(api, 'flash-idle', 123, nodes_list)
         self.assertEqual(my_mock.API_RET, res)
-        api.node_command.assert_called_with('update-idle', 123, nodes_list)
+        api.node_command.assert_called_with('flash-idle', 123, nodes_list)
 
         # profile-load
         read_file_mock.return_value = '{profilejson}'  # no local content check
