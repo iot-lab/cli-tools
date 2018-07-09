@@ -716,14 +716,14 @@ def _get_experiment_attr(api, opts):
     ret = experiment.get_experiment(api, exp_id, '')
     if opts.get_cmd == 'state':
         return {opts.get_cmd: ret[opts.get_cmd]}
-    elif opts.get_cmd == 'start_date':
-        from datetime import datetime
-        utc_date = datetime.strptime(ret[opts.get_cmd],
-                                     '%Y-%m-%dT%H:%M:%SZ')
-        timestamp = (utc_date - datetime(1970, 1, 1)).total_seconds()
-        local_date = time.ctime(timestamp) if timestamp else 'Unknown'
-        return {'start_time': int(timestamp),
-                'local_date': local_date}
+    # start_date option
+    from datetime import datetime
+    utc_date = datetime.strptime(ret[opts.get_cmd],
+                                 '%Y-%m-%dT%H:%M:%SZ')
+    timestamp = (utc_date - datetime(1970, 1, 1)).total_seconds()
+    local_date = time.ctime(timestamp) if timestamp else 'Unknown'
+    return {'start_time': int(timestamp),
+            'local_date': local_date}
 
 
 def load_experiment_parser(opts):
