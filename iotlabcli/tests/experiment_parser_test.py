@@ -78,7 +78,11 @@ class TestMainInfoParser(MainMock):
 
         get_exp.return_value = {'start_date': "2018-01-19T14:54:15Z"}
         experiment_parser.main(['get', '--start-time'])
-        get_exp.assert_called_with(self.api, 234, 'start')
+        get_exp.assert_called_with(self.api, 234, '')
+
+        get_exp.return_value = {'state': "Running"}
+        experiment_parser.main(['get', '--exp-state'])
+        get_exp.assert_called_with(self.api, 234, '')
 
         # No value is treated inside
         get_exp.return_value = {}
@@ -86,14 +90,11 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['get', '--id', '18', '--print'])
         get_exp.assert_called_with(self.api, 18, '')
 
-        experiment_parser.main(['get', '--resources'])
-        get_exp.assert_called_with(self.api, 123, 'resources')
+        experiment_parser.main(['get', '--nodes'])
+        get_exp.assert_called_with(self.api, 123, 'nodes')
 
-        experiment_parser.main(['get', '--resources-id'])
-        get_exp.assert_called_with(self.api, 123, 'id')
-
-        experiment_parser.main(['get', '--exp-state'])
-        get_exp.assert_called_with(self.api, 123, 'state')
+        experiment_parser.main(['get', '--nodes-id'])
+        get_exp.assert_called_with(self.api, 123, 'nodes_ids')
 
         experiment_parser.main(['get', '--archive'])
         get_exp.assert_called_with(self.api, 123, 'data')
@@ -119,14 +120,14 @@ class TestMainInfoParser(MainMock):
 
         get_exp.return_value = {'start_date': "2018-01-19T14:54:15Z"}
         ret = experiment_parser.get_experiment_parser(args)
-        get_exp.assert_called_with(self.api, 234, 'start')
+        get_exp.assert_called_with(self.api, 234, '')
         # don't expect anything on local time
         self.assertTrue('2018' in ret['local_date'])
 
         # No start_time
         get_exp.return_value = {'start_date': "1970-01-01T00:00:00Z"}
         ret = experiment_parser.get_experiment_parser(args)
-        get_exp.assert_called_with(self.api, 234, 'start')
+        get_exp.assert_called_with(self.api, 234, '')
         self.assertEqual('Unknown', ret['local_date'])
 
     @patch('iotlabcli.experiment.get_active_experiments')

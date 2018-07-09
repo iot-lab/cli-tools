@@ -90,7 +90,9 @@ class Api():  # pylint:disable=too-many-public-methods
 
         url = 'nodes%s' % ("/ids" if list_id else '')
         if selections:
-            url += '?' + urlencode(selections)
+            # the order of parameters in the encoded string
+            # will match the order of tuples list
+            url += '?' + urlencode(sorted(list(selections.items())))
         return self.method(url)
 
     def submit_experiment(self, files):
