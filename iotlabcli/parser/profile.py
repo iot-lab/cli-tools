@@ -313,12 +313,8 @@ def load_profile_parser(api, opts):
     :param opts: command-line parser opts
     :type opts: Namespace object with opts attribute
     """
-    try:
-        profile = json.loads(helpers.read_file(opts.path_file))
-        return _add_profile(api, profile['profilename'], profile)
-    except KeyError:  # pragma: no cover
-        raise ValueError(
-            "'profilename' required in profile JSON file: %r" % opts.path_file)
+    profile = json.loads(helpers.read_file(opts.path_file))
+    return _add_profile(api, profile)
 
 
 def del_profile_parser(api, opts):

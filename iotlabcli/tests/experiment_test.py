@@ -667,8 +667,7 @@ class TestExperimentInfo(CommandMock):
         self.api.get_nodes.assert_called_with(True, 'grenoble')
 
         experiment.info_experiment(self.api, site='grenoble', archi='m3')
-        self.api.get_nodes.assert_called_with(False, 'grenoble',
-                                                  archi='m3')
+        self.api.get_nodes.assert_called_with(False, 'grenoble', archi='m3')
 
 
 class TestWriteExperimentArchive(unittest.TestCase):
