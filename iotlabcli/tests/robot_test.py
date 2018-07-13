@@ -52,25 +52,29 @@ class TestRobot(unittest.TestCase):
         nodes_list = ["m3-1", "m3-2", "m3-3"]
 
         # With site name
-        ret = robot.robot_update_mobility(self.api, 123,
-                                          'mob_name', 'grenoble', nodes_list)
+        ret = robot.robot_update_mobility(self.api, 123, 'mob_name',
+                                          nodes_list)
         self.assertEqual(my_mock.API_RET, ret)
         self.api.robot_update_mobility.assert_called_with(
-            123, 'mob_name', 'grenoble', nodes_list)
+            123, 'mob_name', nodes_list)
 
-    def test_mobility_command(self):
+    def test_circuit_command(self):
         """Test 'mobility_command'."""
 
         # mobility-list
-        ret = robot.mobility_command(self.api, 'list')
+        ret = robot.circuit_command(self.api, 'list')
         self.assertEqual(my_mock.API_RET, ret)
-        self.api.mobility_user_list.assert_called_with()
+        self.api.get_circuits_list.assert_called_with()
         self.api.reset_mock()
 
+        # invalid circuit type
+        self.assertRaises(AssertionError, robot.circuit_command,
+                          self.api, 'list', site='grenoble', type='no_defined')
+
         # mobility-get
-        ret = robot.mobility_command(self.api, 'get', ('m_name', 'm_site'))
+        ret = robot.circuit_command(self.api, 'get', 'm_name')
         self.assertEqual(my_mock.API_RET, ret)
-        self.api.mobility_user_get.assert_called_with('m_name', 'm_site')
+        self.api.get_circuit.assert_called_with('m_name')
         self.api.reset_mock()
 
     def test_robot_get_map(self):
