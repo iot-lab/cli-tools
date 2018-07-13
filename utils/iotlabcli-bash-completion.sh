@@ -116,7 +116,7 @@ _iotlab_experiment() {
                     COMPREPLY=($(compgen -W "${_iotlab_states[*]}" -- "$cur"))
                     ;;
                 *)
-                    COMPREPLY=($(compgen -W '-h --help -i --id -r --resources -ri --resources-id -s --exp-state -st --start-time -p --print -a --archive -l --list --offset --limit --state -e --experiments --active' -- "$cur" ))
+                    COMPREPLY=($(compgen -W '-h --help -i --id -n --nodes -ni --nodes-id -p --print -a --archive -l --list --offset --limit --state -e --experiments --active' -- "$cur" ))
             esac
             ;;
         load)
@@ -188,7 +188,7 @@ _iotlab_node() {
         -i|--id)
             _iotlab_experiment_id
             ;;
-        -up|--update)
+        -fl|--flash)
             _filedir
             ;;
         --profile|--update-profile)
@@ -204,7 +204,7 @@ _iotlab_node() {
             _iotlab_resources_list
             ;;
         *)
-            COMPREPLY=($(compgen -W '-h --help -u --user -p --password -v --version -i --id -sta --start -sto --stop -r --reset --update-idle --debug-start --debug-stop -up --update --profile --profile-load --profile-reset -e --exclude -l --list --jmespath --jp --format --fmt' -- "$cur"))
+            COMPREPLY=($(compgen -W '-h --help -u --user -p --password -v --version -i --id -sta --start -sto --stop -r --reset --flash-idle --debug-start --debug-stop -fl --flash --profile --profile-load --profile-reset -e --exclude -l --list --jmespath --jp --format --fmt' -- "$cur"))
             ;;
     esac
 }
