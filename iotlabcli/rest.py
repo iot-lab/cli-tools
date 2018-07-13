@@ -79,7 +79,7 @@ class Api():  # pylint:disable=too-many-public-methods
         self.auth = HTTPBasicAuth(username, password)
 
     def get_nodes(self, list_id=False, site=None, **selections):
-        """ Get testbed resources description
+        """ Get testbed nodes description
 
         :param list_id: return result in 'exp_list' format '3-12+35'
         :param site: restrict to site
