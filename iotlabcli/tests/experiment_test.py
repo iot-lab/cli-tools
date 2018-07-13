@@ -700,7 +700,7 @@ class TestExperimentInfo(CommandMock):
     """ Test iotlabcli.experiment.info_experiment """
 
     def test_info_experiment(self):
-        """Test experiment.get_resources."""
+        """Test experiment.get_nodes."""
         experiment.info_experiment(self.api)
         self.api.get_nodes.assert_called_with(False, None)
 

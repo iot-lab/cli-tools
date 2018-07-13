@@ -161,7 +161,7 @@ class TestGetNodesSelection(unittest.TestCase):
 
     @patch('iotlabcli.rest.Api.method')
     def test_get_nodes_selection(self, _method):
-        """Test get_resources selection."""
+        """Test get_nodes selection."""
         _method.return_value = {'state': 'Running'}
         api = rest.Api(None, None)
 

@@ -29,7 +29,7 @@ NODE_FILENAME = 'nodes.json'
 
 def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
     """ Launch commands (start, stop, reset, update)
-    on resources (JSONArray) user experiment
+    on nodes (JSONArray) user experiment
 
     :param api: API Rest api object
     :param command: command that should be run

@@ -55,13 +55,13 @@ Examples:
         -l <experiment_list_2>
 
     * Physical experiment list:
-        + <site_name,archi,resourceid_list,firmware_path,profile_name>
+        + <site_name,archi,nodes_id_list,firmware_path,profile_name>
         + grenoble,m3,1-20,bin/tutorial.elf -l rocquencourt,a8,1-5,,battery
         + grenoble,wsn430,1-5+8+9-11,cc1101.hex,battery
         + grenoble,m3,1-20
 
     * Alias experiment list:
-        + <resources_number,properties,firmware_path,profile_name>
+        + <nodes_number,properties,firmware_path,profile_name>
         + 9,archi=wsn430:cc1101+site=grenoble,tp.hex,battery
         + 9,archi=m3:at86rf231+site=grenoble,gre.elf
         + 5,archi=m3:at86rf231+site=strasbourg,stras.elf
@@ -131,8 +131,8 @@ Examples:
         Note : with one experiment in the state Running
     * Get an experiment archive with id 1637
         $ iotlab-experiment get -i 1637 -a
-    * Get exeriment resources list with id 1637
-        $ iotlab-experiment get -i 1637 -r
+    * Get experiment nodes list with id 1637
+        $ iotlab-experiment get -i 1637 -n
     * Get user's experiment list with filter by state and number
         $ iotlab-experiment get -l --state Running,Terminated \\
             --offset 10 --limit 20
@@ -142,9 +142,9 @@ Examples:
 INFO_EPILOG = """
 
 Examples:
-    * Get resources description list with filter by site
+    * Get nodes description list with filter by site
         $ iotlab-experiment info -l --site grenoble
-    * Get resources id list (e.g. 1-34+72)
+    * Get nodes id list (e.g. 1-34+72)
         $ iotlab-experiment info -li
 
 """
