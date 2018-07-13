@@ -59,32 +59,30 @@ class TestMainRobotParser(MainMock):
         robot_update_mobility.return_value = {'result': 'test'}
 
         list_nodes.return_value = []
-        args = ['update', 'traj,grenoble']
+        args = ['update', '-n', 'traj']
         robot_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
         robot_update_mobility.assert_called_with(
-            self.api, 123, 'traj', 'grenoble', [])
+            self.api, 123, 'traj', [])
 
-        # Invalid mobility format
-        robot_update_mobility.reset_mock()
-        args = ['update', 'traj',
-                '-l', 'grenoble,m3,1-2',
-                '-l', 'grenoble,m3,3']
-        self.assertRaises(SystemExit, robot_parser.main, args)
-        self.assertFalse(robot_update_mobility.called)
+    @patch('iotlabcli.robot.circuit_command')
+    def test_main_mobility(self, circuit_command):
+        """Run the parser.robot.main function for circuit commands."""
+        circuit_command.return_value = {'result': 'test'}
 
-    @patch('iotlabcli.robot.mobility_command')
-    def test_main_mobility(self, mobility_command):
-        """Run the parser.robot.main function for mobility commands."""
-        mobility_command.return_value = {'result': 'test'}
-
-        # List mobility
+        # List circuits
         args = ['get', '--list']
         robot_parser.main(args)
-        mobility_command.assert_called_with(self.api, 'list')
+        circuit_command.assert_called_with(self.api, 'list')
+
+        # List mobility
+        args = ['get', '--list', '--site', 'grenoble', '--type', 'predefined']
+
+        robot_parser.main(args)
+        circuit_command.assert_called_with(self.api, 'list', site='grenoble',
+                                           type='predefined')
 
         # Get mobility
-        args = ['get', '-n', 'traj_name,site_name']
+        args = ['get', '-n', 'site_name']
         robot_parser.main(args)
-        mobility_command.assert_called_with(self.api, 'get',
-                                            ('traj_name', 'site_name'))
+        circuit_command.assert_called_with(self.api, 'get', 'site_name')

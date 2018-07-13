@@ -140,20 +140,6 @@ class TestRest(unittest.TestCase):
         with patch('requests.request', side_effect=TypeError()):
             self.assertRaises(RuntimeError, self.api.method, self._url)
 
-    @patch('iotlabcli.rest.Api._get_with_cache')
-    def test_mobility_predifined_list(self, get_with_cache):
-        """Test 'mobility_predefined_list' method.
-
-        It's here for completeness so unused outside when writing this test.
-        """
-        expected = {'return': 0}
-
-        get_with_cache.return_value = expected
-
-        ret = rest.Api.mobility_predefined_list()
-        self.assertTrue(get_with_cache.called)
-        self.assertEqual(ret, expected)
-
 
 class TestGetAnyExperimentState(unittest.TestCase):
     """Test get_any_experiment_state."""
