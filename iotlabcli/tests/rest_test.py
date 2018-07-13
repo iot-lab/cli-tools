@@ -87,7 +87,7 @@ class TestRest(unittest.TestCase):
         patch.stopall()
 
     @patch('iotlabcli.rest.Api.method')
-    def test__get_with_cach(self, api_method):
+    def test__get_with_cache(self, api_method):
         """ Test Api._get_with_cache """
         ret = {'ret': 'my_url'}
         api_method.return_value = ret
@@ -172,3 +172,18 @@ class TestGetNodesSelection(unittest.TestCase):
         api.get_nodes(True, archi='a8', state='Busy', site='lille')
         _method.assert_called_with('nodes/ids'
                                    '?archi=a8&site=lille&state=Busy')
+
+
+class TestGetCircuitsSelection(unittest.TestCase):
+    """Test get_circuits selection."""
+    # pylint:disable=no-self-use
+
+    @patch('iotlabcli.rest.Api.method')
+    def test_get_circuits_selection(self, _method):
+        """Test get_circuits selection."""
+        _method.return_value = {'circuit': 'test'}
+        api = rest.Api(None, None)
+
+        api.get_circuits(site='grenoble', type='predefined')
+        _method.assert_called_with('mobilities/circuits'
+                                   '?site=grenoble&type=predefined')
