@@ -34,20 +34,20 @@ from iotlabcli.parser import common
 
 NODE_PARSER = """
 
-iotlab-node manages interaction with resources.
-You can launch commands on your experiment's resources.
+iotlab-node manages interaction with nodes.
+You can launch commands on your experiment's nodes.
 
 """
 
 NODE_EPILOG = """
 
 Examples:
-    * update firmware on all experiment resources
+    * update firmware on all experiment nodes
         $ iotlab-node --flash /home/tp.hex
         Note : with one experiment in the state Running
-    * Launch command stop on experiment resources list
+    * Launch command stop on experiment nodes list
         $ iotlab-node --sto -l grenoble,m3,1-5+10+12
-    * update firmware on all experiment resources except two
+    * update firmware on all experiment nodes except two
         $ iotlab-node --flash /home/tp.hex -e grenoble,m3,1-2
     * commmand list : site_name,archi,nodeid_list
         $ iotlab-node --reset -l grenoble,wsn430,1-34+72

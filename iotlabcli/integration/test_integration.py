@@ -247,9 +247,9 @@ class TestCliToolsExperiments(unittest.TestCase):
         if type(self.exp_desc["nodes"][0]) == dict:
             LOGGER.warning("Nodes not expanded: %r", self.exp_desc["nodes"])
 
-        cmd = 'iotlab-experiment get --resources-id -i {}'.format(self.exp_id)
+        cmd = 'iotlab-experiment get --nodes-id -i {}'.format(self.exp_id)
         call_cli(cmd)
-        cmd = 'iotlab-experiment get --resources -i {}'.format(self.exp_id)
+        cmd = 'iotlab-experiment get --nodes -i {}'.format(self.exp_id)
         call_cli(cmd)
         call_cli('iotlab-experiment get -a -i {}'.format(self.exp_id))
 

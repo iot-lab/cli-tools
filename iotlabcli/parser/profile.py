@@ -37,7 +37,7 @@ from iotlabcli.profile import ProfileCustom
 PROFILE_PARSER = """
 
 iotlab-profile command-line manage profiles experimentation :
-store you favourite resources configuration with combination
+store you favourite profiles configuration with combination
 of a power supply mode and an automatic measure configuration
 (e.g. consumption, radio, ...)
 

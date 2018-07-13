@@ -217,8 +217,8 @@ def reload_experiment(api, exp_id, duration=None, start_time=None):
 
 def info_experiment(api, list_id=False, site=None, **selections):
     """ Print testbed information for user experiment submission:
-    * resources description
-    * resources description in short mode
+    * nodes description
+    * nodes description in short mode
 
     :param api: API Rest api object
     :param list_id: By default, return full nodes list, if list_id
