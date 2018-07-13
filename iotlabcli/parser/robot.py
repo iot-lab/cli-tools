@@ -33,26 +33,6 @@ ROBOT_PARSER = """iotlab-robot manages interaction with nodes \
 on a turtlebot."""
 
 
-def name_site(name_site_str):
-    """Extract name site string.
-
-    >>> name_site('name,site')
-    ('name', 'site')
-
-    >>> name_site('name')
-    ... # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ValueError: ...
-
-    >>> name_site('name,site,extra')
-    ... # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ValueError: ...
-    """
-    name, site = name_site_str.split(',')
-    return name, site
-
-
 def parse_options():
     """ Handle iotlab-robot command-line options with argparse """
 
@@ -72,21 +52,28 @@ def parse_options():
 
     # 'update' command
     up_parser = subparsers.add_parser('update', help='Update robot mobility')
-    up_parser.add_argument('update_name_site', help='Update robot mobility',
-                           metavar='NAME,SITE', type=name_site)
+    up_parser.add_argument('-n', '--name', dest='up_name',
+                           help='Update robot mobility')
     common.add_nodes_selection_list(up_parser)
     common.add_expid_arg(up_parser)
 
     # Mobility commands
 
     # 'get' command
-    get_parser = subparsers.add_parser('get', help='Get robot mobilities')
+    get_parser = subparsers.add_parser('get',
+                                       help='Get robot mobilities')
     get_group = get_parser.add_mutually_exclusive_group(required=True)
-    get_group.add_argument('-l', '--list', dest='get_list',
-                           action='store_true', help='Get mobilities list')
-    get_group.add_argument('-n', '--name', dest='get_name_site',
-                           type=name_site, metavar='NAME,SITE',
-                           help='Get given mobility')
+    get_group.add_argument('-l', '--list', dest='list',
+                           action='store_true',
+                           help='Get circuits list')
+    get_group.add_argument('-n', '--name', dest='get_name',
+                           help='Get circuit')
+    get_parser.add_argument('--site', action='append', dest='get_selection',
+                            type=lambda x: ('site', x),
+                            help='filter list by site')
+    get_parser.add_argument('--type', action='append', dest='get_selection',
+                            type=lambda x: ('type', x),
+                            help='filter list by circuit type')
 
     return parser
 
@@ -107,13 +94,13 @@ def robot_parse_and_run(opts):  # noqa  # Too complex but straightforward
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
         nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                                   opts.exclude_nodes_list)
-        name, site = opts.update_name_site
         ret = iotlabcli.robot.robot_update_mobility(api, exp_id,
-                                                    name, site, nodes)
-    elif command == 'get' and opts.get_list:
-        ret = iotlabcli.robot.mobility_command(api, 'list')
-    elif command == 'get' and opts.get_name_site is not None:
-        ret = iotlabcli.robot.mobility_command(api, 'get', opts.get_name_site)
+                                                    opts.up_name, nodes)
+    elif command == 'get' and opts.list:
+        selection = dict(opts.get_selection or ())
+        ret = iotlabcli.robot.circuit_command(api, 'list', **selection)
+    elif command == 'get' and opts.get_name is not None:
+        ret = iotlabcli.robot.circuit_command(api, 'get', opts.get_name)
 
     else:  # pragma: no cover
         raise ValueError('Unknown command')

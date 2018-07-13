@@ -38,39 +38,35 @@ def robot_command(api, command, exp_id, nodes_list=()):
     return result
 
 
-def robot_update_mobility(api, exp_id, name, site, nodes_list=()):
-    """Update robot mobility 'name [site]' on nodes_list.
+def robot_update_mobility(api, exp_id, name, nodes_list=()):
+    """Update robot mobility on nodes_list.
 
     :param api: API Rest api object
     :param exp_id: Target experiment id
     :param name: mobility name
-    :param site: mobility site
     :param nodes_list: List of nodes where to run command.
                        Empty list runs on all nodes
     """
-    result = api.robot_update_mobility(exp_id, name, site, nodes_list)
+    result = api.robot_update_mobility(exp_id, name, nodes_list)
     return result
 
 
-def mobility_command(api, command, arg=None):
-    """Run mobility command.
-
-    Command argument:
-
-    * 'list' no arguments
-    * 'get': Mobility (name, site) tuple.
+def circuit_command(api, command, name=None, **selection):
+    """Run mobilities circuit commands.
 
     :param command: in ['list', 'get']
-    :param arg: argument specific to command
+    :param name: circuit name
+    :param **selections: selections by circuit site and type
 
     """
     assert command in ('list', 'get')
+    if 'type' in selection:
+        assert selection['type'] in ('predefined', 'userdefined',)
 
     if command == 'list':
-        result = api.mobility_user_list()
+        result = api.get_circuits_list(**selection)
     elif command == 'get':
-        name, site = arg  # pylint:disable=unpacking-non-sequence
-        result = api.mobility_user_get(name, site)
+        result = api.get_circuit(name)
     else:  # pragma: no cover
         raise ValueError('Unknown command %r' % command)
 
@@ -83,8 +79,8 @@ def robot_get_map(site):
     Download robot site config, map and docks list """
     map_cfg = {}
 
-    map_cfg['config'] = Api.get_robot_mapfile(site, 'mapconfig')
-    map_cfg['image'] = Api.get_robot_mapfile(site, 'mapimage')
-    map_cfg['dock'] = Api.get_robot_mapfile(site, 'dockconfig')
+    map_cfg['config'] = Api.get_robot_mapfile(site, 'map/config')
+    map_cfg['image'] = Api.get_robot_mapfile(site, 'map/image')
+    map_cfg['dock'] = Api.get_robot_mapfile(site, 'dock/config')
 
     return map_cfg
