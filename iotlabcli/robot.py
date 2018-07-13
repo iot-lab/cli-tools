@@ -64,7 +64,7 @@ def circuit_command(api, command, name=None, **selection):
         assert selection['type'] in ('predefined', 'userdefined',)
 
     if command == 'list':
-        result = api.get_circuits_list(**selection)
+        result = api.get_circuits(**selection)
     elif command == 'get':
         result = api.get_circuit(name)
     else:  # pragma: no cover

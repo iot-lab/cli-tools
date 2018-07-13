@@ -298,7 +298,7 @@ class Api():  # pylint:disable=too-many-public-methods
         url = 'robots/%s/%s' % (site, mapfile)
         return api.method(url, raw=raw)
 
-    def get_circuits_list(self, **selections):
+    def get_circuits(self, **selections):
         """List circuits mobilities."""
         url = 'mobilities/circuits'
         if selections:
