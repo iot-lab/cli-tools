@@ -64,7 +64,7 @@ class TestRobot(unittest.TestCase):
         # mobility-list
         ret = robot.circuit_command(self.api, 'list')
         self.assertEqual(my_mock.API_RET, ret)
-        self.api.get_circuits_list.assert_called_with()
+        self.api.get_circuits.assert_called_with()
         self.api.reset_mock()
 
         # invalid circuit type
