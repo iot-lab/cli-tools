@@ -2,7 +2,7 @@
 
 _iotlab_sites=(euratech strasbourg paris grenoble rennes lille saclay lyon)
 _iotlab_archis=(wsn430 a8 m3 firefly arduino-zero samr21 st-lrwan1)
-_iotlab_states=(Waiting toLaunch Launching Running Finishing Terminated Error)
+_iotlab_states=(Waiting toLaunch Launching Running Finishing Stopped Terminated Error)
 
 _iotlab_site_scripts() {
     # TODO: complete `iotlab-experiment submit -s <tab>` and iotlab-experiment script --run <tab>`

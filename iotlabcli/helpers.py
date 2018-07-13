@@ -30,7 +30,7 @@ import warnings
 OAR_STATES = ["Waiting", "toLaunch", "Launching",
               "Running",
               "Finishing",
-              "Terminated", "Error"]
+              "Terminated", "Stopped", "Error"]
 ACTIVE_STATES = OAR_STATES[OAR_STATES.index('Running')::-1]
 
 DEPRECATION_MESSAGE = ("{old_cmd} command is deprecated and will be removed "
