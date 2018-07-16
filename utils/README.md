@@ -18,7 +18,7 @@ for all users:
 
     export BASH_COMPLETION_DIR=/usr/share/bash-completion/completions
     sudo install -m644 iotlabcli-bash-completion.sh $BASH_COMPLETION_DIR/iotlab-experiment
-    for command_name in iotlab-admin iotlab-auth iotlab-node iotlab-profile iotlab-robot; do
+    for command_name in iotlab-auth iotlab-node iotlab-profile iotlab-robot; do
         sudo ln -s $BASH_COMPLETION_DIR/iotlab-experiment $BASH_COMPLETION_DIR/$command_name
     done
 
