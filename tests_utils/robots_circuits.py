@@ -41,6 +41,10 @@ delete_if_exists('modified_my_circuit')
 circuit = json.load(open('my_circuit.json', 'r'))
 pprint.pprint(api.method('mobilities/circuits', method='post', json=circuit))
 
+# POST on the same circuit should fail
+req = api._request(urljoin(api.url, 'mobilities/circuits/my_circuit'), method='post', auth=api.auth, json=circuit)
+assert req.status_code == 500
+
 # remove point B in the circuit
 del circuit["coordinates"]['B']
 circuit['points'].remove('B')
