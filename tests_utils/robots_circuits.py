@@ -22,6 +22,7 @@ def delete_if_exists(circuit_name):
 
 
 # get all circuits
+"""
 print('all circuits:')
 pprint.pprint(api.method('mobilities/circuits', method='get', params={'type': 'all'}))
 print('userdefined circuits:')
@@ -30,12 +31,13 @@ print('predefined circuits:')
 pprint.pprint(api.method('mobilities/circuits', method='get', params={'type': 'predefined'}))
 print('predefined circuits on devlille:')
 pprint.pprint(api.method('mobilities/circuits', method='get', params={'site':'devlille', 'type': 'predefined'}))
-
+"""
 print('predefined circuit square1 on devlille:')
 pprint.pprint(api.method('mobilities/circuits/square1', method='get'))
 
 print('add my_circuit user defined circuit:')
 delete_if_exists('my_circuit')
+delete_if_exists('modified_my_circuit')
 circuit = json.load(open('my_circuit.json', 'r'))
 pprint.pprint(api.method('mobilities/circuits', method='post', json=circuit))
 
@@ -49,11 +51,22 @@ req = api._request(urljoin(api.url, 'mobilities/circuits/my_circuit'), method='p
 print('userdefined circuit my_circuit on devlille:')
 pprint.pprint(api.method('mobilities/circuits/my_circuit', method='get'))
 
+# rename my_circuit
+circuit['name'] = 'modified_my_circuit'
+
+req = api._request(urljoin(api.url, 'mobilities/circuits/my_circuit'), method='put', auth=api.auth, json=circuit)
+
+print('userdefined circuit modified_my_circuit on devlille:')
+pprint.pprint(api.method('mobilities/circuits/modified_my_circuit', method='get'))
+
 print('userdefined circuits:')
-pprint.pprint(api.method('mobilities/circuits', method='get', params={'filter': 'userdefined'}))
+pprint.pprint(api.method('mobilities/circuits?type=userdefined', method='get'))
 
 print('userdefined circuits on devstrasbourg:')
-pprint.pprint(api.method('mobilities/circuits', method='get', params={'site':'devstrasbourg', 'filter': 'userdefined'}))
+pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=userdefined', method='get'))
+
+print('predefined circuits on devstrasbourg:')
+pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=predefined', method='get'))
 
 print('get map config:')
 pprint.pprint(api.method('robots/%s/map/config' % site, method='get'))
