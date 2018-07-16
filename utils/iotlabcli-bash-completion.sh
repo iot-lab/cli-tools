@@ -209,52 +209,6 @@ _iotlab_node() {
     esac
 }
 
-_iotlab_admin() {
-    local cur prev words cword
-    _init_completion || return
-
-    # Look for the command name
-    local subcword cmd
-    for (( subcword=1; subcword < ${#words[@]}-1; subcword++ )); do
-        [[ ${words[subcword]} != -* && \
-            ! ${words[subcword-1]} =~ -+(jmespath|jp|format|fmt|u(ser)?|p(assword)) ]] && \
-                { cmd=${words[subcword]}; break; }
-    done
-
-    if [[ -z $cmd ]]; then
-        case "$prev" in
-            -u|--username|-p|--password|--jmespath|--jp|--format|--fmt)
-                # We don't need to complete there
-                ;;
-            *)
-                COMPREPLY=($(compgen -W 'wait -h --help -u --user -p --password -v --version --jmespath --jp --format --fmt' -- "$cur"))
-                ;;
-        esac
-    else
-        # Sole `wait` command
-        case "$prev" in
-            -u|--username|-p|--password|--jmespath|--jp|--format|--fmt)
-                # We don't need to complete there
-                ;;
-            -i|--id)
-                _iotlab_experiment_id
-                ;;
-            --state)
-                COMPREPLY=($(compgen -W "${_iotlab_states[*]}" -- "$cur"))
-                ;;
-            --step|--timeout)
-                # We don't need to complete there
-                ;;
-            --exp-user)
-                # FIXME: don't know what that option does…
-                ;;
-            *)
-                COMPREPLY=($(compgen -W '-h --help -i --id --state --step --timeout --exp-user' -- "$cur"))
-                ;;
-        esac
-    fi
-}
-
 _iotlab_auth() {
     case "$prev" in
         -u|--username|-p|--password|--jmespath|--jp|--format|--fmt)
@@ -459,7 +413,6 @@ _iotlab_robot() {
     esac
 }
 
-complete -F _iotlab_admin iotlab-admin
 complete -F _iotlab_auth iotlab-auth
 complete -F _iotlab_experiment iotlab-experiment
 complete -F _iotlab_node iotlab-node

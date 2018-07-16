@@ -49,10 +49,10 @@ def get_version(package):
 
 
 SCRIPTS = ['iotlab-auth', 'iotlab-experiment', 'iotlab-node', 'iotlab-profile',
-           'iotlab-robot', 'iotlab-admin', 'iotlab']
+           'iotlab-robot', 'iotlab']
 
 DEPRECATED_SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
-                      'robot-cli', 'admin-cli']
+                      'robot-cli']
 SCRIPTS += DEPRECATED_SCRIPTS
 
 LONG_DESCRIPTION_FILES = ['README.rst', 'CHANGELOG.rst']
