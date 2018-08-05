@@ -53,7 +53,9 @@ def setattrdefault(obj, attribute, default=None):
         return default
 
 
-class _Association(collections.MutableMapping, dict):
+class _Association(
+        # pylint: disable=too-many-ancestors
+        collections.MutableMapping, dict):
     """_Association class key->value.
 
     Inherit from dict to be dumped as a dict by json.
@@ -198,7 +200,9 @@ class _Association(collections.MutableMapping, dict):
         return _disabled_method(self)
 
 
-class AssociationsMap(  # pylint:disable=too-many-public-methods
+class AssociationsMap(
+        # pylint:disable=too-many-public-methods
+        # pylint: disable=too-many-ancestors
         collections.MutableMapping, list):
     """Sorted Map of Associations objects.
 
