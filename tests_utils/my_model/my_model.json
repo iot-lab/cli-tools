@@ -1,0 +1,6 @@
+{
+    "name":"my_model",
+    "type":"model",
+    "script": "my_model.py",
+    "site":"devlille"
+}

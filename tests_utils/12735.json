@@ -1,0 +1,1 @@
+{"type":"physical","duration":1,"name":"test-robot-mobilities","associations":{"mobility":[{"nodes":["m3-202.devlille.iot-lab.info"],"mobilityname":"random"}]},"mobilities":{"devlille":[{"type":"controlled","name":"random","site":"devlille","robot_user_env":true,"script":"random_move.py"}]},"nodes":["m3-202.devlille.iot-lab.info"]}
