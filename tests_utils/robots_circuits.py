@@ -1,6 +1,5 @@
 import json
 from urllib2 import HTTPError
-from urlparse import urljoin
 
 import iotlabcli
 import pprint
@@ -33,10 +32,10 @@ pprint.pprint(api.method('mobilities/circuits?type=userdefined', method='get'))
 print('predefined circuits:')
 pprint.pprint(api.method('mobilities/circuits?type=predefined', method='get'))
 
-print('predefined circuits on devlille:')
-pprint.pprint(api.method('mobilities/circuits?type=predefined&site=devlille', method='get'))
+print('predefined circuits:')
+pprint.pprint(api.method('mobilities/circuits?type=predefined&site=%s' % site, method='get'))
 
-print('predefined circuit square1 on devlille:')
+print('predefined circuit square1:')
 pprint.pprint(api.method('mobilities/circuits/square1', method='get'))
 
 print('add my_circuit user defined circuit:')
@@ -74,7 +73,7 @@ files['mobility'] = json.dumps(circuit)
 
 api.method('mobilities/circuits/my_circuit', method='put', files=files)
 
-print('userdefined circuit modified_my_circuit on devlille:')
+print('userdefined circuit modified_my_circuit:')
 pprint.pprint(api.method('mobilities/circuits/modified_my_circuit', method='get'))
 
 print('userdefined circuits (only modified_my_circuit):')
