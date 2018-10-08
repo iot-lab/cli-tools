@@ -74,7 +74,7 @@ def exps_by_states_dict(api, states):
     return exp_states_d  # {'Waiting': [10134, 10135], 'Running': [10130]}
 
 
-def get_current_exp(exp_by_states, states):
+def get_current_exp(exp_by_states, states):  # noqa: C901
     """ Current experiment is the first state in `states` where there is only
     one experiment in `exp_by_states`.
     :raises: ValueError if there is no experiment or if there are multiple
