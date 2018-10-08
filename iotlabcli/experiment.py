@@ -422,7 +422,7 @@ def site_association(*sites, **kwassociations):
     return SiteAssociationTuple(sites, kwassociations)
 
 
-class AliasNodes(object):  # pylint: disable=too-few-public-methods
+class AliasNodes():  # pylint: disable=too-few-public-methods
     """An AliasNodes class
 
     >>> AliasNodes(5, 'grenoble', 'm3:at86rf231', False)
@@ -485,7 +485,7 @@ class AliasNodes(object):  # pylint: disable=too-few-public-methods
 _NODESMAPKWARGS = dict(resource='nodes', sortkey=helpers.node_url_sort_key)
 
 
-class _Experiment(object):  # pylint:disable=too-many-instance-attributes
+class _Experiment():  # pylint:disable=too-many-instance-attributes
     """ Class describing an experiment """
 
     ASSOCATTR_FMT = '{}associations'

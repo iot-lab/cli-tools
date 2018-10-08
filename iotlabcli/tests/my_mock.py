@@ -34,7 +34,7 @@ from .c23 import patch, Mock
 API_RET = {"result": "test"}
 
 
-class RequestRet(object):  # pylint:disable=too-few-public-methods
+class RequestRet():  # pylint:disable=too-few-public-methods
     """ Mock of Request return value """
 
     def __init__(self, status_code, content, headers=None):
