@@ -316,15 +316,18 @@ class TestExperimentSubmit(CommandMock):
     def _read_file_for_load(self, file_path, *_):  # flake8: noqa
         """ read_file mock """
         expected = self.expected
+        res = None
         if file_path == experiment.EXP_FILENAME:
-            return json.dumps(expected)
+            res = json.dumps(expected)
         elif file_path.endswith('.elf'):
-            return 'elf32arm'
+            res = 'elf32arm'
         elif file_path.endswith('.sh'):
-            return '#!/bin/sh'
+            res = '#!/bin/sh'
         elif file_path.endswith('config'):
-            return 'KEY=value'
-        raise ValueError(file_path)
+            res = 'KEY=value'
+        if res is None:
+            raise ValueError(file_path)
+        return res
 
     @patch('iotlabcli.helpers.read_file')
     def test_experiment_load(self, read_file_mock):
