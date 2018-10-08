@@ -64,7 +64,7 @@ except ImportError:
 
 
 # pylint: disable=maybe-no-member,no-member
-class Api(object):  # pylint:disable=too-many-public-methods
+class Api():  # pylint:disable=too-many-public-methods
     """ IoT-Lab REST API """
     _cache = {}
     url = helpers.read_custom_api_url() or 'https://www.iot-lab.info/rest/'

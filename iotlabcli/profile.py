@@ -24,7 +24,7 @@
 # pylint:disable=too-few-public-methods
 
 
-class ProfileM3A8(object):
+class ProfileM3A8():
     """A generic Profile for M3 and A8 """
     choices = {
         'power_mode': ['dc', 'battery'],
@@ -135,7 +135,7 @@ class ProfileCustom(ProfileM3A8):
     arch = 'custom'
 
 
-class ProfileWSN430(object):
+class ProfileWSN430():
     """A Profile measure class for WSN430 """
     choices = {
         'power_mode': ['dc', 'battery'],
