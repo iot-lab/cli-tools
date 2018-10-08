@@ -26,7 +26,7 @@
 
 from iotlabcli.tests.my_mock import MainMock
 import iotlabcli.parser.profile as profile_parser
-import iotlabcli.profile as profile
+import iotlabcli.profile
 
 from .c23 import patch
 
@@ -37,19 +37,23 @@ class TestMainProfileParser(MainMock):
         # add simple add
         profile_parser.main(['addwsn430', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name', profile.ProfileWSN430('profile_name', 'dc'))
+            'profile_name',
+            iotlabcli.profile.ProfileWSN430('profile_name', 'dc'))
 
         profile_parser.main(['addm3', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name', profile.ProfileM3('profile_name', 'dc'))
+            'profile_name',
+            iotlabcli.profile.ProfileM3('profile_name', 'dc'))
 
         profile_parser.main(['adda8', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name', profile.ProfileA8('profile_name', 'dc'))
+            'profile_name',
+            iotlabcli.profile.ProfileA8('profile_name', 'dc'))
 
         profile_parser.main(['addcustom', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name', profile.ProfileCustom('profile_name', 'dc'))
+            'profile_name',
+            iotlabcli.profile.ProfileCustom('profile_name', 'dc'))
 
         # invalid configuration 'power' without period and average
         self.assertRaises(
@@ -63,7 +67,7 @@ class TestMainProfileParser(MainMock):
         Check that default values are ok and that values are correctly passed
         """
         # keep 'choices' valid for argparse
-        prof_m3_class.choices = profile.ProfileM3.choices
+        prof_m3_class.choices = iotlabcli.profile.ProfileM3.choices
         profilem3 = prof_m3_class.return_value
         parser = profile_parser.parse_options()
 
@@ -107,7 +111,7 @@ class TestMainProfileParser(MainMock):
         Check that default values are ok and that values are correctly passed
         """
         # keep 'choices' valid for argparse
-        prof_wsn430_class.choices = profile.ProfileWSN430.choices
+        prof_wsn430_class.choices = iotlabcli.profile.ProfileWSN430.choices
         profilewsn430 = prof_wsn430_class.return_value
         parser = profile_parser.parse_options()
 
