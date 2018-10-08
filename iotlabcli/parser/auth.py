@@ -58,8 +58,8 @@ def auth_parse_and_run(opts):
     if iotlabcli.auth.check_user_credentials(opts.username, password):
         iotlabcli.auth.write_password_file(opts.username, password)
         return 'Written'
-    else:
-        raise RuntimeError('Wrong login:password')
+
+    raise RuntimeError('Wrong login:password')
 
 
 def main(args=None):

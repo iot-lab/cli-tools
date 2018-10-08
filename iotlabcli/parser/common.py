@@ -245,9 +245,10 @@ def _expand_minus_str(minus_nodes_str):
     :raises: ValueError on invalid values
     """
     minus_node = minus_nodes_str.split('-')
+    res = None
     if len(minus_node) == 1:
         # ['6']
-        return [int(minus_node[0])]
+        res = [int(minus_node[0])]
     else:
         # ['1', '4'] or ['7', '8']
         first, last = minus_node
@@ -257,7 +258,8 @@ def _expand_minus_str(minus_nodes_str):
             raise ValueError
 
         # Add nodes range
-        return nodes_range
+        res = nodes_range
+    return res
 
 
 def expand_short_nodes_list(nodes_str):

@@ -233,16 +233,19 @@ def script_experiment(api, exp_id, command, *options):
     :param *options: list of 'site_association' with script 'run'
                      list of sites for 'kill', 'status' may be None
     """
+    res = None
     if command == 'run':
         files_dict = _script_run_files_dict(*options)
-        return api.script_command(exp_id, command, files=files_dict)
+        res = api.script_command(exp_id, command, files=files_dict)
 
     elif command in ('kill', 'status'):
         sites_list = sorted(options)
-        return api.script_command(exp_id, command, json=sites_list)
+        res = api.script_command(exp_id, command, json=sites_list)
 
-    else:
+    if res is None:
         raise ValueError('Unknown script command %r' % command)
+
+    return res
 
 
 def _script_run_files_dict(*site_associations):

@@ -108,17 +108,22 @@ def get_current_exp(exp_by_states, states):
     """
     states_str = ', '.join(states)
 
+    res = None
     for state in states:  # keep order of states
         exps = exp_by_states.get(state, [])
         if len(exps) == 1:
-            return exps[0]
+            res = exps[0]
+            break
         elif not exps:
             continue
         raise ValueError(
             "You have several experiments with state {0!r}\n"
             "Use option -i|--id and choose experiment id in: {1}".format(
                 states_str, exp_by_states))
-    raise ValueError("You have no {0!r} experiment".format(states_str))
+    if res is None:
+        raise ValueError("You have no {0!r} experiment".format(states_str))
+
+    return res
 
 
 def node_url_sort_key(node_url):
