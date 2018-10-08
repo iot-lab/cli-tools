@@ -3,8 +3,7 @@ pytest-cov
 pytest-pep8
 mock
 setuptools-lint
-# issues with setuptools-lint
-pylint>=1.8,<2
+pylint
 # issues with pep8 >= 1.6
 flake8==2.3.0
 codecov>=1.4.0
