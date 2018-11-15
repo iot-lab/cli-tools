@@ -20,7 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """ Test the iotlabcli.helpers module """
-# pylint:disable=too-many-public-methods
+# pylint:disable=too-many-public-methods,redefined-outer-name
 
 import unittest
 import sys
@@ -104,7 +104,14 @@ class TestHelpers(unittest.TestCase):
 
 @pytest.fixture(scope='function')
 def file_dict():
+    """fixture to provide an empty FilesDict"""
     return helpers.FilesDict()
+
+
+def test_none_input(file_dict):
+    """FilesDict.add_file(None) should do nothin"""
+    assert file_dict.add_file(None) is None
+    assert file_dict == {}
 
 
 def test_can_overwrite(file_dict):
@@ -141,6 +148,53 @@ def test_no_overwrite(file_dict):
 
 
 @patch('iotlabcli.helpers.read_file')
+def test_same_basename_files(read_file, file_dict):
+    """Test FilesDict add_file methods
+    when given two files with same basename."""
+
+    files = {
+        'a/1.elf': b'ELF32_1',
+        '~/iot-lab/b/1.elf': b'ELF32_2',
+        '/tmp/c/1.elf': b'ELF32_3',
+    }
+
+    keys = [
+        '1.elf',
+        '56d50b0f4f3216dd962e8911ec91c062_1.elf',
+        'c7b7412e59348fb71ca8ec6619284f3f_1.elf'
+    ]
+
+    def _read_file(name, *_):
+        """Read file mock."""
+
+        return files[name]
+
+    read_file.side_effect = _read_file
+
+    # Add some files
+    input_files_dict = {'firmware': 'a/1.elf'}
+    inserted = file_dict.add_files_from_dict(('firmware',), input_files_dict)
+    assert inserted['firmware'] == keys[0]
+    assert file_dict == {keys[0]: b'ELF32_1'}
+
+    # Add some other files
+    input_files_dict = {'firmware': '~/iot-lab/b/1.elf'}
+    inserted = file_dict.add_files_from_dict(('firmware',), input_files_dict)
+
+    assert inserted['firmware'] == keys[1]
+    assert file_dict == {keys[0]: b'ELF32_1',
+                         keys[1]: b'ELF32_2'}
+
+    input_files_dict = {'firmware': '/tmp/c/1.elf'}
+    inserted = file_dict.add_files_from_dict(('firmware',), input_files_dict)
+
+    assert inserted['firmware'] == keys[2]
+    assert file_dict == {keys[0]: b'ELF32_1',
+                         keys[1]: b'ELF32_2',
+                         keys[2]: b'ELF32_3'}
+
+
+@patch('iotlabcli.helpers.read_file')
 def test_add_file_method(read_file, file_dict):
     """Test FilesDict add_file methods."""
     def _read_file(name, *_):
@@ -152,9 +206,6 @@ def test_add_file_method(read_file, file_dict):
         }
         return files[name]
     read_file.side_effect = _read_file
-
-    file_dict.add_file('1.elf')
-    assert file_dict['1.elf'] == b'ELF32_1'
 
     # Add some files
     input_files_dict = {'firmware': '1.elf', 'profile': 'prof.json'}

@@ -20,7 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """Helpers methods"""
-
+import hashlib
 import sys
 import os
 import json
@@ -155,6 +155,13 @@ def node_url_sort_key(node_url):
     return site, node_type, int(num_str)
 
 
+def md5(data):
+    """calculate the md5 hash of the file"""
+    hash_md5 = hashlib.md5()
+    hash_md5.update(data)
+    return hash_md5.hexdigest()
+
+
 class FilesDict(dict):
     """ Dictionary to store experiment files.
     We don't want adding two different values for the same key,
@@ -171,15 +178,39 @@ class FilesDict(dict):
             raise ValueError('Has different values for same key %r' % key)
 
     def add_file(self, file_path):
-        """Add a file to the dictionary. If None, do nothing """
+        """Add a file to the dictionary.
+        :param file_path the path of the file to add
+        :returns the id of the file in the dict
+        If a file with the same basename already exists inside,
+        then prefix with short hash is used
+        if None do nothing
+        """
         if file_path is None:
-            return
-        self[os.path.basename(file_path)] = read_file(file_path, 'b')
+            return None
+        key = os.path.basename(file_path)
+        value = read_file(file_path, 'b')
+        try:
+            self[key] = value
+        except ValueError:
+            # use md5 hash as prefix to handle duplicated basenames
+            # with different contents
+            key = '{hash}_{path}'.format(hash=md5(value), path=key)
+            self[key] = value
+
+        return key
 
     def add_files_from_dict(self, keys, files_dict):
-        """Add 'keys' files from 'files_dict' if present."""
+        """Add 'keys' files from 'files_dict' if present.
+        :param keys: which keys to consider inside the input files dict
+        :param files_dict:
+        :returns:  the inserted names in the dict
+        """
+        inserted_files_dict = {}
         for key in keys:
-            self.add_file(files_dict.get(key, None))
+            inserted = self.add_file(files_dict.get(key, None))
+            if inserted is not None:
+                inserted_files_dict[key] = inserted
+        return inserted_files_dict
 
     add_firmware = add_file  # Deprecated
 
