@@ -120,6 +120,47 @@ class TestExperimentSubmit(CommandMock):
                                            print_json=True)
         self.assertEqual(ret.__dict__, expected)
 
+    def test_experiment_submit_duplicated_basenames(self):
+        """ Run experiment_submit physical """
+
+        # Physical tests
+        resources = [
+            experiment.exp_resources(
+                ['m3-1.grenoble.iot-lab.info'],
+                tests.resource_file('firmware.elf')),
+            experiment.exp_resources(
+                ['m3-2.grenoble.iot-lab.info'],
+                tests.resource_file('other/firmware.elf')),
+        ]
+        experiment.submit_experiment(self.api, 'exp_name', 20, resources,
+                                     start_time=314159)
+
+        call_dict = self.api.submit_experiment.call_args[0][0]
+        expected = {
+            'name': 'exp_name',
+            'duration': 20,
+            'type': 'physical',
+            'nodes': [
+                'm3-1.grenoble.iot-lab.info',
+                'm3-2.grenoble.iot-lab.info',
+            ],
+            'reservation': 314159,
+            'profileassociations': None,
+            'firmwareassociations': [
+                {'firmwarename':
+                 'e77d9b8dcb84d1fcd21187b03eac74f1_firmware.elf',
+                 'nodes': ['m3-2.grenoble.iot-lab.info']},
+                {'firmwarename': 'firmware.elf',
+                 'nodes': ['m3-1.grenoble.iot-lab.info']},
+            ],
+            'associations': None,
+            'siteassociations': None,
+            'profiles': None,
+            'mobilities': None,
+        }
+
+        self.assertEqual(expected, json.loads(call_dict['new_exp.json']))
+
     def test_experiment_submit_alias(self):
         """ Run experiment_submit alias """
         # Alias tests

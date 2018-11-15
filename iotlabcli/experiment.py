@@ -64,14 +64,18 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
     exp_files = helpers.FilesDict()
     for res_dict in resources:
+        inserted_resources = exp_files.add_files_from_dict(
+            NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict)
+        res_dict.update(inserted_resources)
         experiment.add_exp_resources(res_dict)
-        exp_files.add_files_from_dict(NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict)
 
     sites_assocs = sites_assocs or ()
     for site_assoc in sites_assocs:
-        experiment.add_site_association(site_assoc)
         assocs = site_assoc.associations
-        exp_files.add_files_from_dict(SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+        inserted_assocs = exp_files.add_files_from_dict(
+            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+        assocs.update(inserted_assocs)
+        experiment.add_site_association(site_assoc)
 
     if print_json:  # output experiment description
         return experiment
@@ -271,7 +275,9 @@ def _script_run_files_dict(*site_associations):
     for sites, assocs in site_associations:
         for assoctype, assocname in assocs.items():
             _add_siteassoc_to_dict(associations, sites, assoctype, assocname)
-        files_dict.add_files_from_dict(SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+        inserted_assocs = files_dict.add_files_from_dict(
+            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+        assocs.update(inserted_assocs)
 
     # Add scrit sites association to files_dict
     files_dict[RUN_FILENAME] = helpers.json_dumps(associations)
