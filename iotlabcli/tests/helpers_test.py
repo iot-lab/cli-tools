@@ -26,6 +26,8 @@ import unittest
 import sys
 import warnings
 
+import pytest
+
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
 
@@ -98,53 +100,71 @@ class TestHelpers(unittest.TestCase):
                         in str(warn[-1].message))
 
 
-class TestFilesDict(unittest.TestCase):
-    """Test FilesDict class."""
+# Test FilesDict class
 
-    def test_no_overwrite(self):
-        """Test FilesDict values overriding."""
-        file_dict = helpers.FilesDict()
-        file_dict['a'] = 1
-        # Can re-add same value
-        file_dict['a'] = 1
+@pytest.fixture(scope='function')
+def file_dict():
+    return helpers.FilesDict()
 
-        # Cannot add a different valu
-        file_dict['b'] = 2
 
-        with self.assertRaises(ValueError):
-            file_dict['b'] = 3
+def test_can_overwrite(file_dict):
+    """we can overwrite a value inside the FileDict if same value"""
+    file_dict['test'] = 'value'
+    file_dict['test'] = 'value'
 
-        # Check dict
-        self.assertEqual(file_dict, {'a': 1, 'b': 2})
+    assert file_dict['test'] == 'value'
 
-    @patch('iotlabcli.helpers.read_file')
-    def test_add_file_method(self, read_file):
-        """Test FilesDict add_file methods."""
-        def _read_file(name, *_):
-            """Read file mock."""
-            files = {
-                '1.elf': b'ELF32_1',
-                '2.elf': b'ELF32_2',
-                'prof.json': b'{}',
-            }
-            return files[name]
-        read_file.side_effect = _read_file
 
-        file_dict = helpers.FilesDict()
+def test_dict_eq(file_dict):
+    """a FileDict should be equatable to a dict"""
+    file_dict['test'] = 'value'
+    file_dict['test2'] = 'value'
+    file_dict['test3'] = 'value3'
 
-        file_dict.add_file('1.elf')
-        self.assertEqual(file_dict['1.elf'], b'ELF32_1')
+    assert file_dict == {'test': 'value', 'test3': 'value3', 'test2': 'value'}
 
-        # Add some files
-        input_files_dict = {'firmware': '1.elf', 'profile': 'prof.json'}
-        file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
-                                      input_files_dict)
-        self.assertEqual(file_dict, {'1.elf': b'ELF32_1', 'prof.json': b'{}'})
 
-        # Add some other files
-        input_files_dict = {'firmware': '2.elf', 'scriptconfig': 'otherfile'}
-        file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
-                                      input_files_dict)
-        self.assertEqual(file_dict,
-                         {'1.elf': b'ELF32_1', '2.elf': b'ELF32_2',
-                          'prof.json': b'{}', })
+def test_no_overwrite(file_dict):
+    """Test FilesDict values overriding."""
+    file_dict['a'] = 1
+    # Can re-add same value
+    file_dict['a'] = 1
+
+    # Cannot add a different valu
+    file_dict['b'] = 2
+
+    with pytest.raises(ValueError):
+        file_dict['b'] = 3
+
+    # Check dict
+    assert file_dict == {'a': 1, 'b': 2}
+
+
+@patch('iotlabcli.helpers.read_file')
+def test_add_file_method(read_file, file_dict):
+    """Test FilesDict add_file methods."""
+    def _read_file(name, *_):
+        """Read file mock."""
+        files = {
+            '1.elf': b'ELF32_1',
+            '2.elf': b'ELF32_2',
+            'prof.json': b'{}',
+        }
+        return files[name]
+    read_file.side_effect = _read_file
+
+    file_dict.add_file('1.elf')
+    assert file_dict['1.elf'] == b'ELF32_1'
+
+    # Add some files
+    input_files_dict = {'firmware': '1.elf', 'profile': 'prof.json'}
+    file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
+                                  input_files_dict)
+    assert file_dict == {'1.elf': b'ELF32_1', 'prof.json': b'{}'}
+
+    # Add some other files
+    input_files_dict = {'firmware': '2.elf', 'scriptconfig': 'otherfile'}
+    file_dict.add_files_from_dict(['firmware', 'profile', 'script'],
+                                  input_files_dict)
+    assert file_dict == {'1.elf': b'ELF32_1', '2.elf': b'ELF32_2',
+                         'prof.json': b'{}', }
