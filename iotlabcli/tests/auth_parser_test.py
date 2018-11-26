@@ -44,7 +44,7 @@ class TestMainAuthParser(unittest.TestCase):
 
             api.check_credential.return_value = True
 
-            auth_parser.main(['-u', 'super_user', '-p' 'password'])
+            auth_parser.main(['-u', 'super_user', '-p', 'password'])
             store_m.assert_called_with('super_user', 'password')
             self.assertFalse(getpass_m.called)
 

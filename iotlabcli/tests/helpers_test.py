@@ -88,12 +88,8 @@ class TestHelpers(unittest.TestCase):
 
     def test_deprecate_command(self):
         """Test command deprecation."""
-        def fake_cmd():
-            """Dummy test function"""
-            pass
-
         with warnings.catch_warnings(record=True) as warn:
-            helpers.deprecate_cmd(fake_cmd, "old", "new")
+            helpers.deprecate_cmd(lambda: None, "old", "new")
 
         self.assertEqual(len(warn), 1)
         self.assertTrue(issubclass(warn[-1].category, DeprecationWarning))

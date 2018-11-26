@@ -328,8 +328,8 @@ RUN_SITE_ASSOCIATIONS_STR = ('script=script_path'
 RUN_SITE_ASSOCIATION_METAVAR = 'site,site,%s' % (RUN_SITE_ASSOCIATIONS_STR,)
 
 
-def _run_associations_arg_check(  # pylint:disable=unused-argument
-        script, scriptconfig=None):
+def _run_associations_arg_check(script, scriptconfig=None):
+    # pylint:disable=unused-argument,unnecessary-pass
     """To be used with **associations to check given arguments."""
     pass
 
