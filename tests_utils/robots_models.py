@@ -19,18 +19,17 @@ username, password = iotlabcli.auth.get_user_credentials()
 api = Api(username, password)
 api.url = "https://devwww.iot-lab.info/api/"
 
-
-print('all models:')
-pprint.pprint(api.method('mobilities/models?type=all', method='get'))
-
 print('all models no type parameter:')
 pprint.pprint(api.method('mobilities/models', method='get'))
 
+print('all models:')
+pprint.pprint(api.method('mobilities/models?type=ALL', method='get'))
+
 print('userdefined models:')
-pprint.pprint(api.method('mobilities/models?type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/models?type=USERDEFINED', method='get'))
 
 print('predefined models:')
-pprint.pprint(api.method('mobilities/models?type=predefined', method='get'))
+pprint.pprint(api.method('mobilities/models?type=PREDEFINED', method='get'))
 
 print('predefined model random:')
 pprint.pprint(api.method('mobilities/models/random', method='get'))
@@ -39,7 +38,7 @@ pprint.pprint(api.method('mobilities/models/random', method='get'))
 def delete_if_exists(model_name):
     try:
         pprint.pprint(api.method('mobilities/models/%s' % model_name, method='delete'))
-    except HTTPError:
+    except HTTPError, ex:
         print('OK, model already deleted')
 
 
@@ -54,7 +53,7 @@ files.add_file('my_model/my_model.py')
 pprint.pprint(api.method('mobilities/models', method='post', files=files))
 
 print('userdefined models:')
-pprint.pprint(api.method('mobilities/models?type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/models?type=USERDEFINED', method='get'))
 
 print("my_model file")
 pprint.pprint(api.method('mobilities/models/my_model/file', method='get', raw=True))
@@ -70,12 +69,13 @@ print('userdefined model modified_my_model:')
 pprint.pprint(api.method('mobilities/models/modified_my_model', method='get'))
 
 print('userdefined models:')
-pprint.pprint(api.method('mobilities/models?type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/models?type=USERDEFINED', method='get'))
 
 print('modify the modified_my_model script extra file')
 files = iotlabcli.helpers.FilesDict()
+files['mobility'] = json.dumps(model)
 files.add_file('my_model/modified_my_model.py')
-pprint.pprint(api.method('mobilities/models/modified_my_model/file', method='put', files=files))
+pprint.pprint(api.method('mobilities/models/modified_my_model', method='put', files=files))
 
 print("modified_my_model file")
 pprint.pprint(api.method('mobilities/models/modified_my_model/file', method='get', raw=True))

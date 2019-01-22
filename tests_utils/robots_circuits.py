@@ -23,17 +23,20 @@ def delete_if_exists(circuit_name):
 
 # get all circuits
 
+print('all circuits (no param):')
+pprint.pprint(api.method('mobilities/circuits', method='get'))
+
 print('all circuits:')
-pprint.pprint(api.method('mobilities/circuits?type=all', method='get'))
+pprint.pprint(api.method('mobilities/circuits?type=ALL', method='get'))
 
 print('userdefined circuits:')
-pprint.pprint(api.method('mobilities/circuits?type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/circuits?type=USERDEFINED', method='get'))
 
 print('predefined circuits:')
-pprint.pprint(api.method('mobilities/circuits?type=predefined', method='get'))
+pprint.pprint(api.method('mobilities/circuits?type=PREDEFINED', method='get'))
 
 print('predefined circuits:')
-pprint.pprint(api.method('mobilities/circuits?type=predefined&site=%s' % site, method='get'))
+pprint.pprint(api.method('mobilities/circuits?type=PREDEFINED&site=%s' % site, method='get'))
 
 print('predefined circuit square1:')
 pprint.pprint(api.method('mobilities/circuits/square1', method='get'))
@@ -43,14 +46,11 @@ delete_if_exists('my_circuit')
 delete_if_exists('modified_my_circuit')
 circuit = json.load(open('my_circuit.json', 'r'))
 
-files = iotlabcli.helpers.FilesDict()
-files['mobility'] = read_file('my_circuit.json', 'b')
-
-pprint.pprint(api.method('mobilities/circuits', method='post', files=files))
+pprint.pprint(api.method('mobilities/circuits', method='post', json=circuit))
 
 # POST with the same circuit should fail
 try:
-    result = api.method('mobilities/circuits', method='post', files=files)
+    result = api.method('mobilities/circuits', method='post', json=circuit)
 except HTTPError, ex:
     assert ex.code == 500
 
@@ -58,32 +58,37 @@ print('remove point B in my_circuit')
 
 del circuit["coordinates"]['B']
 circuit['points'].remove('B')
-files = iotlabcli.helpers.FilesDict()
-files['mobility'] = json.dumps(circuit)
 
-api.method('mobilities/circuits/my_circuit', method='put', files=files)
+print('userdefined circuit my_circuit on devlille:')
+pprint.pprint(api.method('mobilities/circuits/my_circuit', method='get'))
+
+try:
+    api.method('mobilities/circuits/my_circuit', method='put', json=circuit)
+except HTTPError, ex:
+    assert ex.code == 204
 
 print('userdefined circuit my_circuit on devlille:')
 pprint.pprint(api.method('mobilities/circuits/my_circuit', method='get'))
 
 # rename my_circuit
 circuit['name'] = 'modified_my_circuit'
-files = iotlabcli.helpers.FilesDict()
-files['mobility'] = json.dumps(circuit)
 
-api.method('mobilities/circuits/my_circuit', method='put', files=files)
+try:
+    api.method('mobilities/circuits/my_circuit', method='put', json=circuit)
+except HTTPError, ex:
+    assert ex.code == 204
 
 print('userdefined circuit modified_my_circuit:')
 pprint.pprint(api.method('mobilities/circuits/modified_my_circuit', method='get'))
 
 print('userdefined circuits (only modified_my_circuit):')
-pprint.pprint(api.method('mobilities/circuits?type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/circuits?type=USERDEFINED', method='get'))
 
 print('userdefined circuits on devstrasbourg:')
-pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=userdefined', method='get'))
+pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=USERDEFINED', method='get'))
 
 print('predefined circuits on devstrasbourg:')
-pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=predefined', method='get'))
+pprint.pprint(api.method('mobilities/circuits?site=devstrasbourg&type=PREDEFINED', method='get'))
 
 print('get map config:')
 pprint.pprint(api.method('robots/%s/map/config' % site, method='get'))
