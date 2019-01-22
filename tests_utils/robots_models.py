@@ -1,18 +1,11 @@
 import json
 
-import time
 from urllib2 import HTTPError
-from urlparse import urljoin
 
-from iotlabcli.helpers import read_file
-
-from iotlabcli.robot import mobility_command
-
-from iotlabcli.experiment import submit_experiment, wait_experiment, get_active_experiments
 
 import iotlabcli
 import pprint
-from iotlabcli import Api, experiment
+from iotlabcli import Api
 
 username, password = iotlabcli.auth.get_user_credentials()
 
