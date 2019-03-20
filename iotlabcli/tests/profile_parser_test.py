@@ -37,22 +37,18 @@ class TestMainProfileParser(MainMock):
         # add simple add
         profile_parser.main(['addwsn430', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name',
             iotlabcli.profile.ProfileWSN430('profile_name', 'dc'))
 
         profile_parser.main(['addm3', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name',
             iotlabcli.profile.ProfileM3('profile_name', 'dc'))
 
         profile_parser.main(['adda8', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name',
             iotlabcli.profile.ProfileA8('profile_name', 'dc'))
 
         profile_parser.main(['addcustom', '-n', 'profile_name', '-p', 'dc'])
         self.api.add_profile.assert_called_with(
-            'profile_name',
             iotlabcli.profile.ProfileCustom('profile_name', 'dc'))
 
         # invalid configuration 'power' without period and average
