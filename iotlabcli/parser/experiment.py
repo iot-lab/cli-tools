@@ -75,6 +75,11 @@ def parse_options():
     common.add_expid_arg(get_parser)
 
     get_group = get_parser.add_mutually_exclusive_group(required=True)
+
+    get_group.add_argument(
+        '-d', '--deployment', dest='get_cmd', action='store_const',
+        const='deployment', help='get an experiment deployment')
+
     get_group.add_argument(
         '-n', '--nodes', dest='get_cmd', action='store_const',
         const='nodes', help='get an experiment nodes list')
