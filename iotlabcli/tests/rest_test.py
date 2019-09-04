@@ -47,6 +47,17 @@ class TestRest(unittest.TestCase):
         self.api = rest.Api('user', 'password')
         self.api.url = self._url
 
+    def test_method_no_content(self):
+        """ Test Api.method rest code 204 """
+        ret_val = RequestRet(204, content='')
+        m_req = patch('requests.request', return_value=ret_val).start()
+        _auth = self.api.auth
+
+        ret = self.api.method('resources/123', 'delete')
+        m_req.assert_called_with('delete', self._url + 'resources/123',
+                                 files=None, json=None, auth=_auth)
+        self.assertIsNone(ret)
+
     def test_method(self):
         """ Test Api.method rest submission """
         ret = {'test': 'val'}

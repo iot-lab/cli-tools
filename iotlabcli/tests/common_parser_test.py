@@ -27,6 +27,7 @@ import sys
 import argparse
 
 from iotlabcli.parser import common
+from iotlabcli.parser.common import print_result
 from iotlabcli.tests.my_mock import api_mock, api_mock_stop
 
 from .c23 import HTTPError, patch, Mock, StringIO
@@ -93,6 +94,9 @@ class TestCommonParser(unittest.TestCase):
             # Should raise other errors
             mock_print.side_effect = IOError(28, 'No space left on device')
             self.assertRaises(IOError, common.print_result, result)
+
+    def test_print_results(self):
+        self.assertIsNone(print_result(None))
 
     @staticmethod
     def test_main_cli_jmespath_fmt():
