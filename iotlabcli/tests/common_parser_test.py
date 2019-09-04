@@ -95,7 +95,8 @@ class TestCommonParser(unittest.TestCase):
             mock_print.side_effect = IOError(28, 'No space left on device')
             self.assertRaises(IOError, common.print_result, result)
 
-    def test_print_results(self):
+    def test_print_result(self):
+        """verify that print_result can handle None results"""
         self.assertIsNone(print_result(None))
 
     @staticmethod
