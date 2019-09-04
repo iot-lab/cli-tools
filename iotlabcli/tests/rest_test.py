@@ -60,8 +60,8 @@ class TestRest(unittest.TestCase):
 
     def test_method(self):
         """ Test Api.method rest submission """
-        ret = {'test': 'val'}
-        ret_val = RequestRet(200, content=json_dumps(ret))
+        ret_expected = {'test': 'val'}
+        ret_val = RequestRet(200, content=json_dumps(ret_expected))
         m_req = patch('requests.request', return_value=ret_val).start()
 
         # pylint:disable=protected-access
@@ -71,30 +71,30 @@ class TestRest(unittest.TestCase):
         ret = self.api.method('page')
         m_req.assert_called_with('get', self._url + 'page',
                                  files=None, json=None, auth=_auth)
-        self.assertEqual(ret, ret)
+        self.assertEqual(ret_expected, ret)
         ret = self.api.method('page?1', 'get')
         m_req.assert_called_with('get', self._url + 'page?1',
                                  files=None, json=None, auth=_auth)
-        self.assertEqual(ret, ret)
+        self.assertEqual(ret_expected, ret)
 
         # call delete
         ret = self.api.method('deeel', 'delete')
         m_req.assert_called_with('delete', self._url + 'deeel',
                                  files=None, json=None, auth=_auth)
-        self.assertEqual(ret, ret)
+        self.assertEqual(ret_expected, ret)
 
         # call post
         ret = self.api.method('post_page', 'post', json={})
         m_req.assert_called_with('post', self._url + 'post_page',
                                  files=None, json={}, auth=_auth)
-        self.assertEqual(ret, ret)
+        self.assertEqual(ret_expected, ret)
 
         # call multipart
         _files = {'entry': '{}'}
         ret = self.api.method('multip', 'post', files=_files)
         m_req.assert_called_with('post', self._url + 'multip',
                                  files=_files, json=None, auth=_auth)
-        self.assertEqual(ret, ret)
+        self.assertEqual(ret_expected, ret)
         patch.stopall()
 
     @patch('iotlabcli.rest.Api.method')
