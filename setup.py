@@ -49,7 +49,8 @@ def get_version(package):
 
 
 SCRIPTS = ['iotlab-auth', 'iotlab-experiment', 'iotlab-node', 'iotlab-profile',
-           'iotlab-robot', 'iotlab-admin']
+           'iotlab-robot', 'iotlab-admin', 'iotlab']
+
 DEPRECATED_SCRIPTS = ['auth-cli', 'experiment-cli', 'node-cli', 'profile-cli',
                       'robot-cli', 'admin-cli']
 SCRIPTS += DEPRECATED_SCRIPTS
