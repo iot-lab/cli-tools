@@ -1,6 +1,13 @@
 Changelog
 =========
 
+2.6.0
+-----
+
+- Manage duplicated firmware name at experiment submission
+- Add iotlab subcommands (experiment, node, profile, ...)
+- Add autocompletion script
+
 2.5.4
 -----
 
@@ -36,7 +43,6 @@ Bugs
 ~~~~
 
 -  Fix load experiment with mobilities or profiles associations.
-
 
 2.4.1
 -----
