@@ -114,7 +114,7 @@ def get_current_exp(exp_by_states, states):  # noqa: C901
         if len(exps) == 1:
             res = exps[0]
             break
-        elif not exps:
+        if not exps:
             continue
         raise ValueError(
             "You have several experiments with state {0!r}\n"
