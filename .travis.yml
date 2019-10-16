@@ -4,11 +4,11 @@ dist: xenial
 matrix:
   include:
     - python: 2.7
-      env: TOXENV="py27-tests,coverage_upload,py27-tools,coverage_upload,py27-lint,cli"
+      env: TOXENV="py27-tests,coverage_upload_tests,py27-tools,coverage_upload_tools,py27-lint,cli"
     - python: 3.4
       env: TOXENV="py34-tests,cli"
     - python: 3.5
-      env: TOXENV="copying,py35-tests,coverage_upload,py35-tools,coverage_upload,py35-lint,cli"
+      env: TOXENV="copying,py35-tests,coverage_upload_tests,py35-tools,coverage_upload_tools,py35-lint,cli"
     - python: 3.6
       env: TOXENV="py36-tests,cli"
     - python: 3.7

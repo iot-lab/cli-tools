@@ -20,10 +20,10 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """Tests for iotlabcli package."""
+import os.path
 
 
 def resource_file(file_path):
     """Test Resource file path."""
-    import os.path
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.relpath(os.path.join(cur_dir, file_path))
