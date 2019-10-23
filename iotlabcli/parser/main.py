@@ -55,18 +55,18 @@ except (ImportError, SyntaxError, TypeError):
     oml_plot_tools = None  # pylint:disable=invalid-name
 
 
-def parse_subcommands(commands, args=None):
+def parse_subcommands(commands, args):
     """ common function to parse `iotlab` or other with subcommands """
-    args = args or sys.argv[1:]
 
     parser = ArgumentParser()
+    commands['help'] = lambda args: parser.print_help()
     parser.add_argument('command', nargs='?',
                         choices=commands.keys(), default='help')
-    commands['help'] = lambda args: parser.print_help()
 
-    opts, args = parser.parse_known_args(args)
+    opts, _ = parser.parse_known_args(args[:1])
 
-    return commands[opts.command](args)
+    sys.argv[0] = 'iotlab %s' % opts.command
+    return commands[opts.command](args[1:])
 
 
 def oml_plot(args):
@@ -82,6 +82,7 @@ def oml_plot(args):
 
 def main(args=None):
     """'iotlab' main function."""
+    args = args or sys.argv[1:]
 
     commands = {
         'auth': iotlabcli.parser.auth.main,
@@ -89,8 +90,7 @@ def main(args=None):
         'experiment': iotlabcli.parser.experiment.main,
         'node': iotlabcli.parser.node.main,
         'profile': iotlabcli.parser.profile.main,
-        'robot': iotlabcli.parser.robot.main,
-        'help': None
+        'robot': iotlabcli.parser.robot.main
     }
     if iotlabaggregator:
         commands['serial'] = iotlabaggregator.serial.main
