@@ -48,6 +48,9 @@ except ImportError:
 # from oml-plot-tools
 try:
     import oml_plot_tools
+    import oml_plot_tools.consum
+    import oml_plot_tools.radio
+    import oml_plot_tools.traj
 except (ImportError, SyntaxError, TypeError):
     oml_plot_tools = None  # pylint:disable=invalid-name
 
