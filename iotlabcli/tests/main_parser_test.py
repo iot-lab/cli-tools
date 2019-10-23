@@ -21,6 +21,7 @@
 
 """ Test the iotlabcli.experiment_parser module """
 import argparse
+import subprocess
 
 import sys
 
@@ -125,9 +126,11 @@ def test_aggregator_main(entry):
         main_parser.main([entry, '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
 
+    assert subprocess.check_call(['iotlab', entry, '--help']) == 0
+
 
 @with_oml_plot_tools
-@pytest.mark.parametrize('entry', ('consum', 'traj', 'radio'))
+@pytest.mark.parametrize('entry', ('traj', 'radio', 'consum'))
 def test_oml_main(entry):
     """ test main parser dispatching for subcommands"""
 
@@ -135,6 +138,9 @@ def test_oml_main(entry):
         mocked_main = getattr(mocked_module, entry).main
         main_parser.main(['plot', entry, '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
+
+    assert subprocess.check_call(['iotlab', 'plot', '--help']) == 0
+    assert subprocess.check_call(['iotlab', 'plot', entry, '--help']) == 0
 
 
 @with_ssh_tools
@@ -146,14 +152,7 @@ def test_ssh_main():
         main_parser.main(['ssh', '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
 
-
-@with_oml_plot_tools
-def test_main_parser_oml_plot():
-    """ Experiment parser """
-    entry = 'plot'
-    with patch('iotlabcli.parser.main.oml_plot') as entrypoint_func:
-        main_parser.main([entry, '-i', '123'])
-        entrypoint_func.assert_called_with(['-i', '123'])
+    assert subprocess.check_call(['iotlab', 'ssh', '--help']) == 0
 
 
 @without_tools
@@ -162,9 +161,11 @@ def test_main_parser_no_tools():
     pytest.raises(SystemExit,
                   lambda: main_parser.main(['ssh']))
     pytest.raises(SystemExit,
-                  lambda: main_parser.main(['aggregator']))
+                  lambda: main_parser.main(['serial']))
     pytest.raises(SystemExit,
-                  lambda: main_parser.main(['oml-plot']))
+                  lambda: main_parser.main(['sniffer']))
+    pytest.raises(SystemExit,
+                  lambda: main_parser.main(['plot']))
 
 
 @with_aggregator_tools
