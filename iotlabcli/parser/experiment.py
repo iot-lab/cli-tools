@@ -23,6 +23,7 @@
 
 import sys
 import time
+from datetime import datetime
 
 import argparse
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -722,7 +723,6 @@ def _get_experiment_attr(api, opts):
     if opts.get_cmd == 'state':
         return {opts.get_cmd: ret[opts.get_cmd]}
     # start_date option
-    from datetime import datetime
     utc_date = datetime.strptime(ret[opts.get_cmd],
                                  '%Y-%m-%dT%H:%M:%SZ')
     timestamp = (utc_date - datetime(1970, 1, 1)).total_seconds()
