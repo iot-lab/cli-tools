@@ -23,6 +23,7 @@
 
 import sys
 import unittest
+import json
 
 from iotlabcli import experiment
 from iotlabcli.rest import Api
@@ -45,7 +46,6 @@ class RequestRet():  # pylint:disable=too-few-public-methods
 
     def json(self):
         """ Load output as JSON """
-        import json
         return json.loads(self.text)
 
 
