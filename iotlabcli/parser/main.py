@@ -25,7 +25,6 @@ import sys
 from argparse import ArgumentParser
 
 import iotlabcli.parser.auth
-import iotlabcli.parser.admin
 import iotlabcli.parser.experiment
 import iotlabcli.parser.node
 import iotlabcli.parser.profile
@@ -82,7 +81,6 @@ def main(args=None):
 
     commands = {
         'auth': iotlabcli.parser.auth.main,
-        'admin': iotlabcli.parser.admin.main,
         'experiment': iotlabcli.parser.experiment.main,
         'node': iotlabcli.parser.node.main,
         'profile': iotlabcli.parser.profile.main,
