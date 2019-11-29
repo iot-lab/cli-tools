@@ -95,6 +95,23 @@ class TestMainNodeParser(MainMock):
         list_nodes.assert_called_with(self.api, 123, None, None)
         node_command.assert_called_with(self.api, 'flash-idle', 123, [], None)
 
+    def test_deprecated_option(self, list_nodes, node_command):
+        """Run the parser.node.main with deprecated option."""
+        node_command.return_value = {'result': 'test'}
+        args = ['--update', 'tp.elf']
+        list_nodes.return_value = ['m3-3']
+        node_parser.main(args)
+        node_command.assert_called_with(
+            self.api, 'flash', 123, ['m3-3'], 'tp.elf')
+
+        # update idle
+        node_command.reset_mock()
+        args = ['--update-idle']
+        list_nodes.return_value = []
+        node_parser.main(args)
+        list_nodes.assert_called_with(self.api, 123, None, None)
+        node_command.assert_called_with(self.api, 'flash-idle', 123, [], None)
+
     def test_main_profile(self, list_nodes, node_command):
         """Run the parser.node.main function regarding profile."""
         node_command.return_value = {'result': 'test'}

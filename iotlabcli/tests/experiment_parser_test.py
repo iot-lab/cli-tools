@@ -96,6 +96,13 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['get', '--nodes-id'])
         get_exp.assert_called_with(self.api, 123, 'nodes_ids')
 
+        # add deprecated option
+        experiment_parser.main(['get', '--resources'])
+        get_exp.assert_called_with(self.api, 123, 'nodes')
+
+        experiment_parser.main(['get', '--resources-id'])
+        get_exp.assert_called_with(self.api, 123, 'nodes_ids')
+
         experiment_parser.main(['get', '--archive'])
         get_exp.assert_called_with(self.api, 123, 'data')
 
