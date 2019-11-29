@@ -101,18 +101,18 @@ def parse_options():
         const='experiment_list', help='get user\'s experiment list')
     get_group.add_argument(
         '-r', '--resources', dest='get_cmd', action='store_const',
-        const='nodes', help='DEPRECATED: use -n option')
+        const='resources', help='DEPRECATED: use -n or --nodes option')
     get_group.add_argument(
         '-ri', '--resources-id', dest='get_cmd', action='store_const',
-        const='nodes_ids',
-        help=('DEPRECATED: use -ni option'))
+        const='resources_ids',
+        help=('DEPRECATED: use -ni or --nodes-id option'))
     get_group.add_argument(
         '-s', '--exp-state', dest='get_cmd', action='store_const',
-        const='state', help='DEPRECATED: use -p option')
+        const='state', help='DEPRECATED: use -p or --print option')
     get_group.add_argument(
         '-st', '--start-time', dest='get_cmd', action='store_const',
         const='start_date',
-        help='DEPRECATED: use -p option')
+        help='DEPRECATED: use -p or --print option')
     get_parser.add_argument('--offset', default=0, type=int,
                             help='experiment list start index')
 
@@ -711,7 +711,20 @@ def get_experiment_parser(opts):
                                                  running_only=not opts.active)
     else:
         exp_id = helpers.get_current_experiment(api, opts.experiment_id)
-        return experiment.get_experiment(api, exp_id, opts.get_cmd)
+
+        return experiment.get_experiment(api, exp_id,
+                                         _deprecate_cmd(opts.get_cmd))
+
+
+def _deprecate_cmd(cmd):
+    if cmd == 'resources':
+        new_cmd = 'nodes'
+        helpers.deprecate_warn_cmd(cmd, new_cmd, 8)
+        return new_cmd
+    if cmd == 'resources_ids':
+        helpers.deprecate_warn_cmd('resources-id', 'nodes-ids', 8)
+        return 'nodes_ids'
+    return cmd
 
 
 def _get_experiment_attr(api, opts):
@@ -721,7 +734,9 @@ def _get_experiment_attr(api, opts):
                                             running_only=False)
     ret = experiment.get_experiment(api, exp_id, '')
     if opts.get_cmd == 'state':
+        helpers.deprecate_warn_cmd('exp-state', 'print', 8)
         return {opts.get_cmd: ret[opts.get_cmd]}
+    helpers.deprecate_warn_cmd('start-time', 'print', 8)
     # start_date option
     utc_date = datetime.strptime(ret[opts.get_cmd],
                                  '%Y-%m-%dT%H:%M:%SZ')

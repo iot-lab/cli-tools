@@ -282,9 +282,14 @@ def flatten_list_list(list_list):
     return list(itertools.chain.from_iterable(list_list))
 
 
-def deprecate_cmd(cmd_func, old_cmd, new_cmd):
-    """Display a deprecation warning message and run command."""
+def deprecate_warn_cmd(old_cmd, new_cmd, stacklevel):
+    """ Display a deprecation warning message """
     warnings.simplefilter('always', DeprecationWarning)
     warnings.warn(DEPRECATION_MESSAGE.format(old_cmd=old_cmd, new_cmd=new_cmd),
-                  DeprecationWarning, stacklevel=3)
+                  DeprecationWarning, stacklevel)
+
+
+def deprecate_cmd(cmd_func, old_cmd, new_cmd):
+    """Display a deprecation warning message and run command."""
+    deprecate_warn_cmd(old_cmd, new_cmd, 4)
     cmd_func()

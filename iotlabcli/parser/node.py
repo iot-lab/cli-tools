@@ -113,9 +113,9 @@ def parse_options():
                            help='reset to default no monitoring profile')
     cmd_group.add_argument(
         '--update-idle', help='DEPRECATED: use --flash-idle',
-        const='flash-idle', dest='command', action='store_const')
+        const='update-idle', dest='command', action='store_const')
     cmd_group.add_argument('-up', '--update',
-                           dest='firmware_path', default=None,
+                           dest='up_firmware_path', default=None,
                            help='DEPRECATED: use -fl or --flash option')
     # nodes list or exclude list
     common.add_nodes_selection_list(parser)
@@ -129,6 +129,8 @@ def node_parse_and_run(opts):
     api = rest.Api(user, passwd)
     exp_id = helpers.get_current_experiment(api, opts.experiment_id)
 
+    _deprecate_cmd(opts)
+
     if opts.command == 'with_argument':
         command, cmd_opt = _node_parse_command_and_opt(**vars(opts))
     else:
@@ -137,7 +139,18 @@ def node_parse_and_run(opts):
 
     nodes = common.list_nodes(api, exp_id, opts.nodes_list,
                               opts.exclude_nodes_list)
+
     return iotlabcli.node.node_command(api, command, exp_id, nodes, cmd_opt)
+
+
+def _deprecate_cmd(opts):
+    if opts.command == 'update-idle':
+        new_cmd = 'flash-idle'
+        helpers.deprecate_warn_cmd(opts.command, new_cmd, 7)
+        opts.command = new_cmd
+    if opts.up_firmware_path:
+        helpers.deprecate_warn_cmd('update', 'flash', 7)
+        opts.firmware_path = opts.up_firmware_path
 
 
 def _node_parse_command_and_opt(**opts_dict):
