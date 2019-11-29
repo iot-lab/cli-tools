@@ -115,12 +115,13 @@ class Api():  # pylint:disable=too-many-public-methods
         """ Get user experiment description.
         :param expid: experiment id submission (e.g. OAR scheduler)
         :param option: Restrict to some values:
-            * '':          experiment submission
-            * 'nodes':     nodes list
-            * 'nodes_ids': nodes id list: (1-34+72 format)
-            * 'data':      experiment tar.gz with description and firmwares
+            * '':            experiment submission
+            * 'nodes':       nodes list
+            * 'nodes_ids':   nodes id list: (1-34+72 format)
+            * 'data':        experiment tar.gz with description and firmwares
+            * 'deployment':  deployment info
         """
-        assert option in ('', 'nodes', 'nodes_ids', 'data')
+        assert option in ('', 'nodes', 'nodes_ids', 'data', 'deployment')
 
         url = 'experiments/%s' % expid
         if option:
@@ -330,6 +331,8 @@ class Api():  # pylint:disable=too-many-public-methods
                             json=json, files=files)
         if requests.codes.ok == req.status_code:
             return req.content if raw else req.json()
+        if requests.codes.no_content == req.status_code:
+            return None
         return self._raise_http_error(_url, req)
 
     @staticmethod
