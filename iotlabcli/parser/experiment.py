@@ -23,6 +23,7 @@
 
 import sys
 import time
+from datetime import datetime
 
 import argparse
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -75,6 +76,11 @@ def parse_options():
     common.add_expid_arg(get_parser)
 
     get_group = get_parser.add_mutually_exclusive_group(required=True)
+
+    get_group.add_argument(
+        '-d', '--deployment', dest='get_cmd', action='store_const',
+        const='deployment', help='get an experiment deployment')
+
     get_group.add_argument(
         '-n', '--nodes', dest='get_cmd', action='store_const',
         const='nodes', help='get an experiment nodes list')
@@ -717,7 +723,6 @@ def _get_experiment_attr(api, opts):
     if opts.get_cmd == 'state':
         return {opts.get_cmd: ret[opts.get_cmd]}
     # start_date option
-    from datetime import datetime
     utc_date = datetime.strptime(ret[opts.get_cmd],
                                  '%Y-%m-%dT%H:%M:%SZ')
     timestamp = (utc_date - datetime(1970, 1, 1)).total_seconds()

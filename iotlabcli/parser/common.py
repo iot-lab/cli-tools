@@ -119,6 +119,10 @@ def print_result(result, jmespath_expr=None, format_function=None):
     """ Print result vule """
     format_function = format_function or helpers.json_dumps
 
+    # early bail out if nothing was returned
+    if result is None:
+        return
+
     # Query using jmespath
     if jmespath_expr is not None:
         keep_dict_order = jmespath.Options(dict_cls=OrderedDict)

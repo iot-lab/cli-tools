@@ -52,7 +52,7 @@ def parse_options():
 
     # 'update' command
     up_parser = subparsers.add_parser('update', help='Update robot mobility')
-    up_parser.add_argument('-n', '--name', dest='up_name',
+    up_parser.add_argument('-n', '--name', dest='up_name', required=True,
                            help='Update robot mobility')
     common.add_nodes_selection_list(up_parser)
     common.add_expid_arg(up_parser)

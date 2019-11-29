@@ -10,8 +10,8 @@ Examples from iot-lab bash scripts
 
 ### Get Grenoble M3 alive nodes ###
 
-    iotlab-experiment --jmespath 'items[*].grenoble.m3.Alive|[0]' --format='str' info -li
-    1-5+7+9+11-16+18-19+21-23+25-27+29-35+37-40+42-45+48-51+53-64+66-72+74-81+83-137+139-146+149+152-154+156-158+160-162+164-166+168-182+184+186-283+285-290+292-318+320-350+352-355+357-381
+    iotlab-experiment --jmespath 'items[?site==`grenoble`]|[0].archis[?archi==`m3:at86rf231`]|[0].states[?state==`Alive`]|[0].ids' --format='str' info -li
+    1-16+18+20-43+45-49+51-154+156-164+166-186+188-242+244-261+263-289+346+359-363+365-380
 
 
 ### New line seperated nodes list ###

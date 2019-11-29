@@ -32,7 +32,7 @@ from .c23 import patch, version_info
 
 
 @pytest.mark.parametrize('entry',
-                         ['auth', 'admin', 'experiment',
+                         ['auth', 'experiment',
                           'node', 'profile', 'robot'])
 def test_main_parser(entry):
     """ test main parser dispatching """
