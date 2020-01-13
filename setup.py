@@ -49,7 +49,7 @@ def get_version(package):
 
 
 SCRIPTS = ['iotlab-auth', 'iotlab-experiment', 'iotlab-node', 'iotlab-profile',
-           'iotlab-robot', 'iotlab']
+           'iotlab-robot', 'iotlab-status', 'iotlab']
 
 LONG_DESCRIPTION_FILES = ['README.rst', 'CHANGELOG.rst']
 

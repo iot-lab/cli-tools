@@ -78,6 +78,10 @@ class Api():  # pylint:disable=too-many-public-methods
         """
         self.auth = HTTPBasicAuth(username, password)
 
+    def get_sites_details(self):
+        """ Get testbed sites details """
+        return self.method('sites/details')
+
     def get_nodes(self, list_id=False, site=None, **selections):
         """ Get testbed nodes description
 
@@ -110,6 +114,10 @@ class Api():  # pylint:disable=too-many-public-methods
         """
         queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
         return self.method('experiments?%s' % queryset)
+
+    def get_running_experiments(self):
+        """ Get testbed running experiments """
+        return self.method('experiments/running')
 
     def get_experiment_info(self, expid, option=''):
         """ Get user experiment description.

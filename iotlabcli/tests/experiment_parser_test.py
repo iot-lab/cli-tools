@@ -51,6 +51,9 @@ class TestMainInfoParser(MainMock):
         experiment_parser.main(['info', '--list-id', '--site', 'grenoble'])
         info_exp.assert_called_with(self.api, True, site='grenoble')
 
+        # test deprecated info parser print usage
+        self.assertRaises(SystemExit, experiment_parser.main, ['info', '-h'])
+
         # Use other selections
         experiment_parser.main(['info', '--list', '--archi', 'm3',
                                 '--state', 'Alive'])

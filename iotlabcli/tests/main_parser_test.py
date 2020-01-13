@@ -34,7 +34,8 @@ from .c23 import patch, version_info
 
 @pytest.mark.parametrize('entry',
                          ['auth', 'experiment',
-                          'node', 'profile', 'robot'])
+                          'node', 'profile',
+                          'robot', 'status'])
 def test_main_parser(entry):
     """ test main parser dispatching """
     with patch('iotlabcli.parser.%s.main' % entry) as entrypoint_func:
