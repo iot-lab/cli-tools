@@ -157,9 +157,18 @@ def parse_options():
                                          duration_required=False)
 
     # ####### INFO PARSER ###############
-    info_parser = subparsers.add_parser('info', epilog=help_msgs.INFO_EPILOG,
-                                        help='nodes description list',
-                                        formatter_class=RawTextHelpFormatter)
+    class DeprecateHelpFormatter(argparse.HelpFormatter):
+        """ Add drepecate help formatter """
+        def add_usage(self, usage, actions, groups, prefix=None):
+            helpers.deprecate_warn_cmd('info', 'iotlab-status', 19)
+            return super(DeprecateHelpFormatter, self).add_usage(usage,
+                                                                 actions,
+                                                                 groups,
+                                                                 prefix)
+
+    help_msg = 'DEPRECATED: use iotlab-status command instead'
+    info_parser = subparsers.add_parser('info', help=help_msg,
+                                        formatter_class=DeprecateHelpFormatter)
 
     info_parser.add_argument('--site',
                              action='append', dest='info_selection',
@@ -768,6 +777,7 @@ def info_experiment_parser(opts):
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
 
+    helpers.deprecate_warn_cmd('info', 'iotlab-status', 7)
     selection = dict(opts.info_selection or ())
     return experiment.info_experiment(api, opts.list_id, **selection)
 

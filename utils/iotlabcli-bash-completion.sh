@@ -413,8 +413,44 @@ _iotlab_robot() {
     esac
 }
 
+_iotlab_status() {
+    local cur prev words cword
+    _init_completion || return
+
+    case "$prev" in
+        -u|--username|-p|--password|--jmespath|--jp|--format|--fmt)
+            # We don't need to complete there
+            ;;
+        -s|--sites)
+            # We don't need to complete there
+            ;;
+        -n|--nodes)
+            # We don't need to complete there
+            ;;
+        -ni|--nodes-ids)
+            # We don't need to complete there
+            ;;
+        -er|--experiments-running)
+            # We don't need to complete there
+            ;;
+        --site)
+            COMPREPLY=($(compgen -W "${_iotlab_sites[*]}" -- "$cur"))
+            ;;
+        --archi)
+            COMPREPLY=($(compgen -W "${_iotlab_archis[*]}" -- "$cur"))
+            ;;
+        --state)
+            COMPREPLY=($(compgen -W "${_iotlab_states[*]}" -- "$cur"))
+            ;;
+        *)
+            COMPREPLY=($(compgen -W '-h --help -u --username -p --password -v --version -s --sites -n --nodes -ni --nodes-ids -er --experiments-running --site --archi --state --jmespath --jp --format --fmt' -- "$cur"))
+            ;;
+    esac
+}_
+
 complete -F _iotlab_auth iotlab-auth
 complete -F _iotlab_experiment iotlab-experiment
 complete -F _iotlab_node iotlab-node
 complete -F _iotlab_profile iotlab-profile
 complete -F _iotlab_robot iotlab-robot
+complete -F _iotlab_status iotlab-status

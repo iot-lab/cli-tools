@@ -29,6 +29,7 @@ import iotlabcli.parser.experiment
 import iotlabcli.parser.node
 import iotlabcli.parser.profile
 import iotlabcli.parser.robot
+import iotlabcli.parser.status
 
 # from aggregation-tools
 try:
@@ -88,7 +89,8 @@ def main(args=None):
         'experiment': iotlabcli.parser.experiment.main,
         'node': iotlabcli.parser.node.main,
         'profile': iotlabcli.parser.profile.main,
-        'robot': iotlabcli.parser.robot.main
+        'robot': iotlabcli.parser.robot.main,
+        'status': iotlabcli.parser.status.main
     }
     if iotlabaggregator:
         commands['serial'] = iotlabaggregator.serial.main
