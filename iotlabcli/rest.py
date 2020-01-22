@@ -136,17 +136,6 @@ class Api():  # pylint:disable=too-many-public-methods
             url += '/%s' % option
         return self.method(url, raw=(option == 'data'))
 
-    @classmethod
-    def get_any_experiment_state(cls, expid, username):
-        """Get any experiment state."""
-
-        url = 'experiments/{expid}?anystate&user={username}'
-        url = url.format(expid=expid, username=username)
-
-        # Get value
-        api = cls(None, None)
-        return api.method(url)
-
     def stop_experiment(self, expid):
         """ Stop user experiment.
 
