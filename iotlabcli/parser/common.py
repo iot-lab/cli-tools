@@ -21,7 +21,6 @@
 
 """ Common parsing methods """
 
-from __future__ import print_function
 import sys
 import errno
 import argparse
