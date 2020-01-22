@@ -3,8 +3,6 @@ dist: xenial
 
 matrix:
   include:
-    - python: 2.7
-      env: TOXENV="py27-tests,coverage_upload_tests,py27-tools,coverage_upload_tools,py27-lint,cli"
     - python: 3.4
       env: TOXENV="py34-tests,cli"
     - python: 3.5
