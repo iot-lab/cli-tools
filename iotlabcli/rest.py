@@ -168,7 +168,7 @@ class Api():  # pylint:disable=too-many-public-methods
             url += '/%s' % option
         return self.method(url, 'post', json=nodes)
 
-    def node_update(self, expid, files):
+    def node_update(self, expid, files, binary=False):
         """ Launch update command (flash firmware) on user
         experiment list nodes
 
@@ -177,8 +177,10 @@ class Api():  # pylint:disable=too-many-public-methods
         :type files: dict
         :returns: dict
         """
-        return self.method('experiments/%s/nodes/flash' % expid,
-                           'post', files=files)
+        url = 'experiments/{}/nodes/flash'.format(expid)
+        if binary:
+            url += '/binary'
+        return self.method(url, 'post', files=files)
 
     def node_profile_load(self, expid, files):
         """Update profile with profile json on user
