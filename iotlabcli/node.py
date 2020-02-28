@@ -25,6 +25,29 @@ import json
 from iotlabcli import helpers
 
 NODE_FILENAME = 'nodes.json'
+EXPERIMENT = 'experiment.json'
+
+
+def _node_command_flash(api, exp_id, nodes_list, cmd_opt):
+    assert cmd_opt is not None, '`cmd_opt` required for update'
+    files = helpers.FilesDict()
+
+    files.add_file(cmd_opt)
+    if cmd_opt.endswith('.bin'):
+        files[EXPERIMENT] = json.dumps({'nodes': nodes_list, 'offset': 0})
+        return api.node_update(exp_id, files, binary=True)
+
+    files[NODE_FILENAME] = json.dumps(nodes_list)
+    return api.node_update(exp_id, files)
+
+
+def _node_command_profile_load(api, exp_id, nodes_list, cmd_opt):
+    assert cmd_opt is not None, '`cmd_opt` required for update'
+    files = helpers.FilesDict()
+
+    files.add_file(cmd_opt)
+    files[NODE_FILENAME] = json.dumps(nodes_list)
+    return api.node_profile_load(exp_id, files)
 
 
 def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
@@ -45,19 +68,9 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
 
     result = None
     if command == 'flash':
-        assert cmd_opt is not None, '`cmd_opt` required for update'
-        files = helpers.FilesDict()
-
-        files.add_file(cmd_opt)
-        files[NODE_FILENAME] = json.dumps(nodes_list)
-        result = api.node_update(exp_id, files)
+        result = _node_command_flash(api, exp_id, nodes_list, cmd_opt)
     elif command == 'profile-load':
-        assert cmd_opt is not None, '`cmd_opt` required for update'
-        files = helpers.FilesDict()
-
-        files.add_file(cmd_opt)
-        files[NODE_FILENAME] = json.dumps(nodes_list)
-        result = api.node_profile_load(exp_id, files)
+        result = _node_command_profile_load(api, exp_id, nodes_list, cmd_opt)
     elif command == 'profile':
         cmd_opt = '&name={}'.format(cmd_opt)
         result = api.node_command(command, exp_id, nodes_list, cmd_opt)
