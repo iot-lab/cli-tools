@@ -23,7 +23,8 @@
 
 # pylint: disable=too-many-public-methods
 # Issues with 'mock'
-# pylint: disable=no-member,maybe-no-member
+# pylint: disable=no-member,maybe-no-member,too-many-statements
+import json
 import unittest
 
 from iotlabcli import node
@@ -76,6 +77,23 @@ class TestNode(unittest.TestCase):
             "filename.elf": "file_data",
             'nodes.json': '["m3-1", "m3-2", "m3-3"]',
         })
+
+        api.reset_mock()
+        res = node.node_command(api, 'flash', 123, nodes_list,
+                                '~/../filename.bin')
+        self.assertEqual(my_mock.API_RET, res)
+        self.assertEqual(1, api.node_update.call_count)
+        api.node_update.assert_called_once()
+        args = api.node_update.call_args.args
+        kwargs = api.node_update.call_args.kwargs
+        assert args[0] == 123
+        assert 'experiment.json' in args[1]
+        data_dict = json.loads(args[1]['experiment.json'])
+        assert 'offset' in data_dict
+        assert data_dict['offset'] == 0
+        assert 'nodes' in data_dict
+        assert data_dict['nodes'] == ["m3-1", "m3-2", "m3-3"]
+        assert kwargs == {'binary': True}
 
         # no firmware for update command
         self.assertRaises(AssertionError, node.node_command,
