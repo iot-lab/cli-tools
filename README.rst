@@ -53,7 +53,7 @@ When `IoT-Lab OML plot Tools <https://github.com/iot-lab/oml-plot-tools>`_  is i
 | ``iotlab plot radio``        | plot node sniffer results                                                              |
 +------------------------------+----------------------------------------------------------------------------------------+
 
- When `IoT-Lab Aggregation Tools <https://github.com/iot-lab/aggregation-tools>`_ is installed:
+When `IoT-Lab Aggregation Tools <https://github.com/iot-lab/aggregation-tools>`_ is installed:
 
 +------------------------------+----------------------------------------------------------------------------------------+
 | ``iotlab serial``            | aggregate node serial link                                                             |
