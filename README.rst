@@ -43,7 +43,7 @@ When `IoT-Lab SSH CLI Tools <https://github.com/iot-lab/ssh-cli-tools>`_ is inst
 | ``iotlab ssh``               | run commands on A8 open nodes through SSH                                              |
 +------------------------------+----------------------------------------------------------------------------------------+
 
-When `IoT-Lab OML plot Tools <https://github.com/iot-lab/oml-plot-tools>`_  is installed:
+When `IoT-Lab OML plot Tools <https://github.com/iot-lab/oml-plot-tools>`_ is installed:
 
 +------------------------------+----------------------------------------------------------------------------------------+
 | ``iotlab plot traj``         | plot robot trajectory                                                                  |

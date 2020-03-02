@@ -1,6 +1,14 @@
 Changelog
 =========
 
+3.0.0
+-----
+
+- Migrate the new IoT-LAB REST API (https://api.iot-lab.info)
+- Add iotlab-status command
+- Add support for flashing firmware in raw format with .bin extension
+- Remove the iotlab-admin command
+
 2.6.0
 -----
 
