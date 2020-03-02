@@ -446,7 +446,7 @@ _iotlab_status() {
             COMPREPLY=($(compgen -W '-h --help -u --username -p --password -v --version -s --sites -n --nodes -ni --nodes-ids -er --experiments-running --site --archi --state --jmespath --jp --format --fmt' -- "$cur"))
             ;;
     esac
-}_
+}
 
 complete -F _iotlab_auth iotlab-auth
 complete -F _iotlab_experiment iotlab-experiment
