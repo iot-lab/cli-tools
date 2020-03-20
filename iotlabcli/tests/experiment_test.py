@@ -643,6 +643,7 @@ class TestGetActiveExperiment(unittest.TestCase):
             api, ['Running', 'Launching', 'toLaunch', 'Waiting'])
 
 
+@patch('iotlabcli.experiment.stop_experiment')
 @patch('iotlabcli.experiment.get_experiment')
 class TestExperimentWait(CommandMock):
     """ Test iotlabcli.experiment.wait_experiment """
@@ -657,7 +658,7 @@ class TestExperimentWait(CommandMock):
             state = 'Waiting'
         return {'state': state}
 
-    def test_wait_experiment(self, get_exp):
+    def test_wait_experiment(self, get_exp, stop_exp):
         """ Test the wait_experiment function """
         self.wait_ret = ['Waiting', 'Waiting', 'toLaunch', 'Launching',
                          'Running']
@@ -676,6 +677,13 @@ class TestExperimentWait(CommandMock):
         self.wait_ret = []
         self.assertRaises(RuntimeError, experiment.wait_experiment,
                           self.api, 123, step=0.1, timeout=0.5)
+
+        # Timeout + cancel on timeout
+        self.wait_ret = []
+        self.assertRaises(RuntimeError, experiment.wait_experiment,
+                          self.api, 123, step=0.1, timeout=0.5,
+                          cancel_on_timeout=True)
+        stop_exp.assert_called_with(self.api, 123)
 
 
 class TestExperimentGetWriteExpArchive(unittest.TestCase):
