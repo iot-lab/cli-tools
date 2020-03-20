@@ -4,6 +4,11 @@ Changelog
 3.0.0
 -----
 
+- Add --cancel-on-timeout flag with experiment wait subcommand
+
+3.0.0
+-----
+
 - Migrate the new IoT-LAB REST API (https://api.iot-lab.info)
 - Add iotlab-status command
 - Add support for flashing firmware in raw format with .bin extension
