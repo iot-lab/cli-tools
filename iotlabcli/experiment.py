@@ -42,6 +42,9 @@ RUN_FILENAME = 'script.json'
 NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
 SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', 'scriptconfig')
 
+# Default wait timeout when waiting for an experiment to be in Running state
+WAIT_TIMEOUT_DEFAULT = float('+inf')
+
 
 def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
                       resources, start_time=None, print_json=False,
@@ -312,7 +315,9 @@ def _check_sites_uniq(*site_associations):
 
 
 def wait_experiment(api, exp_id, states='Running',
-                    step=5, timeout=float('+inf')):
+                    step=5, timeout=WAIT_TIMEOUT_DEFAULT,
+                    cancel_on_timeout=False):
+    # pylint: disable=too-many-arguments
     """Wait for the experiment to be in `states`.
 
     Also returns if Terminated or Error
@@ -322,13 +327,19 @@ def wait_experiment(api, exp_id, states='Running',
     :param states: Comma separated string of states to wait for
     :param step: time to wait between each server check
     :param timeout: timeout if wait takes too long
+    :param cancel_on_timeout: cancel the experiment if the timeout is reached
     """
     def _state_function():
         """Get current user experiment state."""
         return get_experiment(api, exp_id, '')['state']
+
+    def _stop_function():
+        """Cancel submitted user experiment."""
+        stop_experiment(api, exp_id)
     exp_str = '%s' % (exp_id,)
 
-    return wait_state(_state_function, exp_str, states, step, timeout)
+    return wait_state(_state_function, _stop_function,
+                      exp_str, states, step, timeout, cancel_on_timeout)
 
 
 def _states_from_str(states_str):
@@ -342,8 +353,18 @@ def _states_from_str(states_str):
 STOPPED_STATES = set(_states_from_str('Terminated,Error'))
 
 
-def wait_state(state_fct, exp_str, states='Running',
-               step=5, timeout=float('+inf')):
+def _raise_timeout_msg(exp_str, stop_fct, cancel_on_timeout):
+    msg = 'Timeout reached'
+    if cancel_on_timeout:
+        msg += (', cancelling experiment {}'.format(exp_str))
+        stop_fct()
+
+    raise RuntimeError(msg)
+
+
+def wait_state(state_fct, stop_fct, exp_str, states='Running',
+               step=5, timeout=WAIT_TIMEOUT_DEFAULT, cancel_on_timeout=False):
+    # pylint: disable=too-many-arguments
     """Wait until `state_fct` returns a state in `states`
     and also Terminated or Error
 
@@ -369,7 +390,7 @@ def wait_state(state_fct, exp_str, states='Running',
         # Still wait
         time.sleep(step)
 
-    raise RuntimeError('Timeout reached')
+    _raise_timeout_msg(exp_str, stop_fct, cancel_on_timeout)
 
 
 def _timeout(start_time, timeout):
