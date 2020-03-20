@@ -263,8 +263,11 @@ def parser_add_wait_subparser(subparsers, expid_required=False):
         '--step', default=5, type=int,
         help="Wait time in seconds between each check")
     wait_parser.add_argument(
-        '--timeout', default=float('+inf'), type=float,
+        '--timeout', default=experiment.WAIT_TIMEOUT_DEFAULT, type=float,
         help="Max time to wait in seconds")
+    wait_parser.add_argument(
+        '--cancel-on-timeout', action='store_true',
+        help="Cancel experiment if timeout is reached")
 
     return wait_parser
 
@@ -795,7 +798,8 @@ def wait_experiment_parser(opts):
         exp_id, opts.state))
 
     return experiment.wait_experiment(api, exp_id, opts.state,
-                                      opts.step, opts.timeout)
+                                      opts.step, opts.timeout,
+                                      opts.cancel_on_timeout)
 
 
 def experiment_parse_and_run(opts):
