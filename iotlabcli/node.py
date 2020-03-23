@@ -72,8 +72,7 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
     elif command == 'profile-load':
         result = _node_command_profile_load(api, exp_id, nodes_list, cmd_opt)
     elif command == 'profile':
-        cmd_opt = '&name={}'.format(cmd_opt)
-        result = api.node_command(command, exp_id, nodes_list, cmd_opt)
+        result = api.node_command('monitoring', exp_id, nodes_list, cmd_opt)
     else:
         result = api.node_command(command, exp_id, nodes_list)
 
