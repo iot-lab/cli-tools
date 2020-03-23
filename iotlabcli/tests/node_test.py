@@ -65,8 +65,8 @@ class TestNode(unittest.TestCase):
         api.reset_mock()
         res = node.node_command(api, 'profile', 123, nodes_list, 'p_m3')
         self.assertEqual(my_mock.API_RET, res)
-        api.node_command.assert_called_with('profile', 123, nodes_list,
-                                            '&name=p_m3')
+        api.node_command.assert_called_with('monitoring', 123, nodes_list,
+                                            'p_m3')
 
         api.reset_mock()
         res = node.node_command(api, 'flash', 123, nodes_list,
