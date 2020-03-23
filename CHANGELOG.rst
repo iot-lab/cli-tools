@@ -1,7 +1,12 @@
 Changelog
 =========
 
-3.0.0
+3.1.1
+-----
+
+- fix URL used with update-profile command
+
+3.1.0
 -----
 
 - Add --cancel-on-timeout flag with experiment wait subcommand
