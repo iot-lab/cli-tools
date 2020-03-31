@@ -97,3 +97,51 @@ class TestAuthModule(unittest.TestCase):
         api = m_api_class.return_value
         api.check_credential.return_value = True
         self.assertEqual(True, auth.check_user_credentials('user', 'password'))
+
+
+TEST_SSH_IDENTITY_FILE = 'test_ssh_key_file'
+TEST_SSH_PUB_FILE = TEST_SSH_IDENTITY_FILE + '.pub'
+TEST_SSHKEYS = {'sshkeys': ['test']}
+TEST_KEY = 'testkey'
+
+
+class TestSSHKeyFeature(unittest.TestCase):
+    """ Test the ssh key feature from auth module """
+    def setUp(self):
+        try:
+            os.remove(TEST_SSH_PUB_FILE + '.pub')
+        except OSError:
+            pass
+        with open(TEST_SSH_PUB_FILE, 'w') as key_file:
+            key_file.write(TEST_KEY)
+        patch('iotlabcli.auth.IDENTITY_FILE', TEST_SSH_IDENTITY_FILE).start()
+
+    def tearDown(self):
+        os.remove(TEST_SSH_PUB_FILE)
+        patch.stopall()
+
+    @patch('iotlabcli.auth.Api')
+    def test_add_ssh_key(self, m_api_class):
+        """ Check the add_ssh_key function """
+
+        api = m_api_class.return_value
+        api.get_ssh_keys.return_value = TEST_SSHKEYS
+
+        auth.add_ssh_key()
+        api.get_ssh_keys.assert_called_once()
+        test_keys = TEST_SSHKEYS
+        test_keys['sshkeys'].append(TEST_SSHKEYS)
+        api.set_ssh_keys.assert_called_with(test_keys)
+
+        api.get_ssh_keys.call_count = 0
+        # Cannot add a key that is already stored (here it's in test_keys)
+        self.assertRaises(ValueError, auth.add_ssh_key, TEST_SSH_IDENTITY_FILE)
+        api.get_ssh_keys.assert_called_once()
+
+    @patch('iotlabcli.auth.Api')
+    def test_ssh_keys(self, m_api_class):  # pylint:disable=no-self-use
+        """ Check the ssh_keys function """
+        api = m_api_class.return_value
+        api.get_ssh_keys.return_value = TEST_SSHKEYS
+        auth.ssh_keys()
+        api.get_ssh_keys.assert_called_once()

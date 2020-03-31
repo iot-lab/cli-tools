@@ -23,7 +23,7 @@
 
 # pylint: disable=too-many-public-methods
 # pylint: disable=protected-access
-
+import json
 import unittest
 
 from iotlabcli import rest
@@ -131,6 +131,16 @@ class TestRest(unittest.TestCase):
         ret_val.status_code = 500
         self.assertRaises(HTTPError, self.api.check_credential)
 
+        patch.stopall()
+
+    def test_ssh_key(self):
+        """ Test ssh keys get/set """
+        test_ssh_keys = '{"sshkey": ["test"]}'
+        test_ssh_keys_json = json.loads(test_ssh_keys)
+        ret_val = RequestRet(200, content=test_ssh_keys)
+        patch('requests.request', return_value=ret_val).start()
+        assert self.api.get_ssh_keys() == test_ssh_keys_json
+        assert self.api.set_ssh_keys(test_ssh_keys_json) is None
         patch.stopall()
 
     def test_method_raw(self):
