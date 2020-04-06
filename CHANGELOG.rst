@@ -1,6 +1,11 @@
 Changelog
 =========
 
+3.2.0
+-----
+
+- add SSH key management from iotlab-auth
+
 3.1.1
 -----
 
