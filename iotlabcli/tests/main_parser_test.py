@@ -79,10 +79,6 @@ except (ImportError, TypeError):
 
 try:
     import oml_plot_tools
-
-    if version_info[0] != 2:
-        # pylint: disable=invalid-name
-        oml_plot_tools = None  # noqa
 except ImportError:
     oml_plot_tools = None
 
