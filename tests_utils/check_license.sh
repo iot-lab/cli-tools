@@ -27,6 +27,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.travis.yml' \
     -e 'codecov.yml' \
     -e '.github/workflows/continuous-integration.yml' \
+    -e '.github/workflows/continuous-integration-tools.yml' \
     -e 'utils/iotlabcli-bash-completion.sh' \
 )
 
