@@ -557,8 +557,8 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
     @classmethod
     def from_dict(cls, exp_dict):
         """Create an _Experiment object from given `exp_dict`."""
-        experiment = cls(exp_dict.pop('name'), exp_dict.pop('duration'),
-                         exp_dict.pop('reservation'))
+        experiment = cls(exp_dict.pop('name', None), exp_dict.pop('duration'),
+                         exp_dict.pop('reservation', None))
 
         experiment.type = exp_dict.pop('type')
         experiment.nodes = exp_dict.pop('nodes')
