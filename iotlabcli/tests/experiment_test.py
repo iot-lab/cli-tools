@@ -371,7 +371,26 @@ class TestExperimentSubmit(CommandMock):
         return res
 
     @patch('iotlabcli.helpers.read_file')
-    def test_experiment_load(self, read_file_mock):
+    def test_experiment_load_min(self, read_file_mock):
+        """ Try experiment_load """
+        node_fmt = 'm3-%u.grenoble.iot-lab.info'
+        self.expected = {
+            "duration": 20,
+            "nodes": [node_fmt % num for num in range(1, 6)],
+            "type": "physical",
+        }
+        read_file_mock.side_effect = self._read_file_for_load
+
+        experiment.load_experiment(
+            self.api, experiment.EXP_FILENAME)
+
+        # read_file_calls
+        _files = {_call[0][0] for _call in read_file_mock.call_args_list}
+        self.assertEqual(_files,
+                         set([experiment.EXP_FILENAME]))
+
+    @patch('iotlabcli.helpers.read_file')
+    def test_experiment_load_full(self, read_file_mock):
         """ Try experiment_load """
         node_fmt = 'm3-%u.grenoble.iot-lab.info'
         self.expected = {
