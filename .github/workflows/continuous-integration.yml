@@ -48,3 +48,25 @@ jobs:
       with:
         name: Python ${{ matrix.python-version }}
         fail_ci_if_error: true
+    - name: Build a source tarball
+      if: matrix.python-version == 3.8
+      run: python setup.py sdist check --strict --metadata
+    - name: Publish package to TestPyPI
+      uses: pypa/gh-action-pypi-publish@master
+      if: >-
+        matrix.python-version == 3.8 &&
+        github.event_name == 'push' &&
+        startsWith(github.event.ref, 'refs/tags')
+      with:
+        user: __token__
+        password: ${{ secrets.test_pypi_password }}
+        repository_url: https://test.pypi.org/legacy/
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      if: >-
+        matrix.python-version == 3.8 &&
+        github.event_name == 'push' &&
+        startsWith(github.event.ref, 'refs/tags')
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}
