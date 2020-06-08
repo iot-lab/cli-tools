@@ -1,6 +1,12 @@
 Changelog
 =========
 
+3.2.1
+-----
+
+- Fix bug when load an experiment with only mandatory attributes set
+- Switch the CI to Github Actions
+
 3.2.0
 -----
 
