@@ -361,7 +361,7 @@ class Api():  # pylint:disable=too-many-public-methods
     def _raise_http_error(url, req):
         """ Raises HTTP error for 'url' and 'req' """
         # Indent req.text to pretty print it later
-        indented_lines = ['\t' + l for l in req.text.splitlines(True)]
+        indented_lines = ['\t' + line for line in req.text.splitlines(True)]
         msg = '\n' + ''.join(indented_lines)
         raise HTTPError(url, req.status_code, msg, req.headers, None)
 
