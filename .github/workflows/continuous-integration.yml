@@ -44,11 +44,8 @@ jobs:
         tox -e py$(echo ${{ matrix.python-version }} | tr -d .)-lint
         tox -e copying
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.7
       if: ${{ (matrix.python-version == 3.8 || matrix.python-version == 2.7) }}
-      with:
-        name: Python ${{ matrix.python-version }}
-        fail_ci_if_error: true
+      run: bash <(curl -s https://codecov.io/bash)
     - name: Build a source tarball
       if: matrix.python-version == 3.8
       run: python setup.py sdist check --strict --metadata
