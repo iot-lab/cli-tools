@@ -503,7 +503,7 @@ def treat_cli_return(stdout, stderr):
     try:
         stdout_value = stdout.getvalue()
         ret = json.loads(stdout_value)
-    except:
+    except json.JSONDecodeError:
         ret = None
 
     stdout.close()
