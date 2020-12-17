@@ -36,4 +36,6 @@ jobs:
       run: |
           tox -e py$(echo ${{ matrix.python-version }} | tr -d .)-tools
     - name: Upload coverage to Codecov
-      run: bash <(curl -s https://codecov.io/bash)
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
