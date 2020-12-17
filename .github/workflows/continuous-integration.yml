@@ -45,7 +45,9 @@ jobs:
         tox -e copying
     - name: Upload coverage to Codecov
       if: ${{ (matrix.python-version == 3.8 || matrix.python-version == 2.7) }}
-      run: bash <(curl -s https://codecov.io/bash)
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
     - name: Build a source tarball
       if: matrix.python-version == 3.8
       run: python setup.py sdist check --strict --metadata
