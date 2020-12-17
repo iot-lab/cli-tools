@@ -41,7 +41,8 @@ except (ImportError, TypeError):
 
 # from ssh-cli-tools
 try:
-    import iotlabsshcli.parser.open_a8_parser
+    import iotlabsshcli
+    import iotlabsshcli.parser.open_linux_parser
 except ImportError:
     iotlabsshcli = None  # pylint:disable=invalid-name
 
@@ -98,6 +99,6 @@ def main(args=None):
     if oml_plot_tools:
         commands['plot'] = oml_plot
     if iotlabsshcli:
-        commands['ssh'] = iotlabsshcli.parser.open_a8_parser.main
+        commands['ssh'] = iotlabsshcli.parser.open_linux_parser.main
 
     return parse_subcommands(commands, args)

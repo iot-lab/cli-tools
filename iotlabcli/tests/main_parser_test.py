@@ -145,7 +145,7 @@ def test_ssh_main():
     """ test main parser dispatching for subcommands"""
 
     with patch('iotlabcli.parser.main.iotlabsshcli') as mocked_module:
-        mocked_main = mocked_module.parser.open_a8_parser.main
+        mocked_main = mocked_module.parser.open_linux_parser.main
         main_parser.main(['ssh', '-i', '123'])
         mocked_main.assert_called_with(['-i', '123'])
 
