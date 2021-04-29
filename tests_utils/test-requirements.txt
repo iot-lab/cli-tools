@@ -1,7 +1,6 @@
 pytest
 pytest-cov
 mock
-setuptools-lint
 pylint
 pycodestyle
 # issues with pep8 >= 1.6
