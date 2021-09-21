@@ -87,7 +87,7 @@ class TestAuthModule(unittest.TestCase):
         # pylint: disable=protected-access
         open_name = 'iotlabcli.auth.open'
         m_open = mock_open(read_data='invalid_format:paswd:third_field')
-        open(TEST_RC_FILE, 'wb').close()
+        open(TEST_RC_FILE, 'wb').close()  # pylint:disable=consider-using-with
         with patch(open_name, m_open, create=True):
             self.assertRaises(ValueError, auth._read_password_file)
 

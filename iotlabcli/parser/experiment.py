@@ -716,7 +716,7 @@ def get_experiment_parser(opts):
     if opts.get_cmd == 'experiment_list':
         return experiment.get_experiments_list(api, opts.state, opts.limit,
                                                opts.offset)
-    elif opts.get_cmd == 'start_date' or opts.get_cmd == 'state':
+    elif opts.get_cmd in ('start_date', 'state'):
         return _get_experiment_attr(api, opts)
     elif opts.get_cmd == 'experiments':
         return experiment.get_active_experiments(api,

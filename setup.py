@@ -32,6 +32,7 @@ LICENSE = 'CeCILL v2.1'
 
 def cat(files, join_str=''):
     """Concatenate `files` content with `join_str` between them."""
+    # pylint:disable=consider-using-with
     files_content = (open(f).read() for f in files)
     return join_str.join(files_content)
 
