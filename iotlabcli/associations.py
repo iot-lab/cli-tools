@@ -33,7 +33,7 @@ Dumped JSON format is:
 """
 
 import abc
-import collections
+import collections.abc
 
 
 def _disabled_method(*_):
@@ -55,7 +55,7 @@ def setattrdefault(obj, attribute, default=None):
 
 class _Association(
         # pylint: disable=too-many-ancestors
-        collections.MutableMapping, dict):
+        collections.abc.MutableMapping, dict):
     """_Association class key->value.
 
     Inherit from dict to be dumped as a dict by json.
@@ -203,7 +203,7 @@ class _Association(
 class AssociationsMap(
         # pylint:disable=too-many-public-methods
         # pylint: disable=too-many-ancestors
-        collections.MutableMapping, list):
+        collections.abc.MutableMapping, list):
     """Sorted Map of Associations objects.
 
     Inherit list to be json serialized to a list.
