@@ -21,8 +21,6 @@
 
 """ Authentication file management """
 
-from __future__ import print_function
-
 import os
 import os.path
 import getpass
