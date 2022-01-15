@@ -300,7 +300,7 @@ def exp_infos_from_str(exp_str):
         associations = _extract_associations(params)
     except ValueError as err:
         raise argparse.ArgumentTypeError(
-            'Invalid arguments in experiment list %r: %s' % (exp_str, err))
+            f'Invalid arguments in experiment list {exp_str!r}: {err}')
 
     return nodes, associations
 
@@ -341,12 +341,12 @@ def site_association_from_str(site_assoc_str):
         sites = [common.site_with_domain_checked(site) for site in sites]
         return experiment.site_association(*sites, **kwassocs)
     except ValueError as err:
-        raise argparse.ArgumentTypeError('Invalid site_association: %s' % err)
+        raise argparse.ArgumentTypeError(f'Invalid site_association: {err}')
 
 
 RUN_SITE_ASSOCIATIONS_STR = ('script=script_path'
                              '[,scriptconfig=scriptconfig_path]')
-RUN_SITE_ASSOCIATION_METAVAR = 'site,site,%s' % (RUN_SITE_ASSOCIATIONS_STR,)
+RUN_SITE_ASSOCIATION_METAVAR = f'site,site,{RUN_SITE_ASSOCIATIONS_STR}'
 
 
 def _run_associations_arg_check(script, scriptconfig=None):
@@ -368,8 +368,9 @@ def run_site_association_from_str(site_assoc_str):
         _run_associations_arg_check(**associations)
     except TypeError:
         raise argparse.ArgumentTypeError(
-            'Invalid associations in %s should match %s' %
-            (site_assoc_str, RUN_SITE_ASSOCIATIONS_STR))
+            f"Invalid associations in {site_assoc_str} "
+            f"should match {RUN_SITE_ASSOCIATIONS_STR}"
+        )
 
     return site_association
 
@@ -383,7 +384,7 @@ def _valid_param(param):
     if ' ' in param:
         raise ValueError('no space allowed')
     if param.startswith('='):
-        raise ValueError("name required for kwarg '%s'" % param)
+        raise ValueError(f"name required for kwarg '{param}'")
 
 
 def _args_kwargs(params):
@@ -505,8 +506,10 @@ def _extract_associations(params):
     try:
         args_dict = _submit_args_to_dict(*args)
     except TypeError:
-        raise ValueError('Invalid positional arguments, should be %s' %
-                         SUBMIT_ASSOC_ARGS_KWARGS)
+        raise ValueError(
+            "Invalid positional arguments, "
+            f"should be {SUBMIT_ASSOC_ARGS_KWARGS}"
+        )
     associations = _merge_assocs_args_d_kwargs(args_dict, kwargs)
 
     return associations
@@ -572,9 +575,9 @@ def _properties_str_to_dict(properties_str):
 
     for key, value in properties:
         if key in prop_dict:
-            raise ValueError('Property "%s" should appear only once' % key)
+            raise ValueError(f'Property "{key}" should appear only once')
         if value == '':
-            raise ValueError('Invalid empty value for property "%s"' % key)
+            raise ValueError(f'Invalid empty value for property "{key}"')
         prop_dict[key] = value
 
     return prop_dict
@@ -791,8 +794,9 @@ def wait_experiment_parser(opts):
     exp_id = helpers.get_current_experiment(
         api, opts.experiment_id, running_only=False)
 
-    sys.stderr.write("Waiting that experiment {} gets in state {}\n".format(
-        exp_id, opts.state))
+    sys.stderr.write(
+        f"Waiting that experiment {exp_id} gets in state {opts.state}\n"
+    )
 
     return experiment.wait_experiment(api, exp_id, opts.state,
                                       opts.step, opts.timeout,

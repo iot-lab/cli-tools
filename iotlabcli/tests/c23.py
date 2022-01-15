@@ -40,7 +40,7 @@ elif version_info[0] == 3:  # pragma: no cover
     from unittest import mock
     from io import StringIO
 else:  # pragma: no cover
-    raise ValueError('Unknown python version %r' % version_info)
+    raise ValueError(f'Unknown python version {version_info!r}')
 
 # pylint:disable=wrong-import-position
 from mock import patch, Mock, mock_open  # noqa

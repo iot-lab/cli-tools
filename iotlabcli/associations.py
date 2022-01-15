@@ -138,7 +138,7 @@ class _Association(
     @classmethod
     def for_key_value(cls, key, value, sortkey=None):
         """Create association class for assoctype."""
-        name = '{}{}Association'.format(key.title(), value.title())
+        name = f'{key.title()}{value.title()}Association'
 
         class KeyValuesAssociation(cls):  # pylint:disable=too-many-ancestors
             """KeyValuesAssociation class->Nodes."""
@@ -151,8 +151,10 @@ class _Association(
 
     def __repr__(self):
         """Representation. Ignore 'sortkey'."""
-        return '%s(%r, %r)' % (self.__class__.__name__, self.key,
-                               getattr(self, 'value', None))
+        return (
+            f"{self.__class__.__name__}({self.key!r}, "
+            f"{getattr(self, 'value', None)!r})"
+        )
 
     @classmethod
     def _concrete_class(cls):

@@ -86,7 +86,7 @@ class TestCommonParser(unittest.TestCase):
         message. We just want it to be silent """
 
         result = {'ret': 0}
-        with patch('%s.print' % BUILTIN) as mock_print:
+        with patch(f'{BUILTIN}.print') as mock_print:
             # Silent BrokenPipe
             mock_print.side_effect = IOError(32, 'Broken pipe')
             common.print_result(result)
@@ -142,7 +142,7 @@ class TestCommonParser(unittest.TestCase):
         args = ['--jmespath', 'deploymentresults."0"', '--format', '" ".join']
         # No need to add 'exp-cli get -p' function is mocked
 
-        with patch('%s.print' % BUILTIN) as mock_print:
+        with patch(f'{BUILTIN}.print') as mock_print:
             common.main_cli(function, parser, args)
             mock_print.assert_called_with(nodes_list_ret)
 

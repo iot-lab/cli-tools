@@ -88,8 +88,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def test_an_experiment_alias_multi_same_node_firmware(self):
         """ Exp alias multiple time same reservation firmware """
-        nodes = '5,site={site}+archi=m3:at86rf231,{fw}'.format(
-            site=NODES['m3'], fw=FIRMWARE['m3'])
+        nodes = f"5,site={NODES['m3']}+archi=m3:at86rf231,{FIRMWARE['m3']}"
         cmd = ('iotlab-experiment submit -d 5 -n test_cli'
                ' -l {0} -l {0} -l {0}'.format(nodes))
 
@@ -101,12 +100,12 @@ class TestCliToolsExperiments(unittest.TestCase):
         self._wait_state_or_finished()
 
         # Test get start-time
-        cmd = 'iotlab-experiment get --start-time -i {}'.format(self.exp_id)
+        cmd = f'iotlab-experiment get --start-time -i {self.exp_id}'
         self.assertNotEqual(0, call_cli(cmd)['start_time'])
 
     def test_an_experiment_alias_multi_same_node(self):
         """ Run an experiment with alias and multiple time same reservation """
-        nodes = '5,site={site}+archi=m3:at86rf231'.format(site=NODES['m3'])
+        nodes = f"5,site={NODES['m3']}+archi=m3:at86rf231"
         cmd = 'iotlab-experiment submit -d 5 -n test_cli -l {0} -l {0}'.format(
             nodes)
 
@@ -123,14 +122,17 @@ class TestCliToolsExperiments(unittest.TestCase):
     def test_an_experiment_alias_multisite(self):
         """ Run an experiment with multisite/archi """
         # ensure profile test_m3 exists
-        call_cli('iotlab-profile addm3 -n {} '
-                 '-sniffer -channels 11'.format('test_m3'))
+        call_cli('iotlab-profile addm3 -n test_m3 -sniffer -channels 11')
 
         cmd = 'iotlab-experiment submit -d 5 -n test_cli'
-        cmd += ' -l 5,site={site}+archi=m3:at86rf231,{fw},test_m3'.format(
-            site=NODES['m3'], fw=FIRMWARE['m3'])
-        cmd += ' -l 1,site={site}+archi=wsn430:cc1101,{fw}'.format(
-            site=NODES['cc1101'], fw=FIRMWARE['cc1101'])
+        cmd += (
+            f" -l 5,"
+            f"site={NODES['m3']}+archi=m3:at86rf231,{FIRMWARE['m3']},test_m3"
+        )
+        cmd += (
+            f" -l 1,"
+            f"site={NODES['cc1101']}+archi=wsn430:cc1101,{FIRMWARE['cc1101']}"
+        )
 
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
@@ -148,7 +150,7 @@ class TestCliToolsExperiments(unittest.TestCase):
     @staticmethod
     def _find_working_nodes(site, archi, num):
         """ Find working nodes, there should be at least num nodes """
-        cmd = 'iotlab-experiment info -li --site {}'.format(site)
+        cmd = f'iotlab-experiment info -li --site {site}'
         nodes = expand_short_nodes_list(next(
             s['ids']
             for n in call_cli(cmd)["items"][0]['archis'] if n['archi'] == archi
@@ -156,16 +158,16 @@ class TestCliToolsExperiments(unittest.TestCase):
         ))
         nodes_str = '+'.join(str(n) for n in nodes[0:num])
         LOGGER.debug("nodes_str: %r", nodes_str)
-        return '{},{},{}'.format(site, archi.split(':')[0], nodes_str)
+        return f"{site},{archi.split(':')[0]},{nodes_str}"
 
     def test_an_experiment_physical_one_site(self):
         """ Run an experiment on m3 nodes simple"""
         site = NODES['m3']
 
-        cmd = 'iotlab-experiment info -li --site {}'.format(site)
+        cmd = f'iotlab-experiment info -li --site {site}'
 
         nodes = self._find_working_nodes(site, 'm3:at86rf231', 3)
-        cmd = 'iotlab-experiment submit -d 5 -n test_cli -l {} '.format(nodes)
+        cmd = f'iotlab-experiment submit -d 5 -n test_cli -l {nodes} '
         self._start_experiment(cmd)
         self.assertEqual('Running', self._wait_state_or_finished('Running'))
         time.sleep(1)
@@ -201,26 +203,24 @@ class TestCliToolsExperiments(unittest.TestCase):
 
         nodes_list = []
         for (_site, _archi), nums in nodes_dict.items():
-            node_str = '{},{},{}'.format(_site, _archi, '+'.join(nums))
+            node_str = f"{_site},{_archi},{'+'.join(nums)}"
             LOGGER.debug("nodes: %s", node_str)
             nodes_list.append(node_str)
 
         # create the joined string
-        node_str = ''.join(' {} {}'.format(n_type, n) for n in nodes_list)
+        node_str = ''.join(f' {n_type} {n}' for n in nodes_list)
         return node_str
 
     def _flash_nodes(self, firmware, cmd_append=''):
         """ Flash all nodes of type archi """
-        cmd = 'iotlab-node -i {id} -up {fw} {nodes}'.format(
-            id=self.exp_id, fw=firmware, nodes=cmd_append)
+        cmd = f'iotlab-node -i {self.exp_id} -up {firmware} {cmd_append}'
         LOGGER.info(cmd)
         ret = call_cli(cmd)
         LOGGER.debug(ret)
 
     def _debug(self, mode, cmd_append=''):
         """ Flash all nodes of type archi """
-        cmd = 'iotlab-node -i {id} --debug-{mode} {nodes}'.format(
-            id=self.exp_id, mode=mode, nodes=cmd_append)
+        cmd = f'iotlab-node -i {self.exp_id} --debug-{mode} {cmd_append}'
         LOGGER.info(cmd)
         ret = call_cli(cmd)
         LOGGER.debug(ret)
@@ -232,12 +232,12 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.firmwares = firmwares
         call_cli(cmd + ' --print')
         self.exp_id = call_cli(cmd)["id"]
-        self.id_str = ' --id {} '.format(self.exp_id)
+        self.id_str = f' --id {self.exp_id} '
         LOGGER.info(self.exp_id)
 
     def _stop_experiment(self):
         """ Stop current experiment """
-        cmd = 'iotlab-experiment stop -i {}'.format(self.exp_id)
+        cmd = f'iotlab-experiment stop -i {self.exp_id}'
         ret = call_cli(cmd)
         LOGGER.info("%s: %r", cmd, ret['status'])
 
@@ -257,16 +257,18 @@ class TestCliToolsExperiments(unittest.TestCase):
         self.assertIsInstance(self.exp_desc['nodes'], dict)
         self.assertIsInstance(self.exp_desc['nodes']['items'][0], dict)
 
-        cmd = 'iotlab-experiment get --nodes-id -i {}'.format(self.exp_id)
+        cmd = f'iotlab-experiment get --nodes-id -i {self.exp_id}'
         call_cli(cmd)
-        cmd = 'iotlab-experiment get --nodes -i {}'.format(self.exp_id)
+        cmd = f'iotlab-experiment get --nodes -i {self.exp_id}'
         call_cli(cmd)
-        call_cli('iotlab-experiment get -a -i {}'.format(self.exp_id))
+        call_cli(f'iotlab-experiment get -a -i {self.exp_id}')
 
     def _wait_state_or_finished(self, states='Stopped,Error,Terminated'):
         """ Wait experiment get in state, or states error and terminated """
-        cmd = 'iotlab-experiment wait --state {} --step 5 -i {}'.format(
-            states, self.exp_id)
+        cmd = (
+            f"iotlab-experiment wait --state {states} "
+            f"--step 5 -i {self.exp_id}"
+        )
         LOGGER.info(cmd)
         return call_cli(cmd)
 
@@ -276,7 +278,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
     def tearDown(self):
         try:
-            os.remove("{}.tar.gz".format(self.exp_id))
+            os.remove(f"{self.exp_id}.tar.gz")
         except (OSError, AttributeError):
             pass
 
@@ -293,7 +295,7 @@ class TestCliToolsExperiments(unittest.TestCase):
 
         for exp in experiments:
             exp_id = exp["id"]
-            call_cli('iotlab-experiment stop -i {}'.format(exp_id))
+            call_cli(f'iotlab-experiment stop -i {exp_id}')
 
         remote_profs = call_cli('iotlab-profile get --list')
         profiles_names = [p['profilename'] for p in remote_profs]
@@ -318,11 +320,11 @@ class TestCliToolsProfile(unittest.TestCase):
         profiles_names = [p['profilename'] for p in remote_profs]
         for prof in cls.profile.values():
             if prof in profiles_names:
-                call_cli('iotlab-profile del --name {}'.format(prof))
+                call_cli(f'iotlab-profile del --name {prof}')
 
     def _del_prof(self, name):
         """ Add a profile and get it to check it's the same """
-        cmd_result = call_cli('iotlab-profile del --name {}'.format(name))
+        cmd_result = call_cli(f'iotlab-profile del --name {name}')
         self.assertIsNone(cmd_result)
 
     def _add_profile_simple(self, cmd, name):
@@ -333,8 +335,7 @@ class TestCliToolsProfile(unittest.TestCase):
         # add profile return name
         self.assertEqual(profile_dict, call_cli(cmd))
 
-        get_profile_dict = call_cli('iotlab-profile get --name {}'
-                                    .format(name))
+        get_profile_dict = call_cli(f'iotlab-profile get --name {name}')
         # compare that initial dict is a subset of result dict
         #     can't '<=' dict in python3, so update result dict with initial
         #     values and see if it stays equals
@@ -347,20 +348,17 @@ class TestCliToolsProfile(unittest.TestCase):
         We then check that getting both profiles return the same output
         """
 
-        get_profile_dict = call_cli('iotlab-profile get --name {}'
-                                    .format(name))
+        get_profile_dict = call_cli(f'iotlab-profile get --name {name}')
 
-        call_cli('iotlab-profile del --name {}'.format(name))
+        call_cli(f'iotlab-profile del --name {name}')
 
         with NamedTemporaryFile(mode='w+') as prof:
             prof.write(json.dumps(get_profile_dict))
             prof.flush()
-            load_ret = call_cli('iotlab-profile load --file {}'
-                                .format(prof.name))
+            load_ret = call_cli(f'iotlab-profile load --file {prof.name}')
         # returned name are the same
         self.assertEqual(get_profile_dict, load_ret)
-        get_loaded_profile = call_cli('iotlab-profile get --name {}'
-                                      .format(name))
+        get_loaded_profile = call_cli(f'iotlab-profile get --name {name}')
         # returned profile are the same
         self.assertEqual(get_profile_dict, get_loaded_profile)
 
@@ -536,8 +534,7 @@ def try_config_iotlab_test_account():
         password = os.environ['IOTLAB_TEST_PASSWORD']
         # use a fake auth_file
         os.environ['IOTLAB_PASSWORD_FILE'] = 'test_auth_file'
-        call_cli('iotlab-auth --user {} --password {}'
-                 .format('iotlab', password))
+        call_cli(f"iotlab-auth --user iotlab --password {password}")
     except KeyError:
         pass
 

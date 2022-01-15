@@ -92,7 +92,7 @@ class Api():  # pylint:disable=too-many-public-methods
         if site:
             selections['site'] = site
 
-        url = 'nodes%s' % ("/ids" if list_id else '')
+        url = f"nodes{'/ids' if list_id else ''}"
         if selections:
             # the order of parameters in the encoded string
             # will match the order of tuples list
@@ -112,8 +112,8 @@ class Api():  # pylint:disable=too-many-public-methods
         """ Get user's experiment
         :returns JSONObject
         """
-        queryset = 'state=%s&limit=%u&offset=%u' % (state, limit, offset)
-        return self.method('experiments?%s' % queryset)
+        queryset = f'state={state}&limit={limit}&offset={offset}'
+        return self.method(f'experiments?{queryset}')
 
     def get_running_experiments(self):
         """ Get testbed running experiments """
@@ -131,9 +131,9 @@ class Api():  # pylint:disable=too-many-public-methods
         """
         assert option in ('', 'nodes', 'nodes_ids', 'data', 'deployment')
 
-        url = 'experiments/%s' % expid
+        url = f'experiments/{expid}'
         if option:
-            url += '/%s' % option
+            url += f'/{option}'
         return self.method(url, raw=(option == 'data'))
 
     def stop_experiment(self, expid):
@@ -141,7 +141,7 @@ class Api():  # pylint:disable=too-many-public-methods
 
         :param id: experiment id submission (e.g. OAR scheduler)
         """
-        return self.method('experiments/%s' % expid, 'delete')
+        return self.method(f'experiments/{expid}', 'delete')
 
     def reload_experiment(self, expid, exp_json=None):
         """Reload user experiment.
@@ -150,7 +150,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :param exp_json: experiment duration and reservation configuration
         :returns JSONObject
         """
-        url = 'experiments/%d/reload' % expid
+        url = f'experiments/{expid}/reload'
         return self.method(url, 'post', json=exp_json)
 
     # Node commands
@@ -163,9 +163,9 @@ class Api():  # pylint:disable=too-many-public-methods
         :param opt: additional string to pass as option in the url
         :returns: dict
         """
-        url = 'experiments/%s/nodes/%s' % (expid, command)
+        url = f'experiments/{expid}/nodes/{command}'
         if option:
-            url += '/%s' % option
+            url += f'/{option}'
         return self.method(url, 'post', json=nodes)
 
     def node_update(self, expid, files, binary=False):
@@ -177,7 +177,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :type files: dict
         :returns: dict
         """
-        url = 'experiments/{}/nodes/flash'.format(expid)
+        url = f'experiments/{expid}/nodes/flash'
         if binary:
             url += '/binary'
         return self.method(url, 'post', files=files)
@@ -191,7 +191,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :type files: dict
         :returns: dict
         """
-        return self.method('experiments/%s/nodes/monitoring' % expid,
+        return self.method(f'experiments/{expid}/nodes/monitoring',
                            'post', files=files)
 
     # script
@@ -207,7 +207,7 @@ class Api():  # pylint:disable=too-many-public-methods
         assert json is not None or command in ('run',)
         assert files is not None or command in ('kill', 'status',)
 
-        url = 'experiments/%s/scripts/%s' % (expid, command)
+        url = f'experiments/{expid}/scripts/{command}'
         return self.method(url, 'post', files=files, json=json)
 
     # Profile methods
@@ -219,7 +219,7 @@ class Api():  # pylint:disable=too-many-public-methods
         """
         url = 'monitoring'
         if archi is not None:
-            url += '?archi={}'.format(archi)
+            url += f'?archi={archi}'
         return self.method(url)
 
     def get_profile(self, name):
@@ -229,7 +229,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :type name: string
         :returns JSONObject
         """
-        return self.method('monitoring/%s' % name)
+        return self.method(f'monitoring/{name}')
 
     def add_profile(self, profile):
         """ Add user profile
@@ -249,7 +249,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :param profile_name: name
         :type profile_name: string
         """
-        ret = self.method('monitoring/%s' % name, 'delete')
+        ret = self.method(f'monitoring/{name}', 'delete')
         return ret
 
     def check_credential(self):
@@ -282,7 +282,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :param nodes: list of nodes, if empty apply on all nodes
         """
         assert command in ('status',)
-        return self.method('experiments/%s/robots/%s' % (expid, command),
+        return self.method(f'experiments/{expid}/robots/{command}',
                            'post', json=nodes)
 
     def robot_update_mobility(self, expid, name, nodes=()):
@@ -291,7 +291,7 @@ class Api():  # pylint:disable=too-many-public-methods
         :param id: experiment id submission (e.g. OAR scheduler)
         :param nodes: list of nodes, if empty apply on all nodes
         """
-        url = 'experiments/%s/robots/mobility/%s' % (expid, name)
+        url = f'experiments/{expid}/robots/mobility/{name}'
         return self.method(url, 'post', json=nodes)
 
     @classmethod
@@ -306,7 +306,7 @@ class Api():  # pylint:disable=too-many-public-methods
         raw = mapfile in ('map/image',)
 
         api = cls(None, None)
-        url = 'robots/%s/%s' % (site, mapfile)
+        url = f'robots/{site}/{mapfile}'
         return api.method(url, raw=raw)
 
     def get_circuits(self, **selections):
@@ -320,7 +320,7 @@ class Api():  # pylint:disable=too-many-public-methods
 
     def get_circuit(self, name):
         """Get user mobilities."""
-        return self.method('mobilities/circuits/%s' % name)
+        return self.method(f'mobilities/circuits/{name}')
 
     def method(self, url, method='get',  # pylint:disable=too-many-arguments
                json=None, files=None, raw=False):

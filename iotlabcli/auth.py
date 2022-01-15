@@ -65,8 +65,7 @@ def write_password_file(username, password):
     with open(RC_FILE, 'w') as pass_file:
         # encode/decode for python3
         enc_password = b64encode(password.encode('utf-8')).decode('utf-8')
-        pass_file.write('{user}:{passwd}'.format(user=username,
-                                                 passwd=enc_password))
+        pass_file.write(f'{username}:{enc_password}')
 
 
 def _read_password_file():
@@ -84,7 +83,7 @@ def _read_password_file():
             password = b64decode(enc_password.encode('utf-8')).decode('utf-8')
             return username, password
     except ValueError:
-        raise ValueError('Bad password file format: %r' % RC_FILE)
+        raise ValueError(f'Bad password file format: {RC_FILE!r}')
 
 
 IDENTITY_FILE = os.path.expanduser('~/.ssh/id_rsa')
@@ -104,7 +103,7 @@ def add_ssh_key(identity_file=None):
 
     keys = keys_json['sshkeys']
     if key in keys:
-        msg = 'Key is already configured:\n"{}"'.format(key)
+        msg = f'Key is already configured:\n"{key}"'
         raise ValueError(msg)
 
     keys.append(key)

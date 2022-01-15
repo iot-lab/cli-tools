@@ -62,7 +62,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     :param sites_assocs: list of 'site_association'
     """
 
-    assert resources, 'Empty resources: %r' % resources
+    assert resources, f'Empty resources: {resources!r}'
     experiment = _Experiment(name, duration, start_time)
 
     exp_files = helpers.FilesDict()
@@ -193,8 +193,10 @@ def _files_with_filespath(files, filespath):
 
     # Error if there are remaining files in filespath
     if filespathdict:
-        raise ValueError('Filespath %s not in files list %s' %
-                         (list(filespathdict.values()), sorted(set(files))))
+        raise ValueError(
+            f'Filespath {list(filespathdict.values())} not in '
+            f'files list {sorted(set(files))}'
+        )
 
     return sorted(updatedfiles)
 
@@ -251,7 +253,7 @@ def script_experiment(api, exp_id, command, *options):
         res = api.script_command(exp_id, command, json=sites_list)
 
     if res is None:
-        raise ValueError('Unknown script command %r' % command)
+        raise ValueError(f'Unknown script command {command!r}')
 
     return res
 
@@ -267,8 +269,7 @@ def _script_run_files_dict(*site_associations):
     """
 
     if not site_associations:
-        raise ValueError('Got empty site_associations: {}'
-                         .format(site_associations))
+        raise ValueError(f'Got empty site_associations: {site_associations}')
 
     _check_sites_uniq(*site_associations)
 
@@ -311,7 +312,7 @@ def _check_sites_uniq(*site_associations):
     duplicates = [s for s, c in collections.Counter(sites).items() if c > 1]
 
     if duplicates:
-        raise ValueError('Sites may only be given once: %s' % duplicates)
+        raise ValueError(f'Sites may only be given once: {duplicates}')
 
 
 def wait_experiment(api, exp_id, states='Running',
@@ -336,7 +337,7 @@ def wait_experiment(api, exp_id, states='Running',
     def _stop_function():
         """Cancel submitted user experiment."""
         stop_experiment(api, exp_id)
-    exp_str = '%s' % (exp_id,)
+    exp_str = f'{exp_id}'
 
     return wait_state(_state_function, _stop_function,
                       exp_str, states, step, timeout, cancel_on_timeout)
@@ -356,7 +357,7 @@ STOPPED_STATES = set(_states_from_str('Terminated,Error'))
 def _raise_timeout_msg(exp_str, stop_fct, cancel_on_timeout):
     msg = 'Timeout reached'
     if cancel_on_timeout:
-        msg += (', cancelling experiment {}'.format(exp_str))
+        msg += f', cancelling experiment {exp_str}'
         stop_fct()
 
     raise RuntimeError(msg)
@@ -441,7 +442,7 @@ def site_association(*sites, **kwassociations):
         raise ValueError('No sites given')
 
     if len(sites) != len(set(sites)):
-        raise ValueError('Sites are not uniq {}'.format(sites))
+        raise ValueError(f'Sites are not uniq {sites}')
 
     # Associations are mandatory
     if not kwassociations:
@@ -497,9 +498,11 @@ class AliasNodes():  # pylint: disable=too-few-public-methods
         return str(alias)
 
     def __repr__(self):  # pragma: no cover
-        return 'AliasNodes(%r, %r, %r, %r, _alias=%r)' % (
-            self.nbnodes, self.properties['site'], self.properties['archi'],
-            self.properties['mobile'], self.alias)
+        return (
+            f"AliasNodes({self.nbnodes!r}, {self.properties['site']!r}, "
+            f"{self.properties['archi']!r}, {self.properties['mobile']!r}, "
+            f"_alias={self.alias!r})"
+        )
 
     def __eq__(self, other):  # pragma: no cover
         return self.__dict__ == other.__dict__
@@ -647,8 +650,7 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
         # Check that nodes are not already present
         _intersect = list(set(self.nodes) & set(nodes_list))
         if _intersect:
-            raise ValueError("Nodes specified multiple times {}".format(
-                _intersect))
+            raise ValueError(f"Nodes specified multiple times {_intersect}")
 
         self.nodes.extend(nodes_list)
         # Keep unique values and sorted
@@ -697,7 +699,7 @@ def setattr_if_none(obj, attr, default):
 
 def _write_experiment_archive(exp_id, data):
     """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
-    with open('%s.tar.gz' % exp_id, 'wb') as archive:
+    with open(f'{exp_id}.tar.gz', 'wb') as archive:
         archive.write(data)
 
 

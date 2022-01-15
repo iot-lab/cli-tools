@@ -68,7 +68,7 @@ def circuit_command(api, command, name=None, **selection):
     elif command == 'get':
         result = api.get_circuit(name)
     else:  # pragma: no cover
-        raise ValueError('Unknown command %r' % command)
+        raise ValueError(f'Unknown command {command!r}')
 
     return result
 

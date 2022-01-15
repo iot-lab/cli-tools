@@ -38,7 +38,7 @@ from .c23 import patch, version_info
                           'robot', 'status'])
 def test_main_parser(entry):
     """ test main parser dispatching """
-    with patch('iotlabcli.parser.%s.main' % entry) as entrypoint_func:
+    with patch(f'iotlabcli.parser.{entry}.main') as entrypoint_func:
         main_parser.main([entry, '-i', '123'])
         entrypoint_func.assert_called_with(['-i', '123'])
 

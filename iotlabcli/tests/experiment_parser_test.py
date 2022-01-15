@@ -168,8 +168,10 @@ class TestMainInfoParser(MainMock):
                                 '--list', 'grenoble,m3,1-5'])
         resources = [
             experiment.exp_resources(
-                ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)],
-                None, None)
+                [f'm3-{i}.grenoble.iot-lab.info' for i in range(1, 6)],
+                None,
+                None
+            )
         ]
         submit_exp.assert_called_with(self.api, 'exp_name', 20, resources,
                                       314159, False, None)
@@ -238,7 +240,7 @@ class TestMainInfoParser(MainMock):
             'submit', '--name', 'exp_name', '--duration', '20',
             '--list', 'grenoble,m3,1',
             '--list', 'strasbourg,m3,1',
-            '--site-association', 'grenoble,strasbourg,script=%s' % script_sh,
+            '--site-association', f'grenoble,strasbourg,script={script_sh}',
         ])
 
         sites_assocs = [
@@ -259,9 +261,9 @@ class TestMainInfoParser(MainMock):
             'submit', '--name', 'exp_name', '--duration', '20',
             '--list', 'grenoble,m3,1',
             '--list', 'strasbourg,m3,1',
-            '--site-association', 'grenoble,script=%s,ipv6=2001::' % script_sh,
-            '--site-association', 'strasbourg,script=%s,scriptconfig=%s' % (
-                script_2_sh, scriptconfig),
+            '--site-association', f'grenoble,script={script_sh},ipv6=2001::',
+            '--site-association',
+            f'strasbourg,script={script_2_sh},scriptconfig={scriptconfig}',
         ])
 
         sites_assocs = [
@@ -377,7 +379,7 @@ class TestMainInfoParser(MainMock):
 
         script.return_value = {}
         experiment_parser.main(['script', '--run',
-                                'grenoble,script=%s' % script_sh])
+                                f'grenoble,script={script_sh}'])
         script.assert_called_with(
             self.api, 123, 'run',
             experiment.site_association('grenoble.iot-lab.info',
@@ -386,7 +388,7 @@ class TestMainInfoParser(MainMock):
 
         # Multiple sites
         experiment_parser.main(['script', '--run',
-                                'grenoble,strasbourg,script=%s' % script_sh])
+                                f'grenoble,strasbourg,script={script_sh}'])
         script.assert_called_with(
             self.api, 123, 'run',
             experiment.site_association('grenoble.iot-lab.info',
@@ -396,10 +398,11 @@ class TestMainInfoParser(MainMock):
 
         # Multiple sites associations
         script.return_value = {}
-        experiment_parser.main(['script', '--run',
-                                'grenoble,script=%s,scriptconfig=%s' % (
-                                    script_sh, scriptconfig),
-                                'strasbourg,script=%s' % script_sh])
+        experiment_parser.main([
+            'script', '--run',
+            f'grenoble,script={script_sh},scriptconfig={scriptconfig}',
+            f'strasbourg,script={script_sh}'
+        ])
         script.assert_called_with(
             self.api, 123, 'run',
             experiment.site_association('grenoble.iot-lab.info',
@@ -415,7 +418,7 @@ class TestMainInfoParser(MainMock):
         # Unknown assoc
         self.assertRaises(SystemExit, experiment_parser.main,
                           ['script', '--run',
-                           'grenoble,script=%s,assoc=new' % script_sh])
+                           f'grenoble,script={script_sh},assoc=new'])
         # Error no script
         self.assertRaises(SystemExit, experiment_parser.main,
                           ['script', '--run', 'grenoble,assoc=test'])

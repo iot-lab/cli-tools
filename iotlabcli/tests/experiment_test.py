@@ -60,12 +60,14 @@ class TestExperiment(unittest.TestCase):
         """ Try creating an 'Experiment' object """
 
         firmware_2 = 'firmware_2.elf'
-        nodes_list_2 = ['m3-%u.grenoble.iot-lab.info' % num for num in
-                        (0, 2, 4, 6, 8)]
+        nodes_list_2 = [
+            f'm3-{num}.grenoble.iot-lab.info' for num in (0, 2, 4, 6, 8)
+        ]
 
         firmware_3 = 'firmware_3.elf'
-        nodes_list_3 = ['m3-%u.grenoble.iot-lab.info' % num for num in
-                        (1, 3, 9, 27)]
+        nodes_list_3 = [
+            f'm3-{num}.grenoble.iot-lab.info' for num in (1, 3, 9, 27)
+        ]
         exp_d_2 = experiment.exp_resources(nodes_list_2, firmware_2, 'prof2')
         exp_d_3 = experiment.exp_resources(nodes_list_3, firmware_3, 'prof3')
 
@@ -76,8 +78,13 @@ class TestExperiment(unittest.TestCase):
         exp.add_exp_resources(exp_d_3)
 
         self.assertEqual(exp.type, 'physical')
-        self.assertEqual(exp.nodes, ['m3-%u.grenoble.iot-lab.info' % num for
-                                     num in (0, 1, 2, 3, 4, 6, 8, 9, 27)])
+        self.assertEqual(
+            exp.nodes,
+            [
+                f'm3-{num}.grenoble.iot-lab.info'
+                for num in (0, 1, 2, 3, 4, 6, 8, 9, 27)
+            ]
+        )
         self.assertTrue(exp.firmwareassociations is not None)
         self.assertTrue(exp.profileassociations is not None)
         self.assertEqual(2, len(exp.firmwareassociations))
@@ -91,8 +98,11 @@ class TestExperimentSubmit(CommandMock):
         """ Run experiment_submit physical """
 
         # Physical tests
-        resources = [experiment.exp_resources(
-            ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)])]
+        resources = [
+            experiment.exp_resources(
+                [f'm3-{i}.grenoble.iot-lab.info' for i in range(1, 6)]
+            )
+        ]
         experiment.submit_experiment(self.api, 'exp_name', 20, resources,
                                      start_time=314159)
 
@@ -102,7 +112,7 @@ class TestExperimentSubmit(CommandMock):
             'duration': 20,
             'type': 'physical',
             'nodes': [
-                'm3-%u.grenoble.iot-lab.info' % num for num in range(1, 6)
+                f'm3-{num}.grenoble.iot-lab.info' for num in range(1, 6)
             ],
             'reservation': 314159,
             'profileassociations': None,
@@ -272,7 +282,8 @@ class TestExperimentSubmit(CommandMock):
         # Physical tests and Alias Nodes
         resources = []
         resources.append(experiment.exp_resources(
-            ['m3-%u.grenoble.iot-lab.info' % i for i in range(1, 6)]))
+            [f'm3-{i}.grenoble.iot-lab.info' for i in range(1, 6)])
+        )
         resources.append(experiment.exp_resources(
             experiment.AliasNodes(1, 'grenoble', 'm3:at86rf231', False),
             tests.resource_file('firmware.elf'), 'profile1'))

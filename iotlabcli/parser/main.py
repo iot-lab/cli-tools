@@ -66,7 +66,7 @@ def parse_subcommands(commands, args):
 
     opts, _ = parser.parse_known_args(args[:1])
 
-    sys.argv[0] = 'iotlab %s' % opts.command
+    sys.argv[0] = f'iotlab {opts.command}'
     return commands[opts.command](args[1:])
 
 

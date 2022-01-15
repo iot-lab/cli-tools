@@ -117,11 +117,11 @@ def get_current_exp(exp_by_states, states):  # noqa: C901
         if not exps:
             continue
         raise ValueError(
-            "You have several experiments with state {0!r}\n"
-            "Use option -i|--id and choose experiment id in: {1}".format(
-                states_str, exp_by_states))
+            f"You have several experiments with state {states_str!r}\n"
+            f"Use option -i|--id and choose experiment id in: {exp_by_states}"
+        )
     if res is None:
-        raise ValueError("You have no {0!r} experiment".format(states_str))
+        raise ValueError(f"You have no {states_str!r} experiment")
 
     return res
 
@@ -175,7 +175,7 @@ class FilesDict(dict):
         if key not in self:
             dict.__setitem__(self, key, val)
         elif self[key] != val:
-            raise ValueError('Has different values for same key %r' % key)
+            raise ValueError(f'Has different values for same key {key!r}')
 
     def add_file(self, file_path):
         """Add a file to the dictionary.
@@ -194,7 +194,7 @@ class FilesDict(dict):
         except ValueError:
             # use md5 hash as prefix to handle duplicated basenames
             # with different contents
-            key = '{hash}_{path}'.format(hash=md5(value), path=key)
+            key = f'{md5(value)}_{key}'
             self[key] = value
 
         return key
@@ -228,7 +228,7 @@ def read_custom_api_url():
         api_url = os.getenv('IOTLAB_API_URL')
 
     if api_url:
-        sys.stderr.write("Using custom api_url: {}\n".format(api_url))
+        sys.stderr.write(f"Using custom api_url: {api_url}\n")
     return api_url
 
 
@@ -258,8 +258,9 @@ def check_experiment_state(state_str=None):
     invalid = set(state_str.split(',')) - set(OAR_STATES)
     if invalid:
         raise ValueError(
-            'Invalid experiment states: {state} should be in {states}.'.format(
-                state=sorted(list(invalid)), states=OAR_STATES))
+            f'Invalid experiment states: {sorted(list(invalid))} '
+            f'should be in {OAR_STATES}.'
+        )
 
     return state_str
 

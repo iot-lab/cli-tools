@@ -166,7 +166,7 @@ def main_cli(function, parser, args=None):  # flake8: noqa
     except (IOError, ValueError) as err:
         parser.error(str(err))
     except RuntimeError as err:
-        print("RuntimeError:\n{err!s}".format(err=err), file=sys.stderr)
+        print(f"RuntimeError:\n{err!s}", file=sys.stderr)
 
     except KeyboardInterrupt:  # pragma: no cover
         print("\nStopped.", file=sys.stderr)
@@ -196,13 +196,13 @@ def check_site_with_server(site_name, _sites_list=None):
     sites = _sites_list or sites_list()
     if site_name in sites:
         return  # site_name is valid
-    raise argparse.ArgumentTypeError('Unknown site name %r' % site_name)
+    raise argparse.ArgumentTypeError(f'Unknown site name {site_name!r}')
 
 
 def site_with_domain_checked(site, domain=DOMAIN_DNS):
     """Return site with domain and check site exists."""
     check_site_with_server(site)
-    return '%s.%s' % (site, domain)
+    return f'{site}.{domain}'
 
 
 def nodes_list_from_info(site, archi, nodes_str):
@@ -225,7 +225,7 @@ def nodes_list_from_info(site, archi, nodes_str):
     """
 
     nodes_list = nodes_id_list(archi, nodes_str)
-    fmt = "%s.{site}.{domain}".format(site=site, domain=DOMAIN_DNS)
+    fmt = f"%s.{site}.{DOMAIN_DNS}"
     nodes_url_list = [fmt % node for node in nodes_list]
     return nodes_url_list
 
@@ -237,7 +237,7 @@ def nodes_id_list(archi, nodes_list):
 
     nodes_num_list = expand_short_nodes_list(nodes_list)
 
-    node_fmt = '{archi}-%u'.format(archi=archi)
+    node_fmt = f'{archi}-%u'
     nodes = [node_fmt % num for num in nodes_num_list]
 
     return nodes
@@ -296,7 +296,7 @@ def expand_short_nodes_list(nodes_str):
         return helpers.flatten_list_list(nodes_ll)
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
-        raise ValueError('Invalid nodes list: %s ([0-9+-])' % nodes_str)
+        raise ValueError(f'Invalid nodes list: {nodes_str} ([0-9+-])')
 
 
 def add_nodes_selection_list(parser):
@@ -350,6 +350,6 @@ def nodes_list_from_str(nodes_list_str):
         site, archi, nodes_str = nodes_list_str.split(',')
     except ValueError:
         raise argparse.ArgumentTypeError(
-            'Invalid number of argument in nodes list: %r' % nodes_list_str)
+            f'Invalid number of argument in nodes list: {nodes_list_str!r}')
     check_site_with_server(site)  # needs an external request
     return nodes_list_from_info(site, archi, nodes_str)
