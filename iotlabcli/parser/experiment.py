@@ -161,10 +161,7 @@ def parse_options():
         """ Add drepecate help formatter """
         def add_usage(self, usage, actions, groups, prefix=None):
             helpers.deprecate_warn_cmd('info', 'iotlab-status', 19)
-            return super(DeprecateHelpFormatter, self).add_usage(usage,
-                                                                 actions,
-                                                                 groups,
-                                                                 prefix)
+            return super().add_usage(usage, actions, groups, prefix)
 
     help_msg = 'DEPRECATED: use iotlab-status command instead'
     info_parser = subparsers.add_parser('info', help=help_msg,
