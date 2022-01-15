@@ -64,7 +64,7 @@ setup(
     name=PACKAGE,
     version=get_version(PACKAGE),
     description='IoT-LAB testbed command-line client',
-    long_description=cat(LONG_DESCRIPTION_FILES, u'\n\n'),
+    long_description=cat(LONG_DESCRIPTION_FILES, '\n\n'),
     long_description_content_type='text/x-rst',
     author='IoT-LAB Team',
     author_email='admin@iot-lab.info',

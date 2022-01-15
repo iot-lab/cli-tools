@@ -50,29 +50,47 @@ class TestAssociationsMap(unittest.TestCase):
 
         # Add 'firmware.elf'
         assoc = assocs.extendvalues('firmware.elf', ['m3-2', 'm3-1', 'm3-10'])
-        expected = [{u'firmwarename': u'firmware.elf',
-                     u'nodes': [u'm3-1', u'm3-2', u'm3-10']}]
+        expected = [
+            {
+                'firmwarename': 'firmware.elf',
+                'nodes': ['m3-1', 'm3-2', 'm3-10']
+            }
+        ]
         self._assert_json_equal(assocs, expected)
 
         # Add nodes
         assocs['firmware.elf'] += ['m3-6']  # also works with '+='
-        expected = [{u'firmwarename': u'firmware.elf',
-                     u'nodes': [u'm3-1', u'm3-2', u'm3-6', u'm3-10']}]
+        expected = [
+            {
+                'firmwarename': 'firmware.elf',
+                'nodes': ['m3-1', 'm3-2', 'm3-6', 'm3-10']
+            }
+        ]
         self._assert_json_equal(assocs, expected)
 
         # Add 'a_tutorial.elf'
         assoc = assocs.setdefault('a_tutorial.elf', [])
         assoc.extend(['m3-5', 'm3-4'])  # Use extend, data needs to be sorted
-        expected = [{u'firmwarename': u'a_tutorial.elf',
-                     u'nodes': [u'm3-4', u'm3-5']},
-                    {u'firmwarename': u'firmware.elf',
-                     u'nodes': [u'm3-1', u'm3-2', u'm3-6', u'm3-10']}]
+        expected = [
+            {
+                'firmwarename': 'a_tutorial.elf',
+                'nodes': ['m3-4', 'm3-5']
+            },
+            {
+                'firmwarename': 'firmware.elf',
+                'nodes': ['m3-1', 'm3-2', 'm3-6', 'm3-10']
+            }
+        ]
         self._assert_json_equal(assocs, expected)
 
         # remove an entry
         del assocs['firmware.elf']
-        expected = [{u'firmwarename': u'a_tutorial.elf',
-                     u'nodes': [u'm3-4', u'm3-5']}]
+        expected = [
+            {
+                'firmwarename': 'a_tutorial.elf',
+                'nodes': ['m3-4', 'm3-5']
+            }
+        ]
         self._assert_json_equal(assocs, expected)
 
     def test_associationsmap_from_list(self):
@@ -100,16 +118,24 @@ class TestAssociationsMap(unittest.TestCase):
         """Test associationsmapdict_from_dict."""
         assocsdict = {
             'firmware': [
-                {'firmwarename': 'a_tutorial.elf',
-                 'nodes': ['m3-4', 'm3-6']},
-                {'firmwarename': 'firmware.elf',
-                 'nodes': ['m3-1', 'm3-2', 'm3-5', 'm3-10']},
+                {
+                    'firmwarename': 'a_tutorial.elf',
+                    'nodes': ['m3-4', 'm3-6']
+                },
+                {
+                    'firmwarename': 'firmware.elf',
+                    'nodes': ['m3-1', 'm3-2', 'm3-5', 'm3-10']
+                },
             ],
             'profile': [
-                {'profilename': 'consumption',
-                 'nodes': ['m3-4']},
-                {'profilename': 'radio',
-                 'nodes': ['m3-1', 'm3-2']},
+                {
+                    'profilename': 'consumption',
+                    'nodes': ['m3-4']
+                },
+                {
+                    'profilename': 'radio',
+                    'nodes': ['m3-1', 'm3-2']
+                },
             ],
         }
 
