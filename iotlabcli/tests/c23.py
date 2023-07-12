@@ -34,13 +34,12 @@ if version_info[0] == 2:  # pragma: no cover
     from urllib2 import HTTPError
     import mock
     from cStringIO import StringIO
+    from mock import patch, Mock, mock_open  # noqa
 elif version_info[0] == 3:  # pragma: no cover
     # python3
     from urllib.error import HTTPError
     from unittest import mock
+    from unittest.mock import patch, Mock, mock_open  # noqa
     from io import StringIO
 else:  # pragma: no cover
     raise ValueError(f'Unknown python version {version_info!r}')
-
-# pylint:disable=wrong-import-position
-from mock import patch, Mock, mock_open  # noqa
