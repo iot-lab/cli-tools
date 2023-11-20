@@ -26,6 +26,7 @@ import os.path
 import getpass
 from base64 import b64encode, b64decode
 from iotlabcli.rest import Api
+import logging
 
 RC_FILE = (os.getenv('IOTLAB_PASSWORD_FILE') or
            os.path.expanduser('~/.iotlabrc'))
@@ -75,6 +76,7 @@ def _read_password_file():
     authentication
     """
     if not os.path.exists(RC_FILE):
+        logging.info(f"Reading password file: no such file or directory: '{RC_FILE}'")
         return None, None
     try:
         with open(RC_FILE, 'r') as password_file:
