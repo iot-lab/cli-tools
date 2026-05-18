@@ -76,14 +76,11 @@ Description
 The cli-tools leverage the IoT-LAB ``REST API`` and simply wrap calls to
 module ``iotlabcli``, which is a Python client for the API.
 
-The cli-tools come as an installable Python package and require that
-module ``setuptools`` be installed before tools installation can happen.
-Please grab the relevant python-setuptools package for your
-distribution.
+The cli-tools come as an installable Python package.
 
 To install cli-tools from Pypi, use ``pip install iotlabcli``.
 
-To install cli-tools from source, use ``pip install --user .`` or ``python setup.py install``
+To install cli-tools from source, use ``pip install --user .``
 
 Installing cli-tools automatically fetches additional dependencies as
 needed.

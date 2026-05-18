@@ -13,7 +13,7 @@ You can run all tests with:
 
 Running test for one specific version
 
-    tox -e py37
+    tox -e py313
 
 
 Step by step validation
@@ -24,12 +24,3 @@ Step by step validation
 Development depencencies can be installed with
 
     pip install -r tests_utils/test-requirements
-
-
-### Manually running tests ###
-
-    python setup.py lint
-    python setup.py pep8
-    flake8  # it does not work from setup.py script
-    python setup.py nosetests
-
