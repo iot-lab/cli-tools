@@ -19,38 +19,38 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.parser.common module """
+"""Test the iotlabcli.parser.common module"""
 # pylint: disable=too-many-public-methods
 
-import unittest
-import sys
 import argparse
+import sys
+import unittest
 
 from iotlabcli.parser import common
 from iotlabcli.parser.common import print_result
 from iotlabcli.tests.my_mock import api_mock, api_mock_stop
 
-from .c23 import HTTPError, patch, Mock, StringIO
+from .c23 import HTTPError, Mock, StringIO, patch
 
-BUILTIN = 'builtins' if sys.version_info[0] == 3 else '__builtin__'
+BUILTIN = "builtins" if sys.version_info[0] == 3 else "__builtin__"
 
 
 class TestCommonParser(unittest.TestCase):
-    """ Test the iotlab.parser.common module """
+    """Test the iotlab.parser.common module"""
 
-    @patch('iotlabcli.rest.Api.method')
+    @patch("iotlabcli.rest.Api.method")
     def test_sites_list(self, _method_get_sites):
-        """ Run get_sites method """
+        """Run get_sites method"""
         _method_get_sites.return_value = {
-            "items": [{'site': 'grenoble'}, {'site': 'strasbourg'}]
+            "items": [{"site": "grenoble"}, {"site": "strasbourg"}]
         }
 
-        self.assertEqual(['grenoble', 'strasbourg'], common.sites_list())
-        self.assertEqual(['grenoble', 'strasbourg'], common.sites_list())
+        self.assertEqual(["grenoble", "strasbourg"], common.sites_list())
+        self.assertEqual(["grenoble", "strasbourg"], common.sites_list())
         self.assertEqual(1, _method_get_sites.call_count)
 
     def test_main_cli(self):
-        """ Run the main-cli function """
+        """Run the main-cli function"""
         # Redefinition of function.side_effect type from XXX
         # pylint: disable=redefined-variable-type
 
@@ -63,12 +63,12 @@ class TestCommonParser(unittest.TestCase):
         function.side_effect = IOError()
         self.assertRaises(SystemExit, common.main_cli, function, parser)
 
-        with patch('sys.stderr', sys.stdout):
+        with patch("sys.stderr", sys.stdout):
             # HTTPError, both cases
-            err = HTTPError(None, 401, 'msg', None, None)
+            err = HTTPError(None, 401, "msg", None, None)
             function.side_effect = err
             self.assertRaises(SystemExit, common.main_cli, function, parser)
-            err = HTTPError(None, 200, 'msg', None, None)
+            err = HTTPError(None, 200, "msg", None, None)
             function.side_effect = err
             self.assertRaises(SystemExit, common.main_cli, function, parser)
 
@@ -80,19 +80,19 @@ class TestCommonParser(unittest.TestCase):
             self.assertRaises(SystemExit, common.main_cli, function, parser)
 
     def test_print_result_sigpipe(self):
-        """ Test BrokenPipe silent handling
+        """Test BrokenPipe silent handling
 
         When executing 'cli_cmd | grep -m1' code may raise a BrokenPipe error
-        message. We just want it to be silent """
+        message. We just want it to be silent"""
 
-        result = {'ret': 0}
-        with patch(f'{BUILTIN}.print') as mock_print:
+        result = {"ret": 0}
+        with patch(f"{BUILTIN}.print") as mock_print:
             # Silent BrokenPipe
-            mock_print.side_effect = IOError(32, 'Broken pipe')
+            mock_print.side_effect = IOError(32, "Broken pipe")
             common.print_result(result)
 
             # Should raise other errors
-            mock_print.side_effect = IOError(28, 'No space left on device')
+            mock_print.side_effect = IOError(28, "No space left on device")
             self.assertRaises(IOError, common.print_result, result)
 
     def test_print_result(self):
@@ -101,66 +101,73 @@ class TestCommonParser(unittest.TestCase):
 
     @staticmethod
     def test_main_cli_jmespath_fmt():
-        """ Run main_cli with --jmespath and --format options
+        """Run main_cli with --jmespath and --format options
 
         Test getting deployed nodes from 'iotlab-experiment get -p'"""
-        function = Mock(return_value={
-            "deploymentresults": {
-                "0": [
+        function = Mock(
+            return_value={
+                "deploymentresults": {
+                    "0": [
+                        "a8-5.grenoble.iot-lab.info",
+                        "a8-6.grenoble.iot-lab.info",
+                        "a8-7.grenoble.iot-lab.info",
+                        "a8-8.grenoble.iot-lab.info",
+                        "a8-9.grenoble.iot-lab.info",
+                    ]
+                },
+                "duration": 60,
+                "firmwareassociations": None,
+                "name": None,
+                "nodes": [
                     "a8-5.grenoble.iot-lab.info",
                     "a8-6.grenoble.iot-lab.info",
                     "a8-7.grenoble.iot-lab.info",
                     "a8-8.grenoble.iot-lab.info",
-                    "a8-9.grenoble.iot-lab.info"
-                ]
-            },
-            "duration": 60,
-            "firmwareassociations": None,
-            "name": None,
-            "nodes": [
-                "a8-5.grenoble.iot-lab.info",
-                "a8-6.grenoble.iot-lab.info",
-                "a8-7.grenoble.iot-lab.info",
-                "a8-8.grenoble.iot-lab.info",
-                "a8-9.grenoble.iot-lab.info"
-            ],
-            "profileassociations": None,
-            "profiles": None,
-            "reservation": None,
-            "state": "Running",
-            "type": "physical"
-        })
+                    "a8-9.grenoble.iot-lab.info",
+                ],
+                "profileassociations": None,
+                "profiles": None,
+                "reservation": None,
+                "state": "Running",
+                "type": "physical",
+            }
+        )
 
-        nodes_list_ret = ('a8-5.grenoble.iot-lab.info'
-                          ' a8-6.grenoble.iot-lab.info'
-                          ' a8-7.grenoble.iot-lab.info'
-                          ' a8-8.grenoble.iot-lab.info'
-                          ' a8-9.grenoble.iot-lab.info')
+        nodes_list_ret = (
+            "a8-5.grenoble.iot-lab.info"
+            " a8-6.grenoble.iot-lab.info"
+            " a8-7.grenoble.iot-lab.info"
+            " a8-8.grenoble.iot-lab.info"
+            " a8-9.grenoble.iot-lab.info"
+        )
 
         # like iotlab-experiment get --print
         parser = common.base_parser()
-        args = ['--jmespath', 'deploymentresults."0"', '--format', '" ".join']
+        args = ["--jmespath", 'deploymentresults."0"', "--format", '" ".join']
         # No need to add 'exp-cli get -p' function is mocked
 
-        with patch(f'{BUILTIN}.print') as mock_print:
+        with patch(f"{BUILTIN}.print") as mock_print:
             common.main_cli(function, parser, args)
             mock_print.assert_called_with(nodes_list_ret)
 
 
 class TestNodeSelectionParser(unittest.TestCase):
-    """ Test the common '-l' '-e' options node selection parser """
+    """Test the common '-l' '-e' options node selection parser"""
+
     def tearDown(self):
         api_mock_stop()
 
-    @patch('iotlabcli.parser.common._get_experiment_nodes_list')
+    @patch("iotlabcli.parser.common._get_experiment_nodes_list")
     def test_list_nodes(self, g_nodes_list):
-        """ Run the different list_nodes cases """
+        """Run the different list_nodes cases"""
         api = api_mock()
         g_nodes_list.return_value = [
-            "m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info",
+            "m3-1.grenoble.iot-lab.info",
+            "m3-2.grenoble.iot-lab.info",
             "m3-3.grenoble.iot-lab.info",
-            "m3-1.strasbourg.iot-lab.info", "m3-2.strasbourg.iot-lab.info",
-            "m3-3.strasbourg.iot-lab.info"
+            "m3-1.strasbourg.iot-lab.info",
+            "m3-2.strasbourg.iot-lab.info",
+            "m3-3.strasbourg.iot-lab.info",
         ]
 
         nodes_ll = [
@@ -175,19 +182,25 @@ class TestNodeSelectionParser(unittest.TestCase):
 
         # Normal case, no external requests, only list of all provided nodes
         res = common.list_nodes(api, 123, nodes_ll=nodes_ll)
-        self.assertEqual(res, ["m3-1.grenoble.iot-lab.info",
-                               "m3-2.grenoble.iot-lab.info",
-                               "m3-1.strasbourg.iot-lab.info",
-                               "m3-2.strasbourg.iot-lab.info"])
+        self.assertEqual(
+            res,
+            [
+                "m3-1.grenoble.iot-lab.info",
+                "m3-2.grenoble.iot-lab.info",
+                "m3-1.strasbourg.iot-lab.info",
+                "m3-2.strasbourg.iot-lab.info",
+            ],
+        )
         self.assertFalse(g_nodes_list.called)
 
         res = common.list_nodes(api, 123, excl_nodes_ll=nodes_ll)
-        self.assertEqual(res, ["m3-3.grenoble.iot-lab.info",
-                               "m3-3.strasbourg.iot-lab.info"])
+        self.assertEqual(
+            res, ["m3-3.grenoble.iot-lab.info", "m3-3.strasbourg.iot-lab.info"]
+        )
         self.assertTrue(g_nodes_list.called)
 
     def test__get_experiment_nodes_list(self):
-        """ Run get_experiment_nodes_list """
+        """Run get_experiment_nodes_list"""
         api = api_mock(
             ret={
                 "items": [
@@ -198,51 +211,61 @@ class TestNodeSelectionParser(unittest.TestCase):
             }
         )
         # pylint: disable=protected-access
-        self.assertEqual(common._get_experiment_nodes_list(api, 3),
-                         ["m3-1.grenoble.iot-lab.info",
-                          "m3-2.grenoble.iot-lab.info",
-                          "m3-3.grenoble.iot-lab.info"])
+        self.assertEqual(
+            common._get_experiment_nodes_list(api, 3),
+            [
+                "m3-1.grenoble.iot-lab.info",
+                "m3-2.grenoble.iot-lab.info",
+                "m3-3.grenoble.iot-lab.info",
+            ],
+        )
 
-    @patch('iotlabcli.parser.common.check_site_with_server')
+    @patch("iotlabcli.parser.common.check_site_with_server")
     def test_nodes_list_from_str(self, _):
-        """ Run error case from test_nodes_list_from_str invalid string """
+        """Run error case from test_nodes_list_from_str invalid string"""
 
-        self.assertRaises(argparse.ArgumentTypeError,
-                          common.nodes_list_from_str, 'grenoble,m3_no_numbers')
+        self.assertRaises(
+            argparse.ArgumentTypeError,
+            common.nodes_list_from_str,
+            "grenoble,m3_no_numbers",
+        )
 
 
 class TestSiteChecking(unittest.TestCase):
     """Test site checking functions."""
 
     def setUp(self):
-        nodes_list = patch('iotlabcli.parser.common.sites_list').start()
-        nodes_list.return_value = ['grenoble', 'strasbourg', 'lille']
+        nodes_list = patch("iotlabcli.parser.common.sites_list").start()
+        nodes_list.return_value = ["grenoble", "strasbourg", "lille"]
 
     def tearDown(self):
         patch.stopall()
 
     def test_check_site_with_server(self):
         """Test check_site_with_server."""
-        common.check_site_with_server('grenoble')
+        common.check_site_with_server("grenoble")
 
         # Invalid site
-        self.assertRaises(argparse.ArgumentTypeError,
-                          common.check_site_with_server, 'unknown')
+        self.assertRaises(
+            argparse.ArgumentTypeError, common.check_site_with_server, "unknown"
+        )
 
         # sites list can be provided
-        common.check_site_with_server('strasourg', ['gre', 'strasourg', 'lil'])
+        common.check_site_with_server("strasourg", ["gre", "strasourg", "lil"])
 
     def test_site_with_domain_checked(self):
         """Test site_with_domain_checked."""
-        self.assertEqual(common.site_with_domain_checked('grenoble'),
-                         'grenoble.iot-lab.info')
+        self.assertEqual(
+            common.site_with_domain_checked("grenoble"), "grenoble.iot-lab.info"
+        )
 
-        self.assertRaises(argparse.ArgumentTypeError,
-                          common.site_with_domain_checked, 'unknown')
+        self.assertRaises(
+            argparse.ArgumentTypeError, common.site_with_domain_checked, "unknown"
+        )
 
         # Override 'domain'
-        ret = common.site_with_domain_checked('grenoble', domain='localhost')
-        self.assertEqual(ret, 'grenoble.localhost')
+        ret = common.site_with_domain_checked("grenoble", domain="localhost")
+        self.assertEqual(ret, "grenoble.localhost")
 
 
 class TestHelpAction(unittest.TestCase):
@@ -251,18 +274,17 @@ class TestHelpAction(unittest.TestCase):
     def test_help_action(self):
         """Test HelpAction method to add help."""
         parser = argparse.ArgumentParser(add_help=True)
-        help_msg = 'Super Help Message for test.\n'
-        common.HelpAction.add_help(parser, '--help-test', 'help to test',
-                                   help_msg)
+        help_msg = "Super Help Message for test.\n"
+        common.HelpAction.add_help(parser, "--help-test", "help to test", help_msg)
 
-        with patch('sys.stdout', StringIO()) as stdout:
+        with patch("sys.stdout", StringIO()) as stdout:
             # Test Help
-            self.assertRaises(SystemExit, parser.parse_args, ['--help'])
+            self.assertRaises(SystemExit, parser.parse_args, ["--help"])
             output = stdout.getvalue()
-            self.assertTrue(output.startswith('usage:'))
-            self.assertTrue(output.endswith('  --help-test  help to test\n'))
+            self.assertTrue(output.startswith("usage:"))
+            self.assertTrue(output.endswith("  --help-test  help to test\n"))
 
-        with patch('sys.stdout', StringIO()) as stdout:
+        with patch("sys.stdout", StringIO()) as stdout:
             # Test custom help
-            self.assertRaises(SystemExit, parser.parse_args, ['--help-test'])
+            self.assertRaises(SystemExit, parser.parse_args, ["--help-test"])
             self.assertEqual(stdout.getvalue(), help_msg)

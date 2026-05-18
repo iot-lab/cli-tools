@@ -24,7 +24,7 @@
 import os
 
 CUR_DIR = os.path.dirname(__file__)
-HELP_DIR = os.path.join(CUR_DIR, 'help')
+HELP_DIR = os.path.join(CUR_DIR, "help")
 
 
 def _read_help_file(name):
@@ -67,8 +67,8 @@ Examples:
         + 5,archi=m3:at86rf231+site=strasbourg,stras.elf
 """
 
-SUBMIT_LIST_HELP = _read_help_file('submit_list_help.md')
-SUBMIT_SITE_ASSOC_HELP = _read_help_file('submit_site_association_help.md')
+SUBMIT_LIST_HELP = _read_help_file("submit_list_help.md")
+SUBMIT_SITE_ASSOC_HELP = _read_help_file("submit_site_association_help.md")
 
 SCRIPT_EPILOG = """
 Examples:

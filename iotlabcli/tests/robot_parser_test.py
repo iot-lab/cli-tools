@@ -20,7 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 
-""" Test the iotlabcli.parser.robot module """
+"""Test the iotlabcli.parser.robot module"""
 
 import iotlabcli.parser.robot as robot_parser
 from iotlabcli.tests.my_mock import MainMock
@@ -34,55 +34,56 @@ from .c23 import patch
 class TestMainRobotParser(MainMock):
     """Test the iotlab-robot main parser."""
 
-    @patch('iotlabcli.robot.robot_command')
-    @patch('iotlabcli.parser.common.list_nodes')
+    @patch("iotlabcli.robot.robot_command")
+    @patch("iotlabcli.parser.common.list_nodes")
     def test_main_status(self, list_nodes, robot_command):
         """Run the parser.robot.main function for status commands."""
-        robot_command.return_value = {'result': 'test'}
+        robot_command.return_value = {"result": "test"}
 
         list_nodes.return_value = []
-        args = ['status']
+        args = ["status"]
         robot_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        robot_command.assert_called_with(self.api, 'status', 123, [])
+        robot_command.assert_called_with(self.api, "status", 123, [])
 
-        args = ['status', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
-        list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify
+        args = ["status", "-l", "grenoble,m3,1-2", "-l", "grenoble,m3,3"]
+        list_nodes.return_value = ["m3-1", "m3-2", "m3-3"]  # simplify
         robot_parser.main(args)
-        robot_command.assert_called_with(self.api, 'status', 123,
-                                         ['m3-1', 'm3-2', 'm3-3'])
+        robot_command.assert_called_with(
+            self.api, "status", 123, ["m3-1", "m3-2", "m3-3"]
+        )
 
-    @patch('iotlabcli.robot.robot_update_mobility')
-    @patch('iotlabcli.parser.common.list_nodes')
+    @patch("iotlabcli.robot.robot_update_mobility")
+    @patch("iotlabcli.parser.common.list_nodes")
     def test_main_update(self, list_nodes, robot_update_mobility):
         """Run the parser.robot.main function for update commands."""
-        robot_update_mobility.return_value = {'result': 'test'}
+        robot_update_mobility.return_value = {"result": "test"}
 
         list_nodes.return_value = []
-        args = ['update', '-n', 'traj']
+        args = ["update", "-n", "traj"]
         robot_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        robot_update_mobility.assert_called_with(
-            self.api, 123, 'traj', [])
+        robot_update_mobility.assert_called_with(self.api, 123, "traj", [])
 
-    @patch('iotlabcli.robot.circuit_command')
+    @patch("iotlabcli.robot.circuit_command")
     def test_main_mobility(self, circuit_command):
         """Run the parser.robot.main function for circuit commands."""
-        circuit_command.return_value = {'result': 'test'}
+        circuit_command.return_value = {"result": "test"}
 
         # List circuits
-        args = ['get', '--list']
+        args = ["get", "--list"]
         robot_parser.main(args)
-        circuit_command.assert_called_with(self.api, 'list')
+        circuit_command.assert_called_with(self.api, "list")
 
         # List mobility
-        args = ['get', '--list', '--site', 'grenoble', '--type', 'predefined']
+        args = ["get", "--list", "--site", "grenoble", "--type", "predefined"]
 
         robot_parser.main(args)
-        circuit_command.assert_called_with(self.api, 'list', site='grenoble',
-                                           type='predefined')
+        circuit_command.assert_called_with(
+            self.api, "list", site="grenoble", type="predefined"
+        )
 
         # Get mobility
-        args = ['get', '-n', 'site_name']
+        args = ["get", "-n", "site_name"]
         robot_parser.main(args)
-        circuit_command.assert_called_with(self.api, 'get', 'site_name')
+        circuit_command.assert_called_with(self.api, "get", "site_name")

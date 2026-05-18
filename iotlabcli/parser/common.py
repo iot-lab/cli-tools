@@ -19,12 +19,12 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Common parsing methods """
+"""Common parsing methods"""
 
-import sys
-import errno
 import argparse
 import contextlib
+import errno
+import sys
 from collections import OrderedDict
 
 # pylint: disable=wrong-import-order
@@ -38,15 +38,14 @@ except ImportError:  # pragma: no cover
 import jmespath
 
 import iotlabcli
-from iotlabcli import helpers
-from iotlabcli import rest
+from iotlabcli import helpers, rest
 
-DOMAIN_DNS = 'iot-lab.info'
+DOMAIN_DNS = "iot-lab.info"
 
 
 def base_parser(user_required=False):
-    """ Base parser giving 'user' 'password' and 'version' arguments
-    :param user_required: set 'user' argument as required or not """
+    """Base parser giving 'user' 'password' and 'version' arguments
+    :param user_required: set 'user' argument as required or not"""
     parser = argparse.ArgumentParser(add_help=False)
     add_auth_arguments(parser, user_required)
     add_version(parser)
@@ -56,32 +55,46 @@ def base_parser(user_required=False):
 
 
 def add_auth_arguments(parser, usr_required=False):
-    """ Add 'user' and 'password' arguments
-    :param user_required: set 'user' argument as required or not  """
-    parser.add_argument('-u', '--user', dest='username', required=usr_required)
-    parser.add_argument('-p', '--password', dest='password')
+    """Add 'user' and 'password' arguments
+    :param user_required: set 'user' argument as required or not"""
+    parser.add_argument("-u", "--user", dest="username", required=usr_required)
+    parser.add_argument("-p", "--password", dest="password")
 
 
 def add_version(parser):
-    """ Add 'version' argument """
+    """Add 'version' argument"""
     parser.add_argument(
-        '-v', '--version', action='version', version=iotlabcli.__version__)
+        "-v", "--version", action="version", version=iotlabcli.__version__
+    )
 
 
 def add_output_formatter(parser):
-    """ Add '--jmespath' argument """
+    """Add '--jmespath' argument"""
     group = parser.add_argument_group("Output Format")
-    group.add_argument('--jmespath', '--jp', type=jmespath.compile,
-                       help="Query output using `jmespath` syntax")
-    group.add_argument('--format', '--fmt', type=eval,
-                       help="Format function, default `helpers.json_dumps`")
+    group.add_argument(
+        "--jmespath",
+        "--jp",
+        type=jmespath.compile,
+        help="Query output using `jmespath` syntax",
+    )
+    group.add_argument(
+        "--format",
+        "--fmt",
+        type=eval,
+        help="Format function, default `helpers.json_dumps`",
+    )
 
 
 def add_expid_arg(parser, required=False):
     """Add '-i' / '--id' for 'experiment_id' option."""
-    parser.add_argument('-i', '--id', dest='experiment_id', type=int,
-                        required=required,
-                        help='experiment id submission')
+    parser.add_argument(
+        "-i",
+        "--id",
+        dest="experiment_id",
+        type=int,
+        required=required,
+        help="experiment id submission",
+    )
 
 
 class HelpAction(argparse.Action):
@@ -90,15 +103,18 @@ class HelpAction(argparse.Action):
     HELPMSG = None
 
     def __call__(self, parser, namespace, values, option_string=None):
-        print(self.HELPMSG, end='')
+        print(self.HELPMSG, end="")
         parser.exit()
 
     @classmethod
     def for_message(cls, msg):
         """Create action for help message."""
+
         class HelpActionWithMessage(cls):
             """Action with custom 'help' message."""
+
             HELPMSG = msg
+
         return HelpActionWithMessage
 
     @classmethod
@@ -114,8 +130,8 @@ class HelpAction(argparse.Action):
         parser.add_argument(name, action=action, nargs=0, help=description)
 
 
-def print_result(result, jmespath_expr=None, format_function=None):
-    """ Print result vule """
+def print_result(result, jmespath_expr=None, format_function=None):  # noqa: C901
+    """Print result vule"""
     format_function = format_function or helpers.json_dumps
 
     # early bail out if nothing was returned
@@ -142,8 +158,10 @@ def print_result(result, jmespath_expr=None, format_function=None):
 def catch_missing_auth_cli():
     """Catch HTTPError 401 and display a message on missing iotlab-auth."""
 
-    auth_cli_err = ("HTTP Error 401: Unauthorized: Wrong login/password\n\n"
-                    "\tRegister your login:password using `iotlab-auth`\n")
+    auth_cli_err = (
+        "HTTP Error 401: Unauthorized: Wrong login/password\n\n"
+        "\tRegister your login:password using `iotlab-auth`\n"
+    )
     try:
         yield
     except HTTPError as err:
@@ -153,8 +171,8 @@ def catch_missing_auth_cli():
         sys.exit(1)
 
 
-def main_cli(function, parser, args=None):  # flake8: noqa
-    """ Main command-line execution. """
+def main_cli(function, parser, args=None):  # noqa: C901
+    """Main command-line execution."""
     args = args or sys.argv[1:]
     try:
         with catch_missing_auth_cli():
@@ -177,13 +195,13 @@ def main_cli(function, parser, args=None):  # flake8: noqa
 
 
 def sites_list():
-    """ Return the list of sites """
+    """Return the list of sites"""
     sites_dict = rest.Api.get_sites()
     return [site["site"] for site in sites_dict["items"]]
 
 
 def check_site_with_server(site_name, _sites_list=None):
-    """ Check if the given site exists by requesting the server list.
+    """Check if the given site exists by requesting the server list.
     If sites_list is given, it is used instead of doing a remote request
 
     >>> _sites_list = ['strasbourg', 'grenoble']
@@ -196,13 +214,13 @@ def check_site_with_server(site_name, _sites_list=None):
     sites = _sites_list or sites_list()
     if site_name in sites:
         return  # site_name is valid
-    raise argparse.ArgumentTypeError(f'Unknown site name {site_name!r}')
+    raise argparse.ArgumentTypeError(f"Unknown site name {site_name!r}")
 
 
 def site_with_domain_checked(site, domain=DOMAIN_DNS):
     """Return site with domain and check site exists."""
     check_site_with_server(site)
-    return f'{site}.{domain}'
+    return f"{site}.{domain}"
 
 
 def nodes_list_from_info(site, archi, nodes_str):
@@ -231,23 +249,23 @@ def nodes_list_from_info(site, archi, nodes_str):
 
 
 def nodes_id_list(archi, nodes_list):
-    """ Expand short nodes_list 'archi', '1-5+6+8-12'
+    """Expand short nodes_list 'archi', '1-5+6+8-12'
     to a regular nodes list
     """
 
     nodes_num_list = expand_short_nodes_list(nodes_list)
 
-    node_fmt = f'{archi}-%u'
+    node_fmt = f"{archi}-%u"
     nodes = [node_fmt % num for num in nodes_num_list]
 
     return nodes
 
 
 def _expand_minus_str(minus_nodes_str):
-    """ Expand a '1-5' or '6' string to a list on integer
+    """Expand a '1-5' or '6' string to a list on integer
     :raises: ValueError on invalid values
     """
-    minus_node = minus_nodes_str.split('-')
+    minus_node = minus_nodes_str.split("-")
     res = None
     if len(minus_node) == 1:
         # ['6']
@@ -266,7 +284,7 @@ def _expand_minus_str(minus_nodes_str):
 
 
 def expand_short_nodes_list(nodes_str):
-    """ Expand short nodes_list '1-5+6+8-12' to a regular nodes list
+    """Expand short nodes_list '1-5+6+8-12' to a regular nodes list
 
     >>> expand_short_nodes_list('1-4+6+7-8')
     [1, 2, 3, 4, 6, 7, 8]
@@ -290,29 +308,41 @@ def expand_short_nodes_list(nodes_str):
 
     try:
         # '1-4+6+8-8'
-        nodes_ll = [_expand_minus_str(minus_nodes_str) for minus_nodes_str in
-                    nodes_str.split('+')]
+        nodes_ll = [
+            _expand_minus_str(minus_nodes_str)
+            for minus_nodes_str in nodes_str.split("+")
+        ]
         # [[1, 2, 3], [6], [12]]
         return helpers.flatten_list_list(nodes_ll)
     except ValueError:
         # invalid: 6-3 or 6-7-8 or non int values
-        raise ValueError(f'Invalid nodes list: {nodes_str} ([0-9+-])')
+        raise ValueError(f"Invalid nodes list: {nodes_str} ([0-9+-])")
 
 
 def add_nodes_selection_list(parser):
-    """ Add '-l' and '-e' experiment nodes selection """
+    """Add '-l' and '-e' experiment nodes selection"""
     list_group = parser.add_mutually_exclusive_group()
 
     list_group.add_argument(
-        '-e', '--exclude', action='append', type=nodes_list_from_str,
-        dest='exclude_nodes_list', help='exclude nodes list')
+        "-e",
+        "--exclude",
+        action="append",
+        type=nodes_list_from_str,
+        dest="exclude_nodes_list",
+        help="exclude nodes list",
+    )
     list_group.add_argument(
-        '-l', '--list', action='append', type=nodes_list_from_str,
-        dest='nodes_list', help='nodes list')
+        "-l",
+        "--list",
+        action="append",
+        type=nodes_list_from_str,
+        dest="nodes_list",
+        help="nodes list",
+    )
 
 
 def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
-    """ Return the list of nodes where the command will apply """
+    """Return the list of nodes where the command will apply"""
 
     if nodes_ll is not None:
         # flatten lists into one
@@ -332,14 +362,14 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
 
 
 def _get_experiment_nodes_list(api, exp_id):
-    """ Get the nodes_list for given experiment"""
-    exp_nodes = api.get_experiment_info(exp_id, 'nodes')
+    """Get the nodes_list for given experiment"""
+    exp_nodes = api.get_experiment_info(exp_id, "nodes")
     nodes = [res["network_address"] for res in exp_nodes["items"]]
     return nodes
 
 
 def nodes_list_from_str(nodes_list_str):
-    """ Convert the nodes_list_str to a list of nodes hostname
+    """Convert the nodes_list_str to a list of nodes hostname
     Checks that given site exist
     :param nodes_list_str: short nodes format: site_name,archi,node_id_list
                            example: 'grenoble,m3,1-34+72'
@@ -347,9 +377,10 @@ def nodes_list_from_str(nodes_list_str):
     """
     try:
         # 'grenoble,m3,1-34+72' -> ['grenoble', 'm3', '1-34+72']
-        site, archi, nodes_str = nodes_list_str.split(',')
+        site, archi, nodes_str = nodes_list_str.split(",")
     except ValueError:
         raise argparse.ArgumentTypeError(
-            f'Invalid number of argument in nodes list: {nodes_list_str!r}')
+            f"Invalid number of argument in nodes list: {nodes_list_str!r}"
+        )
     check_site_with_server(site)  # needs an external request
     return nodes_list_from_info(site, archi, nodes_str)

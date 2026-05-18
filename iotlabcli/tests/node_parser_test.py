@@ -19,7 +19,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.parser.node module """
+"""Test the iotlabcli.parser.node module"""
 
 import iotlabcli.parser.node as node_parser
 from iotlabcli.tests.my_mock import MainMock
@@ -30,113 +30,121 @@ from .c23 import patch
 # pylint: disable=too-few-public-methods
 
 
-@patch('iotlabcli.node.node_command')
-@patch('iotlabcli.parser.common.list_nodes')
+@patch("iotlabcli.node.node_command")
+@patch("iotlabcli.parser.common.list_nodes")
 class TestMainNodeParser(MainMock):
-    """ Test iotlab-node main parser """
+    """Test iotlab-node main parser"""
+
     def test_main(self, list_nodes, node_command):
-        """ Run the parser.node.main function """
-        node_command.return_value = {'result': 'test'}
+        """Run the parser.node.main function"""
+        node_command.return_value = {"result": "test"}
         list_nodes.return_value = []
 
         # start
-        args = ['--start']
+        args = ["--start"]
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'start', 123, [], None)
+        node_command.assert_called_with(self.api, "start", 123, [], None)
         # stop
-        args = ['--stop']
+        args = ["--stop"]
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'stop', 123, [], None)
+        node_command.assert_called_with(self.api, "stop", 123, [], None)
 
         # debug-start
-        args = ['--debug-start']
+        args = ["--debug-start"]
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'debug-start', 123, [], None)
+        node_command.assert_called_with(self.api, "debug-start", 123, [], None)
         # debug-stop
-        args = ['--debug-stop']
+        args = ["--debug-stop"]
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'debug-stop', 123, [], None)
+        node_command.assert_called_with(self.api, "debug-stop", 123, [], None)
 
         # Reset command with many arguments
-        args = ['--reset', '-l', 'grenoble,m3,1-2', '-l', 'grenoble,m3,3']
-        list_nodes.return_value = ['m3-1', 'm3-2', 'm3-3']  # simplify
+        args = ["--reset", "-l", "grenoble,m3,1-2", "-l", "grenoble,m3,3"]
+        list_nodes.return_value = ["m3-1", "m3-2", "m3-3"]  # simplify
         node_parser.main(args)
         list_nodes.assert_called_with(
-            self.api, 123,
-            [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info'],
-             ['m3-3.grenoble.iot-lab.info']], None)
+            self.api,
+            123,
+            [
+                ["m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info"],
+                ["m3-3.grenoble.iot-lab.info"],
+            ],
+            None,
+        )
         node_command.assert_called_with(
-            self.api, 'reset', 123, ['m3-1', 'm3-2', 'm3-3'], None)
+            self.api, "reset", 123, ["m3-1", "m3-2", "m3-3"], None
+        )
 
     def test_main_update(self, list_nodes, node_command):
         """Run the parser.node.main function regarding update."""
-        node_command.return_value = {'result': 'test'}
+        node_command.return_value = {"result": "test"}
         list_nodes.return_value = []
 
         # update with exclude list
-        args = ['--flash', 'tp.elf', '-e', 'grenoble,m3,1-2']
-        list_nodes.return_value = ['m3-3']  # simplify
+        args = ["--flash", "tp.elf", "-e", "grenoble,m3,1-2"]
+        list_nodes.return_value = ["m3-3"]  # simplify
         node_parser.main(args)
         list_nodes.assert_called_with(
-            self.api, 123, None,
-            [['m3-1.grenoble.iot-lab.info', 'm3-2.grenoble.iot-lab.info']])
-        node_command.assert_called_with(
-            self.api, 'flash', 123, ['m3-3'], 'tp.elf')
+            self.api,
+            123,
+            None,
+            [["m3-1.grenoble.iot-lab.info", "m3-2.grenoble.iot-lab.info"]],
+        )
+        node_command.assert_called_with(self.api, "flash", 123, ["m3-3"], "tp.elf")
 
         # update idle
         node_command.reset_mock()
-        args = ['--flash-idle']
+        args = ["--flash-idle"]
         list_nodes.return_value = []
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'flash-idle', 123, [], None)
+        node_command.assert_called_with(self.api, "flash-idle", 123, [], None)
 
     def test_deprecated_option(self, list_nodes, node_command):
         """Run the parser.node.main with deprecated option."""
-        node_command.return_value = {'result': 'test'}
-        args = ['--update', 'tp.elf']
-        list_nodes.return_value = ['m3-3']
+        node_command.return_value = {"result": "test"}
+        args = ["--update", "tp.elf"]
+        list_nodes.return_value = ["m3-3"]
         node_parser.main(args)
-        node_command.assert_called_with(
-            self.api, 'flash', 123, ['m3-3'], 'tp.elf')
+        node_command.assert_called_with(self.api, "flash", 123, ["m3-3"], "tp.elf")
 
         # update idle
         node_command.reset_mock()
-        args = ['--update-idle']
+        args = ["--update-idle"]
         list_nodes.return_value = []
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'flash-idle', 123, [], None)
+        node_command.assert_called_with(self.api, "flash-idle", 123, [], None)
 
     def test_main_profile(self, list_nodes, node_command):
         """Run the parser.node.main function regarding profile."""
-        node_command.return_value = {'result': 'test'}
+        node_command.return_value = {"result": "test"}
         list_nodes.return_value = []
 
         # profile update
-        args = ['--profile', 'profm3']
+        args = ["--profile", "profm3"]
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'profile', 123, [], 'profm3')
+        node_command.assert_called_with(self.api, "profile", 123, [], "profm3")
 
         # profile-load
         node_command.reset_mock()
-        args = ['--profile-load', 'profile.json']
+        args = ["--profile-load", "profile.json"]
         list_nodes.return_value = []
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'profile-load', 123, [],
-                                        'profile.json')
+        node_command.assert_called_with(
+            self.api, "profile-load", 123, [], "profile.json"
+        )
 
         # profile-reset
         node_command.reset_mock()
-        args = ['--profile-reset']
+        args = ["--profile-reset"]
         list_nodes.return_value = []
         node_parser.main(args)
         list_nodes.assert_called_with(self.api, 123, None, None)
-        node_command.assert_called_with(self.api, 'profile-reset', 123, [],
-                                        None)
+        node_command.assert_called_with(self.api, "profile-reset", 123, [], None)

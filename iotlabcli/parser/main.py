@@ -57,16 +57,15 @@ except (ImportError, SyntaxError, TypeError):
 
 
 def parse_subcommands(commands, args):
-    """ common function to parse `iotlab` or other with subcommands """
+    """common function to parse `iotlab` or other with subcommands"""
 
     parser = ArgumentParser()
-    commands['help'] = lambda args: parser.print_help()
-    parser.add_argument('command', nargs='?',
-                        choices=commands.keys(), default='help')
+    commands["help"] = lambda args: parser.print_help()
+    parser.add_argument("command", nargs="?", choices=commands.keys(), default="help")
 
     opts, _ = parser.parse_known_args(args[:1])
 
-    sys.argv[0] = f'iotlab {opts.command}'
+    sys.argv[0] = f"iotlab {opts.command}"
     return commands[opts.command](args[1:])
 
 
@@ -74,9 +73,9 @@ def oml_plot(args):
     """'iotlab oml-plot' main function."""
 
     commands = {
-        'consum': oml_plot_tools.consum.main,
-        'radio': oml_plot_tools.radio.main,
-        'traj': oml_plot_tools.traj.main
+        "consum": oml_plot_tools.consum.main,
+        "radio": oml_plot_tools.radio.main,
+        "traj": oml_plot_tools.traj.main,
     }
     parse_subcommands(commands, args)
 
@@ -86,19 +85,19 @@ def main(args=None):
     args = args or sys.argv[1:]
 
     commands = {
-        'auth': iotlabcli.parser.auth.main,
-        'experiment': iotlabcli.parser.experiment.main,
-        'node': iotlabcli.parser.node.main,
-        'profile': iotlabcli.parser.profile.main,
-        'robot': iotlabcli.parser.robot.main,
-        'status': iotlabcli.parser.status.main
+        "auth": iotlabcli.parser.auth.main,
+        "experiment": iotlabcli.parser.experiment.main,
+        "node": iotlabcli.parser.node.main,
+        "profile": iotlabcli.parser.profile.main,
+        "robot": iotlabcli.parser.robot.main,
+        "status": iotlabcli.parser.status.main,
     }
     if iotlabaggregator:
-        commands['serial'] = iotlabaggregator.serial.main
-        commands['sniffer'] = iotlabaggregator.sniffer.main
+        commands["serial"] = iotlabaggregator.serial.main
+        commands["sniffer"] = iotlabaggregator.sniffer.main
     if oml_plot_tools:
-        commands['plot'] = oml_plot
+        commands["plot"] = oml_plot
     if iotlabsshcli:
-        commands['ssh'] = iotlabsshcli.parser.open_linux_parser.main
+        commands["ssh"] = iotlabsshcli.parser.open_linux_parser.main
 
     return parse_subcommands(commands, args)

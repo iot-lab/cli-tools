@@ -20,34 +20,43 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """Helpers methods"""
+
 import hashlib
-import sys
-import os
-import json
 import itertools
+import json
+import os
+import sys
 import warnings
 
-OAR_STATES = ["Waiting", "toLaunch", "Launching",
-              "Running",
-              "Finishing",
-              "Terminated", "Stopped", "Error"]
-ACTIVE_STATES = OAR_STATES[OAR_STATES.index('Running')::-1]
+OAR_STATES = [
+    "Waiting",
+    "toLaunch",
+    "Launching",
+    "Running",
+    "Finishing",
+    "Terminated",
+    "Stopped",
+    "Error",
+]
+ACTIVE_STATES = OAR_STATES[OAR_STATES.index("Running") :: -1]
 
-DEPRECATION_MESSAGE = ("{old_cmd} command is deprecated and will be removed "
-                       "in next release. Please \033[1muse {new_cmd} "
-                       "instead\033[0m.\n\n")
+DEPRECATION_MESSAGE = (
+    "{old_cmd} command is deprecated and will be removed "
+    "in next release. Please \033[1muse {new_cmd} "
+    "instead\033[0m.\n\n"
+)
 
 
 def get_current_experiment(api, experiment_id=None, running_only=True):
-    """ Return the given experiment or get the currently running one.
+    """Return the given experiment or get the currently running one.
     If running_only is false, try to return the experiment the most advanced
-    Waiting < toLaunch < Launching < Running """
+    Waiting < toLaunch < Launching < Running"""
     if experiment_id is not None:
         return experiment_id
 
     if running_only:
         # no experiment given, try to find the currently running one
-        states = ['Running']
+        states = ["Running"]
     else:
         # or experiment that are starting (from waiting to Running')
         states = ACTIVE_STATES
@@ -60,22 +69,22 @@ def get_current_experiment(api, experiment_id=None, running_only=True):
 
 
 def exps_by_states_dict(api, states):
-    """ Return current experiment in `states` as a per state dict """
+    """Return current experiment in `states` as a per state dict"""
 
     # exps == [{'state': 'Waiting', 'id': 10134, ...},
     #          {'state': 'Waiting', 'id': 10135, ...},
     #          {'state': 'Running', 'id': 10130, ...}]
-    exps = api.get_experiments(state=','.join(states))['items']
+    exps = api.get_experiments(state=",".join(states))["items"]
 
     exp_states_d = {}
     for exp in exps:
-        exp_states_d.setdefault(str(exp['state']), []).append(exp['id'])
+        exp_states_d.setdefault(str(exp["state"]), []).append(exp["id"])
 
     return exp_states_d  # {'Waiting': [10134, 10135], 'Running': [10130]}
 
 
 def get_current_exp(exp_by_states, states):  # noqa: C901
-    """ Current experiment is the first state in `states` where there is only
+    """Current experiment is the first state in `states` where there is only
     one experiment in `exp_by_states`.
     :raises: ValueError if there is no experiment or if there are multiple
              experiments of the same state
@@ -106,7 +115,7 @@ def get_current_exp(exp_by_states, states):  # noqa: C901
     ValueError: You have no 'Running, ..., Waiting' experiment
 
     """
-    states_str = ', '.join(states)
+    states_str = ", ".join(states)
 
     res = None
     for state in states:  # keep order of states
@@ -148,10 +157,10 @@ def node_url_sort_key(node_url):
     """
     if node_url.isdigit():
         return int(node_url)
-    _node, _, domain = node_url.partition('.')
-    site = domain.split('.')[0]
+    _node, _, domain = node_url.partition(".")
+    site = domain.split(".")[0]
 
-    node_type, num_str = _node.rsplit('-', 1)
+    node_type, num_str = _node.rsplit("-", 1)
     return site, node_type, int(num_str)
 
 
@@ -163,19 +172,20 @@ def md5(data):
 
 
 class FilesDict(dict):
-    """ Dictionary to store experiment files.
+    """Dictionary to store experiment files.
     We don't want adding two different values for the same key,
     so __setitem__ is overriden to check that
     """
+
     def __init__(self):
         dict.__init__(self)
 
     def __setitem__(self, key, val):
-        """ Prevent adding a new different value to an existing key """
+        """Prevent adding a new different value to an existing key"""
         if key not in self:
             dict.__setitem__(self, key, val)
         elif self[key] != val:
-            raise ValueError(f'Has different values for same key {key!r}')
+            raise ValueError(f"Has different values for same key {key!r}")
 
     def add_file(self, file_path):
         """Add a file to the dictionary.
@@ -188,13 +198,13 @@ class FilesDict(dict):
         if file_path is None:
             return None
         key = os.path.basename(file_path)
-        value = read_file(file_path, 'b')
+        value = read_file(file_path, "b")
         try:
             self[key] = value
         except ValueError:
             # use md5 hash as prefix to handle duplicated basenames
             # with different contents
-            key = f'{md5(value)}_{key}'
+            key = f"{md5(value)}_{key}"
             self[key] = value
 
         return key
@@ -216,30 +226,30 @@ class FilesDict(dict):
 
 
 def read_custom_api_url():
-    """ Return the customized api url from:
-     * config file in <HOME_DIR>/.iotlab.api-url
-     * or environment variable IOTLAB_API_URL
+    """Return the customized api url from:
+    * config file in <HOME_DIR>/.iotlab.api-url
+    * or environment variable IOTLAB_API_URL
     """
     try:
         # try getting url from config file
-        api_url = read_file('~/.iotlab.api-url').strip()
+        api_url = read_file("~/.iotlab.api-url").strip()
     except IOError:
         # try getting url from environment variable, None if undefined
-        api_url = os.getenv('IOTLAB_API_URL')
+        api_url = os.getenv("IOTLAB_API_URL")
 
     if api_url:
         sys.stderr.write(f"Using custom api_url: {api_url}\n")
     return api_url
 
 
-def read_file(file_path, opt=''):
-    """ Open and read a file """
-    with open(os.path.expanduser(file_path), 'r' + opt) as _fd:  # expand '~'
+def read_file(file_path, opt=""):
+    """Open and read a file"""
+    with open(os.path.expanduser(file_path), "r" + opt) as _fd:  # expand '~'
         return _fd.read()
 
 
 def check_experiment_state(state_str=None):
-    """ Check that given states are valid if None given, return all states
+    """Check that given states are valid if None given, return all states
 
     >>> check_experiment_state('Running')
     'Running'
@@ -252,25 +262,28 @@ def check_experiment_state(state_str=None):
     Traceback (most recent call last):
     ValueError: Invalid experiment states: ['invalid'] should be in [...].
     """
-    state_str = state_str or ','.join(OAR_STATES)  # default to all states
+    state_str = state_str or ",".join(OAR_STATES)  # default to all states
 
     # Check states are all in OAR_STATES
-    invalid = set(state_str.split(',')) - set(OAR_STATES)
+    invalid = set(state_str.split(",")) - set(OAR_STATES)
     if invalid:
         raise ValueError(
-            f'Invalid experiment states: {sorted(list(invalid))} '
-            f'should be in {OAR_STATES}.'
+            f"Invalid experiment states: {sorted(list(invalid))} "
+            f"should be in {OAR_STATES}."
         )
 
     return state_str
 
 
 def json_dumps(obj):
-    """ Dumps data to json """
+    """Dumps data to json"""
+
     class _Encoder(json.JSONEncoder):  # pylint: disable=too-few-public-methods
-        """ Encoder for serialization object python to JSON format """
+        """Encoder for serialization object python to JSON format"""
+
         def default(self, o):  # pylint: disable=method-hidden
             return o.__dict__
+
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
 
@@ -284,10 +297,13 @@ def flatten_list_list(list_list):
 
 
 def deprecate_warn_cmd(old_cmd, new_cmd, stacklevel):
-    """ Display a deprecation warning message """
-    warnings.simplefilter('always', DeprecationWarning)
-    warnings.warn(DEPRECATION_MESSAGE.format(old_cmd=old_cmd, new_cmd=new_cmd),
-                  DeprecationWarning, stacklevel)
+    """Display a deprecation warning message"""
+    warnings.simplefilter("always", DeprecationWarning)
+    warnings.warn(
+        DEPRECATION_MESSAGE.format(old_cmd=old_cmd, new_cmd=new_cmd),
+        DeprecationWarning,
+        stacklevel,
+    )
 
 
 def deprecate_cmd(cmd_func, old_cmd, new_cmd):

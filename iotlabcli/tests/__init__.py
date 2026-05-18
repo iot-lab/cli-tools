@@ -20,6 +20,7 @@
 # knowledge of the CeCILL license and that you accept its terms.
 
 """Tests for iotlabcli package."""
+
 import os.path
 
 

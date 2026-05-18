@@ -1,4 +1,4 @@
-""" iotlabcli package implementing a cli for iotlab REST API """
+"""iotlabcli package implementing a cli for iotlab REST API"""
 
 # This file is a part of IoT-LAB cli-tools
 # Copyright (C) 2015 INRIA (Contact: admin@iot-lab.info)
@@ -22,8 +22,7 @@
 # flake8: noqa
 # simpler access for external usage
 from iotlabcli.auth import get_user_credentials
-from iotlabcli.rest import Api
 from iotlabcli.helpers import get_current_experiment
+from iotlabcli.rest import Api
 
-
-__version__ = '3.3.0-dev0'
+__version__ = "3.3.0-dev0"

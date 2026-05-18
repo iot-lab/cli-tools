@@ -19,22 +19,23 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Implement the 'node' requests """
+"""Implement the 'node' requests"""
 
 import json
+
 from iotlabcli import helpers
 
-NODE_FILENAME = 'nodes.json'
-EXPERIMENT = 'experiment.json'
+NODE_FILENAME = "nodes.json"
+EXPERIMENT = "experiment.json"
 
 
 def _node_command_flash(api, exp_id, nodes_list, cmd_opt):
-    assert cmd_opt is not None, '`cmd_opt` required for update'
+    assert cmd_opt is not None, "`cmd_opt` required for update"
     files = helpers.FilesDict()
 
     files.add_file(cmd_opt)
-    if cmd_opt.endswith('.bin'):
-        files[EXPERIMENT] = json.dumps({'nodes': nodes_list, 'offset': 0})
+    if cmd_opt.endswith(".bin"):
+        files[EXPERIMENT] = json.dumps({"nodes": nodes_list, "offset": 0})
         return api.node_update(exp_id, files, binary=True)
 
     files[NODE_FILENAME] = json.dumps(nodes_list)
@@ -42,7 +43,7 @@ def _node_command_flash(api, exp_id, nodes_list, cmd_opt):
 
 
 def _node_command_profile_load(api, exp_id, nodes_list, cmd_opt):
-    assert cmd_opt is not None, '`cmd_opt` required for update'
+    assert cmd_opt is not None, "`cmd_opt` required for update"
     files = helpers.FilesDict()
 
     files.add_file(cmd_opt)
@@ -51,7 +52,7 @@ def _node_command_profile_load(api, exp_id, nodes_list, cmd_opt):
 
 
 def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
-    """ Launch commands (start, stop, reset, update)
+    """Launch commands (start, stop, reset, update)
     on nodes (JSONArray) user experiment
 
     :param api: API Rest api object
@@ -61,18 +62,26 @@ def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
                        Empty list runs on all nodes
     :param cmd_opt: Firmware path for update, profile name for profile
     """
-    assert command in ('flash', 'flash-idle',
-                       'profile', 'profile-load', 'profile-reset',
-                       'start', 'stop', 'reset',
-                       'debug-start', 'debug-stop')
+    assert command in (
+        "flash",
+        "flash-idle",
+        "profile",
+        "profile-load",
+        "profile-reset",
+        "start",
+        "stop",
+        "reset",
+        "debug-start",
+        "debug-stop",
+    )
 
     result = None
-    if command == 'flash':
+    if command == "flash":
         result = _node_command_flash(api, exp_id, nodes_list, cmd_opt)
-    elif command == 'profile-load':
+    elif command == "profile-load":
         result = _node_command_profile_load(api, exp_id, nodes_list, cmd_opt)
-    elif command == 'profile':
-        result = api.node_command('monitoring', exp_id, nodes_list, cmd_opt)
+    elif command == "profile":
+        result = api.node_command("monitoring", exp_id, nodes_list, cmd_opt)
     else:
         result = api.node_command(command, exp_id, nodes_list)
 

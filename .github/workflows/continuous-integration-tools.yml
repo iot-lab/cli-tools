@@ -20,12 +20,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.9]
+        python-version: ['3.13']
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -34,8 +34,8 @@ jobs:
         python -m pip install tox
     - name: Test sub tools
       run: |
-          tox -e py$(echo ${{ matrix.python-version }} | tr -d .)-tools
+        tox -e py$(echo ${{ matrix.python-version }} | tr -d .)-tools
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v4
       with:
         fail_ci_if_error: true

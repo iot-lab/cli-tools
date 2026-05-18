@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "iotlabcli"
+dynamic = ["version"]
+description = "IoT-LAB testbed command-line client"
+readme = "README.rst"
+license = {text = "CeCILL v2.1"}
+authors = [{name = "IoT-LAB Team", email = "admin@iot-lab.info"}]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: End Users/Desktop",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "requests>2.4.2",
+    "jmespath",
+]
+
+[project.optional-dependencies]
+secure = ["pyOpenSSL", "ndg-httpsclient", "pyasn1"]
+
+[project.urls]
+Homepage = "https://www.iot-lab.info"
+Repository = "https://github.com/iot-lab/cli-tools"
+Download = "https://github.com/iot-lab/cli-tools/"
+
+[project.scripts]
+iotlab = "iotlabcli.parser.main:main"
+iotlab-auth = "iotlabcli.parser.auth:main"
+iotlab-experiment = "iotlabcli.parser.experiment:main"
+iotlab-node = "iotlabcli.parser.node:main"
+iotlab-profile = "iotlabcli.parser.profile:main"
+iotlab-robot = "iotlabcli.parser.robot:main"
+iotlab-status = "iotlabcli.parser.status:main"
+
+[tool.hatch.version]
+path = "iotlabcli/__init__.py"
+
+[tool.pytest.ini_options]
+addopts = "-v --ignore iotlabcli/integration --junit-xml=test-report.xml --doctest-modules"
+testpaths = ["iotlabcli"]
+junit_family = "legacy"
+
+[tool.pylint."messages control"]
+disable = ["bad-option-value", "raise-missing-from", "unspecified-encoding"]
+
+[tool.pylint.reports]
+reports = false
+msg-template = "{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C901"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 4
+
+[tool.isort]
+profile = "black"

@@ -1,5 +1,0 @@
-# include help .md files
-include iotlabcli/parser/help/*
-include CHANGELOG.rst
-include AUTHORS
-include COPYING

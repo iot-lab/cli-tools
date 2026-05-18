@@ -19,7 +19,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.parser.status module """
+"""Test the iotlabcli.parser.status module"""
 
 import iotlabcli.parser.status as status_parser
 from iotlabcli.tests.my_mock import MainMock
@@ -27,36 +27,36 @@ from iotlabcli.tests.my_mock import MainMock
 from .c23 import patch
 
 
-@patch('iotlabcli.status.status_command')
+@patch("iotlabcli.status.status_command")
 class TestMainStatusParser(MainMock):
-    """ Test iotlab-status main parser """
+    """Test iotlab-status main parser"""
+
     def test_main(self, status_command):
-        """ Run the parser.status.main function """
-        status_command.return_value = {'result': 'test'}
+        """Run the parser.status.main function"""
+        status_command.return_value = {"result": "test"}
 
         # sites
-        args = ['--sites']
+        args = ["--sites"]
         status_parser.main(args)
-        status_command.assert_called_with(self.api, 'sites')
+        status_command.assert_called_with(self.api, "sites")
         # nodes
-        args = ['--nodes']
+        args = ["--nodes"]
         status_parser.main(args)
-        status_command.assert_called_with(self.api, 'nodes')
+        status_command.assert_called_with(self.api, "nodes")
         # nodes
-        args = ['--nodes-ids']
+        args = ["--nodes-ids"]
         status_parser.main(args)
-        status_command.assert_called_with(self.api, 'nodes-ids')
+        status_command.assert_called_with(self.api, "nodes-ids")
         # experiments
-        args = ['--experiments-running']
+        args = ["--experiments-running"]
         status_parser.main(args)
-        status_command.assert_called_with(self.api, 'experiments')
+        status_command.assert_called_with(self.api, "experiments")
 
         # Use other selections
-        status_parser.main(['--nodes', '--archi', 'm3',
-                            '--state', 'Alive'])
-        status_command.assert_called_with(self.api, 'nodes', archi='m3',
-                                          state='Alive')
+        status_parser.main(["--nodes", "--archi", "m3", "--state", "Alive"])
+        status_command.assert_called_with(self.api, "nodes", archi="m3", state="Alive")
 
-        status_parser.main(['--nodes-ids', '--site', 'lille', '--archi', 'm3'])
-        status_command.assert_called_with(self.api, 'nodes-ids', site='lille',
-                                          archi='m3')
+        status_parser.main(["--nodes-ids", "--site", "lille", "--archi", "m3"])
+        status_command.assert_called_with(
+            self.api, "nodes-ids", site="lille", archi="m3"
+        )
