@@ -19,7 +19,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.status module """
+"""Test the iotlabcli.status module"""
 
 # pylint: disable=too-many-public-methods
 # Issues with 'mock'
@@ -31,31 +31,32 @@ from iotlabcli.tests import my_mock
 
 
 class TestStatus(unittest.TestCase):
-    """ Test the 'iotlabcli.status' module """
+    """Test the 'iotlabcli.status' module"""
+
     def tearDown(self):
         my_mock.api_mock_stop()
 
     def test_status_command(self):
-        """ Test 'status_command' """
+        """Test 'status_command'"""
 
         api = my_mock.api_mock()
 
         api.reset_mock()
-        res = status.status_command(api, 'sites')
+        res = status.status_command(api, "sites")
         self.assertEqual(my_mock.API_RET, res)
         api.get_sites_details.assert_called()
 
         api.reset_mock()
-        res = status.status_command(api, 'nodes')
+        res = status.status_command(api, "nodes")
         self.assertEqual(my_mock.API_RET, res)
         api.get_nodes.assert_called()
 
         api.reset_mock()
-        res = status.status_command(api, 'nodes-ids', site='grenoble')
+        res = status.status_command(api, "nodes-ids", site="grenoble")
         self.assertEqual(my_mock.API_RET, res)
-        api.get_nodes.assert_called_with(list_id=True, site='grenoble')
+        api.get_nodes.assert_called_with(list_id=True, site="grenoble")
 
         api.reset_mock()
-        res = status.status_command(api, 'experiments')
+        res = status.status_command(api, "experiments")
         self.assertEqual(my_mock.API_RET, res)
         api.get_running_experiments.assert_called()

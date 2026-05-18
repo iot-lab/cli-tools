@@ -21,15 +21,13 @@
 
 """Status parser"""
 
-import sys
 import argparse
+import sys
 from argparse import RawTextHelpFormatter
 
-from iotlabcli import rest
-from iotlabcli import auth
 import iotlabcli.status
-from iotlabcli.parser import help_msgs
-from iotlabcli.parser import common
+from iotlabcli import auth, rest
+from iotlabcli.parser import common, help_msgs
 
 STATUS_PARSER = """
 
@@ -54,55 +52,84 @@ Examples:
 
 
 def parse_options():
-    """ Handle iotlab-status command-line options with argparse """
+    """Handle iotlab-status command-line options with argparse"""
 
     parent_parser = common.base_parser()
     # We create top level parser
-    epilog_msg = help_msgs.PARSER_EPILOG.format(cli='status',
-                                                option='--sites')
+    epilog_msg = help_msgs.PARSER_EPILOG.format(cli="status", option="--sites")
     epilog_msg += STATUS_EPILOG
     parser = argparse.ArgumentParser(
         description=STATUS_PARSER,
-        parents=[parent_parser], formatter_class=RawTextHelpFormatter,
+        parents=[parent_parser],
+        formatter_class=RawTextHelpFormatter,
         epilog=epilog_msg,
     )
 
-    parser.set_defaults(command='with_argument')
+    parser.set_defaults(command="with_argument")
     status_group = parser.add_mutually_exclusive_group(required=True)
     status_group.add_argument(
-        '-s', '--sites', help='get testbed sites list', const='sites',
-        dest='command', action='store_const')
+        "-s",
+        "--sites",
+        help="get testbed sites list",
+        const="sites",
+        dest="command",
+        action="store_const",
+    )
 
     status_group.add_argument(
-        '-n', '--nodes', help='get testbed nodes list', const='nodes',
-        dest='command', action='store_const')
+        "-n",
+        "--nodes",
+        help="get testbed nodes list",
+        const="nodes",
+        dest="command",
+        action="store_const",
+    )
 
     status_group.add_argument(
-        '-ni', '--nodes-ids', help='get testbed nodes ids list (1-3+5)',
-        const='nodes-ids', dest='command', action='store_const')
+        "-ni",
+        "--nodes-ids",
+        help="get testbed nodes ids list (1-3+5)",
+        const="nodes-ids",
+        dest="command",
+        action="store_const",
+    )
 
     status_group.add_argument(
-        '-er', '--experiments-running',
-        help='get testbed running experiments list', const='experiments',
-        dest='command', action='store_const')
+        "-er",
+        "--experiments-running",
+        help="get testbed running experiments list",
+        const="experiments",
+        dest="command",
+        action="store_const",
+    )
 
-    parser.add_argument('--site',
-                        action='append', dest='nodes_selection',
-                        type=lambda x: ('site', x),
-                        help='testbed nodes list filter by site')
-    parser.add_argument('--archi',
-                        action='append', dest='nodes_selection',
-                        type=lambda x: ('archi', x),
-                        help='testbed nodes list filter by architecture')
-    parser.add_argument('--state', action='append', dest='nodes_selection',
-                        type=lambda x: ('state', x),
-                        help='testbed nodes list filter by state')
+    parser.add_argument(
+        "--site",
+        action="append",
+        dest="nodes_selection",
+        type=lambda x: ("site", x),
+        help="testbed nodes list filter by site",
+    )
+    parser.add_argument(
+        "--archi",
+        action="append",
+        dest="nodes_selection",
+        type=lambda x: ("archi", x),
+        help="testbed nodes list filter by architecture",
+    )
+    parser.add_argument(
+        "--state",
+        action="append",
+        dest="nodes_selection",
+        type=lambda x: ("state", x),
+        help="testbed nodes list filter by state",
+    )
 
     return parser
 
 
 def status_parse_and_run(opts):
-    """ Parse namespace 'opts' object and execute requested command """
+    """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
     selection = dict(opts.nodes_selection or ())
@@ -110,7 +137,7 @@ def status_parse_and_run(opts):
 
 
 def main(args=None):
-    """ Main command-line execution loop." """
+    """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(status_parse_and_run, parser, args)

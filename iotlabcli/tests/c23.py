@@ -29,18 +29,19 @@
 # flake8: noqa
 
 from sys import version_info
+
 if version_info[0] == 2:  # pragma: no cover
     # python2
-    from urllib2 import HTTPError
     import mock
     from cStringIO import StringIO
+    from urllib2 import HTTPError
 elif version_info[0] == 3:  # pragma: no cover
     # python3
-    from urllib.error import HTTPError
-    from unittest import mock
     from io import StringIO
+    from unittest import mock
+    from urllib.error import HTTPError
 else:  # pragma: no cover
-    raise ValueError(f'Unknown python version {version_info!r}')
+    raise ValueError(f"Unknown python version {version_info!r}")
 
 # pylint:disable=wrong-import-position
-from mock import patch, Mock, mock_open  # noqa
+from mock import Mock, mock_open, patch  # noqa

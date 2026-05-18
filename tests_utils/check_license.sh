@@ -9,7 +9,6 @@ files_list=$(git ls-tree -r HEAD --full-tree --name-only)
 files_list=$(echo "${files_list}" | grep -v \
     -e 'tests_utils/' \
     -e '.gitignore' \
-    -e 'setup.cfg' \
     -e 'tox.ini' \
     -e '.md$' \
     -e '.rst$' \
@@ -18,7 +17,6 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.json'\
     -e 'AUTHORS' \
     -e 'COPYING' \
-    -e 'MANIFEST.in' \
     -e 'iotlabcli/parser/help/*' \
     -e 'iotlabcli/tests/script.sh' \
     -e 'iotlabcli/tests/script_2.sh' \
@@ -29,6 +27,7 @@ files_list=$(echo "${files_list}" | grep -v \
     -e '.github/workflows/continuous-integration.yml' \
     -e '.github/workflows/continuous-integration-tools.yml' \
     -e 'utils/iotlabcli-bash-completion.sh' \
+    -e 'pyproject.toml' \
 )
 
 # Verify that 'AUTHORS' and 'COPYING' files exist

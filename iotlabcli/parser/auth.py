@@ -21,13 +21,13 @@
 
 """Authentication parser"""
 
-import sys
-import getpass
 import argparse
+import getpass
+import sys
 from argparse import RawTextHelpFormatter
 
-from iotlabcli.parser import common
 from iotlabcli import auth
+from iotlabcli.parser import common
 
 AUTH_PARSER = """
 
@@ -39,40 +39,53 @@ with username and password.
 
 
 def parse_options():
-    """ Handle iotlab-auth command-line options with argparse """
+    """Handle iotlab-auth command-line options with argparse"""
     parent_parser = common.base_parser()
     # We create top level parser
     parser = argparse.ArgumentParser(
-        parents=[parent_parser], formatter_class=RawTextHelpFormatter,
-        description=AUTH_PARSER)
+        parents=[parent_parser],
+        formatter_class=RawTextHelpFormatter,
+        description=AUTH_PARSER,
+    )
 
-    parser.add_argument('-k', '--add-ssh-key', dest='add_key',
-                        action='store_true',
-                        help="add user's ssh public key to iot-lab account")
-    parser.add_argument('-i', '--identity-file', dest='identity_file',
-                        default=auth.IDENTITY_FILE,
-                        help="specify ssh identity file to use")
-    parser.add_argument('-l', '--list-ssh-keys', dest='list_keys',
-                        action='store_true',
-                        help="list ssh keys configured on IoT-LAB account")
+    parser.add_argument(
+        "-k",
+        "--add-ssh-key",
+        dest="add_key",
+        action="store_true",
+        help="add user's ssh public key to iot-lab account",
+    )
+    parser.add_argument(
+        "-i",
+        "--identity-file",
+        dest="identity_file",
+        default=auth.IDENTITY_FILE,
+        help="specify ssh identity file to use",
+    )
+    parser.add_argument(
+        "-l",
+        "--list-ssh-keys",
+        dest="list_keys",
+        action="store_true",
+        help="list ssh keys configured on IoT-LAB account",
+    )
 
     return parser
 
 
 def auth_parse_and_run(opts):  # noqa: C901
-    """ Parse namespace 'opts' object and execute requested command
+    """Parse namespace 'opts' object and execute requested command
     :returns: result object
     """
 
     if opts.username is None:
         if not opts.add_key and not opts.list_keys:
-            raise RuntimeError(
-                'the following arguments are required: -u/--user')
+            raise RuntimeError("the following arguments are required: -u/--user")
         if opts.list_keys:
             auth.ssh_keys()
         if opts.add_key:
             auth.add_ssh_key(opts.identity_file)
-            return 'Key added'
+            return "Key added"
         return None
 
     password = opts.password or getpass.getpass()
@@ -85,13 +98,13 @@ def auth_parse_and_run(opts):  # noqa: C901
                 auth.add_ssh_key(opts.identity_file)
             except ValueError as exc:
                 print(exc)
-        return 'Written'
+        return "Written"
 
-    raise RuntimeError('Wrong login:password')
+    raise RuntimeError("Wrong login:password")
 
 
 def main(args=None):
-    """ Main command-line execution loop." """
+    """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()
     common.main_cli(auth_parse_and_run, parser, args)

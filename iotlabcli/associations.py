@@ -54,14 +54,17 @@ def setattrdefault(obj, attribute, default=None):
 
 
 class _Association(
-        # pylint: disable=too-many-ancestors
-        collections.abc.MutableMapping, dict):
+    # pylint: disable=too-many-ancestors
+    collections.abc.MutableMapping,
+    dict,
+):
     """_Association class key->value.
 
     Inherit from dict to be dumped as a dict by json.
     """
+
     __metaclass__ = abc.ABCMeta
-    KEYFMT = '{}name'
+    KEYFMT = "{}name"
     KEY = None
     VALUE = None
     VALUE_SORT_KEY = None
@@ -142,13 +145,15 @@ class _Association(
     @classmethod
     def for_key_value(cls, key, value, sortkey=None):
         """Create association class for assoctype."""
-        name = f'{key.title()}{value.title()}Association'
+        name = f"{key.title()}{value.title()}Association"
 
         class KeyValuesAssociation(cls):  # pylint:disable=too-many-ancestors
             """KeyValuesAssociation class->Nodes."""
+
             KEY = key
             VALUE = value
             VALUE_SORT_KEY = cls.staticclassattribute(sortkey)
+
         KeyValuesAssociation.__name__ = name
 
         return KeyValuesAssociation
@@ -156,8 +161,7 @@ class _Association(
     def __repr__(self):
         """Representation. Ignore 'sortkey'."""
         return (
-            f"{self.__class__.__name__}({self.key!r}, "
-            f"{getattr(self, 'value', None)!r})"
+            f"{self.__class__.__name__}({self.key!r}, {getattr(self, 'value', None)!r})"
         )
 
     @classmethod
@@ -165,7 +169,8 @@ class _Association(
         """Verify that class is concrete and not abstract."""
         if cls.KEY is None or cls.VALUE is None:
             raise NotImplementedError(
-                "AbstractClass, create real class with 'for_key_value'")
+                "AbstractClass, create real class with 'for_key_value'"
+            )
 
     def dict(self):
         """Dump as a dict."""
@@ -207,9 +212,11 @@ class _Association(
 
 
 class AssociationsMap(
-        # pylint:disable=too-many-public-methods
-        # pylint: disable=too-many-ancestors
-        collections.abc.MutableMapping, list):
+    # pylint:disable=too-many-public-methods
+    # pylint: disable=too-many-ancestors
+    collections.abc.MutableMapping,
+    list,
+):
     """Sorted Map of Associations objects.
 
     Inherit list to be json serialized to a list.
@@ -219,8 +226,7 @@ class AssociationsMap(
         # pylint:disable=super-init-not-called
 
         list.__init__(self)
-        self.assoc_class = _Association.for_key_value(assoctype, resource,
-                                                      sortkey)
+        self.assoc_class = _Association.for_key_value(assoctype, resource, sortkey)
         self._map = {}
 
     def __getitem__(self, key):
@@ -306,6 +312,7 @@ def associationsmapdict_from_dict(assocsdict, resource, sortkey=None):
         return None
     assocs = {}
     for assoctype, assoclist in assocsdict.items():
-        assocs[assoctype] = AssociationsMap.from_list(assoclist, assoctype,
-                                                      resource, sortkey)
+        assocs[assoctype] = AssociationsMap.from_list(
+            assoclist, assoctype, resource, sortkey
+        )
     return assocs

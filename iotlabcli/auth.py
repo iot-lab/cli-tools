@@ -19,22 +19,22 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Authentication file management """
+"""Authentication file management"""
 
+import getpass
 import os
 import os.path
-import getpass
-from base64 import b64encode, b64decode
+from base64 import b64decode, b64encode
+
 from iotlabcli.rest import Api
 
-RC_FILE = (os.getenv('IOTLAB_PASSWORD_FILE') or
-           os.path.expanduser('~/.iotlabrc'))
+RC_FILE = os.getenv("IOTLAB_PASSWORD_FILE") or os.path.expanduser("~/.iotlabrc")
 
 
 def get_user_credentials(username=None, password=None):
-    """ Return user credentials.
+    """Return user credentials.
     If provided in arguments return them, if password missing, ask on console,
-    or try to read them from password file """
+    or try to read them from password file"""
 
     if (password is not None) and (username is not None):
         pass
@@ -46,13 +46,13 @@ def get_user_credentials(username=None, password=None):
 
 
 def check_user_credentials(username, password):
-    """ Check that the given credentials are valid """
+    """Check that the given credentials are valid"""
     api = Api(username, password)
     return api.check_credential()
 
 
 def write_password_file(username, password):
-    """ Create a password file for basic authentication http when
+    """Create a password file for basic authentication http when
     command-line option username and password are used We write .iotlabrc
     file in user home directory with format username:base64(password)
 
@@ -62,14 +62,14 @@ def write_password_file(username, password):
     :type password: string
     """
     assert (username is not None) and (password is not None)
-    with open(RC_FILE, 'w') as pass_file:
+    with open(RC_FILE, "w") as pass_file:
         # encode/decode for python3
-        enc_password = b64encode(password.encode('utf-8')).decode('utf-8')
-        pass_file.write(f'{username}:{enc_password}')
+        enc_password = b64encode(password.encode("utf-8")).decode("utf-8")
+        pass_file.write(f"{username}:{enc_password}")
 
 
 def _read_password_file():
-    """ Try to read password file (.iotlabrc) in user home directory when
+    """Try to read password file (.iotlabrc) in user home directory when
     command-line option username and password are not used. If password
     file exist whe return username and password for basic auth http
     authentication
@@ -77,16 +77,16 @@ def _read_password_file():
     if not os.path.exists(RC_FILE):
         return None, None
     try:
-        with open(RC_FILE, 'r') as password_file:
-            username, enc_password = password_file.readline().split(':')
+        with open(RC_FILE, "r") as password_file:
+            username, enc_password = password_file.readline().split(":")
             # encode/decode for python3
-            password = b64decode(enc_password.encode('utf-8')).decode('utf-8')
+            password = b64decode(enc_password.encode("utf-8")).decode("utf-8")
             return username, password
     except ValueError:
-        raise ValueError(f'Bad password file format: {RC_FILE!r}')
+        raise ValueError(f"Bad password file format: {RC_FILE!r}")
 
 
-IDENTITY_FILE = os.path.expanduser('~/.ssh/id_rsa')
+IDENTITY_FILE = os.path.expanduser("~/.ssh/id_rsa")
 
 
 def add_ssh_key(identity_file=None):
@@ -97,11 +97,11 @@ def add_ssh_key(identity_file=None):
 
     api = Api(*get_user_credentials())
     keys_json = api.get_ssh_keys()
-    pub_key = identity_file + '.pub'
+    pub_key = identity_file + ".pub"
     with open(pub_key) as key_fh:
         key = key_fh.read().strip()
 
-    keys = keys_json['sshkeys']
+    keys = keys_json["sshkeys"]
     if key in keys:
         msg = f'Key is already configured:\n"{key}"'
         raise ValueError(msg)
@@ -118,5 +118,5 @@ def ssh_keys():
     keys_json = api.get_ssh_keys()
 
     print("SSH keys:")
-    for key in keys_json['sshkeys']:
+    for key in keys_json["sshkeys"]:
         print(key)

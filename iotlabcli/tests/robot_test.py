@@ -19,18 +19,19 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.robot module """
+"""Test the iotlabcli.robot module"""
 
 # pylint: disable=too-many-public-methods
 # Issues with 'mock'
 # pylint: disable=no-member,maybe-no-member
 import unittest
+
 from iotlabcli import robot
 from iotlabcli.tests import my_mock
 
 
 class TestRobot(unittest.TestCase):
-    """ Test the iotlabcli.node module """
+    """Test the iotlabcli.node module"""
 
     def setUp(self):
         self.api = my_mock.api_mock()
@@ -42,43 +43,47 @@ class TestRobot(unittest.TestCase):
         """Test 'robot_command'."""
         nodes_list = ["m3-1", "m3-2", "m3-3"]
 
-        ret = robot.robot_command(self.api, 'status', 123, nodes_list)
+        ret = robot.robot_command(self.api, "status", 123, nodes_list)
         self.assertEqual(my_mock.API_RET, ret)
 
-        self.api.robot_command.assert_called_with('status', 123, nodes_list)
+        self.api.robot_command.assert_called_with("status", 123, nodes_list)
 
     def test_robot_update_mobility(self):
         """Test robot_update_mobility."""
         nodes_list = ["m3-1", "m3-2", "m3-3"]
 
         # With site name
-        ret = robot.robot_update_mobility(self.api, 123, 'mob_name',
-                                          nodes_list)
+        ret = robot.robot_update_mobility(self.api, 123, "mob_name", nodes_list)
         self.assertEqual(my_mock.API_RET, ret)
-        self.api.robot_update_mobility.assert_called_with(
-            123, 'mob_name', nodes_list)
+        self.api.robot_update_mobility.assert_called_with(123, "mob_name", nodes_list)
 
     def test_circuit_command(self):
         """Test 'mobility_command'."""
 
         # mobility-list
-        ret = robot.circuit_command(self.api, 'list')
+        ret = robot.circuit_command(self.api, "list")
         self.assertEqual(my_mock.API_RET, ret)
         self.api.get_circuits.assert_called_with()
         self.api.reset_mock()
 
         # invalid circuit type
-        self.assertRaises(AssertionError, robot.circuit_command,
-                          self.api, 'list', site='grenoble', type='no_defined')
+        self.assertRaises(
+            AssertionError,
+            robot.circuit_command,
+            self.api,
+            "list",
+            site="grenoble",
+            type="no_defined",
+        )
 
         # mobility-get
-        ret = robot.circuit_command(self.api, 'get', 'm_name')
+        ret = robot.circuit_command(self.api, "get", "m_name")
         self.assertEqual(my_mock.API_RET, ret)
-        self.api.get_circuit.assert_called_with('m_name')
+        self.api.get_circuit.assert_called_with("m_name")
         self.api.reset_mock()
 
     def test_robot_get_map(self):
         """Test robot_get_map."""
-        ret = robot.robot_get_map('grenoble')
-        self.assertEqual(sorted(ret.keys()), ['config', 'dock', 'image'])
+        ret = robot.robot_get_map("grenoble")
+        self.assertEqual(sorted(ret.keys()), ["config", "dock", "image"])
         # Lazy to check calls to Api.method should use proxy to call it...

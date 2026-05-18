@@ -19,10 +19,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Test the iotlabcli.experiment_parser module """
+"""Test the iotlabcli.experiment_parser module"""
+
 import argparse
 import subprocess
-
 import sys
 
 import pytest
@@ -32,29 +32,31 @@ import iotlabcli.parser.main as main_parser
 from .c23 import patch, version_info
 
 
-@pytest.mark.parametrize('entry',
-                         ['auth', 'experiment',
-                          'node', 'profile',
-                          'robot', 'status'])
+@pytest.mark.parametrize(
+    "entry", ["auth", "experiment", "node", "profile", "robot", "status"]
+)
 def test_main_parser(entry):
-    """ test main parser dispatching """
-    with patch(f'iotlabcli.parser.{entry}.main') as entrypoint_func:
-        main_parser.main([entry, '-i', '123'])
-        entrypoint_func.assert_called_with(['-i', '123'])
+    """test main parser dispatching"""
+    with patch(f"iotlabcli.parser.{entry}.main") as entrypoint_func:
+        main_parser.main([entry, "-i", "123"])
+        entrypoint_func.assert_called_with(["-i", "123"])
 
 
-@pytest.mark.parametrize('argv,exc',
-                         argvalues=((['iotlab'], None),
-                                    (['iotlab', 'help'], None),
-                                    (['iotlab', '--help'], SystemExit),),
-                         ids=['no subcommand',
-                              'help subcommand',
-                              '--help argument'])
+@pytest.mark.parametrize(
+    "argv,exc",
+    argvalues=(
+        (["iotlab"], None),
+        (["iotlab", "help"], None),
+        (["iotlab", "--help"], SystemExit),
+    ),
+    ids=["no subcommand", "help subcommand", "--help argument"],
+)
 def test_help(argv, exc):
     """Tests that the help entrypoints print the help."""
-    with patch.object(argparse.ArgumentParser, 'print_help') \
-            as argparser_print_help, \
-            patch.object(sys, 'argv', argv):
+    with (
+        patch.object(argparse.ArgumentParser, "print_help") as argparser_print_help,
+        patch.object(sys, "argv", argv),
+    ):
         if exc:
             with pytest.raises(exc):
                 main_parser.main()
@@ -85,84 +87,81 @@ except ImportError:
 
 def with_ssh_tools(function):
     """decorator, skip test if iotlabsshcli is not installed"""
-    return pytest.mark.skipif(
-        iotlabsshcli is None,
-        reason="iotlabsshcli is required")(function)
+    return pytest.mark.skipif(iotlabsshcli is None, reason="iotlabsshcli is required")(
+        function
+    )
 
 
 def with_aggregator_tools(function):
     """decorator, skip test if iotlabaggregator is not installed"""
     return pytest.mark.skipif(
-        iotlabaggregator is None,
-        reason="iotlabaggregator is required")(function)
+        iotlabaggregator is None, reason="iotlabaggregator is required"
+    )(function)
 
 
 def with_oml_plot_tools(function):
     """decorator, skip test if oml_plot_tools not installed"""
     return pytest.mark.skipif(
-        oml_plot_tools is None,
-        reason="oml_plot_tools is required")(function)
+        oml_plot_tools is None, reason="oml_plot_tools is required"
+    )(function)
 
 
 def without_tools(function):
     """decorator, skip test if any tool is installed"""
     return pytest.mark.skipif(
-        oml_plot_tools is not None or
-        iotlabaggregator is not None or
-        iotlabsshcli is not None,
-        reason="No tools should be installed")(function)
+        oml_plot_tools is not None
+        or iotlabaggregator is not None
+        or iotlabsshcli is not None,
+        reason="No tools should be installed",
+    )(function)
 
 
 @with_aggregator_tools
-@pytest.mark.parametrize('entry', ('serial', 'sniffer'))
+@pytest.mark.parametrize("entry", ("serial", "sniffer"))
 def test_aggregator_main(entry):
-    """ test main parser dispatching for subcommands"""
+    """test main parser dispatching for subcommands"""
 
-    with patch('iotlabcli.parser.main.iotlabaggregator') as mocked_module:
+    with patch("iotlabcli.parser.main.iotlabaggregator") as mocked_module:
         mocked_main = getattr(mocked_module, entry).main
-        main_parser.main([entry, '-i', '123'])
-        mocked_main.assert_called_with(['-i', '123'])
+        main_parser.main([entry, "-i", "123"])
+        mocked_main.assert_called_with(["-i", "123"])
 
-    assert subprocess.check_call(['iotlab', entry, '--help']) == 0
+    assert subprocess.check_call(["iotlab", entry, "--help"]) == 0
 
 
 @with_oml_plot_tools
-@pytest.mark.parametrize('entry', ('traj', 'radio', 'consum'))
+@pytest.mark.parametrize("entry", ("traj", "radio", "consum"))
 def test_oml_main(entry):
-    """ test main parser dispatching for subcommands"""
+    """test main parser dispatching for subcommands"""
 
-    with patch('iotlabcli.parser.main.oml_plot_tools') as mocked_module:
+    with patch("iotlabcli.parser.main.oml_plot_tools") as mocked_module:
         mocked_main = getattr(mocked_module, entry).main
-        main_parser.main(['plot', entry, '-i', '123'])
-        mocked_main.assert_called_with(['-i', '123'])
+        main_parser.main(["plot", entry, "-i", "123"])
+        mocked_main.assert_called_with(["-i", "123"])
 
-    assert subprocess.check_call(['iotlab', 'plot', '--help']) == 0
-    assert subprocess.check_call(['iotlab', 'plot', entry, '--help']) == 0
+    assert subprocess.check_call(["iotlab", "plot", "--help"]) == 0
+    assert subprocess.check_call(["iotlab", "plot", entry, "--help"]) == 0
 
 
 @with_ssh_tools
 def test_ssh_main():
-    """ test main parser dispatching for subcommands"""
+    """test main parser dispatching for subcommands"""
 
-    with patch('iotlabcli.parser.main.iotlabsshcli') as mocked_module:
+    with patch("iotlabcli.parser.main.iotlabsshcli") as mocked_module:
         mocked_main = mocked_module.parser.open_linux_parser.main
-        main_parser.main(['ssh', '-i', '123'])
-        mocked_main.assert_called_with(['-i', '123'])
+        main_parser.main(["ssh", "-i", "123"])
+        mocked_main.assert_called_with(["-i", "123"])
 
-    assert subprocess.check_call(['iotlab', 'ssh', '--help']) == 0
+    assert subprocess.check_call(["iotlab", "ssh", "--help"]) == 0
 
 
 @without_tools
 def test_main_parser_no_tools():
     """tools subcommands returning"""
-    pytest.raises(SystemExit,
-                  lambda: main_parser.main(['ssh']))
-    pytest.raises(SystemExit,
-                  lambda: main_parser.main(['serial']))
-    pytest.raises(SystemExit,
-                  lambda: main_parser.main(['sniffer']))
-    pytest.raises(SystemExit,
-                  lambda: main_parser.main(['plot']))
+    pytest.raises(SystemExit, lambda: main_parser.main(["ssh"]))
+    pytest.raises(SystemExit, lambda: main_parser.main(["serial"]))
+    pytest.raises(SystemExit, lambda: main_parser.main(["sniffer"]))
+    pytest.raises(SystemExit, lambda: main_parser.main(["plot"]))
 
 
 @with_aggregator_tools

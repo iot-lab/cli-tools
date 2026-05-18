@@ -19,11 +19,12 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL license and that you accept its terms.
 
-""" Implement the 'experiment' requests """
+"""Implement the 'experiment' requests"""
 
-from os.path import basename
 import json
 import time
+from os.path import basename
+
 try:
     # pylint: disable=import-error,no-name-in-module
     import backport_collections as collections
@@ -32,24 +33,29 @@ except ImportError:  # pragma: no cover
     import collections
 
 from iotlabcli import helpers
-from iotlabcli.associations import AssociationsMap
-from iotlabcli.associations import associationsmapdict_from_dict
+from iotlabcli.associations import AssociationsMap, associationsmapdict_from_dict
 
 # static name for experiment file : rename by server-rest
-EXP_FILENAME = 'new_exp.json'
-RUN_FILENAME = 'script.json'
+EXP_FILENAME = "new_exp.json"
+RUN_FILENAME = "script.json"
 
-NODES_ASSOCIATIONS_FILE_ASSOCS = ('firmware',)
-SITE_ASSOCIATIONS_FILE_ASSOCS = ('script', 'scriptconfig')
+NODES_ASSOCIATIONS_FILE_ASSOCS = ("firmware",)
+SITE_ASSOCIATIONS_FILE_ASSOCS = ("script", "scriptconfig")
 
 # Default wait timeout when waiting for an experiment to be in Running state
-WAIT_TIMEOUT_DEFAULT = float('+inf')
+WAIT_TIMEOUT_DEFAULT = float("+inf")
 
 
-def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
-                      resources, start_time=None, print_json=False,
-                      sites_assocs=None):
-    """ Submit user experiment with JSON Encoder serialization object
+def submit_experiment(  # pylint:disable=too-many-arguments,too-many-positional-arguments
+    api,
+    name,
+    duration,
+    resources,
+    start_time=None,
+    print_json=False,
+    sites_assocs=None,
+):
+    """Submit user experiment with JSON Encoder serialization object
     Experiment and firmware(s). If submission is accepted by scheduler OAR
     we print JSONObject response with id submission.
 
@@ -62,13 +68,14 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     :param sites_assocs: list of 'site_association'
     """
 
-    assert resources, f'Empty resources: {resources!r}'
+    assert resources, f"Empty resources: {resources!r}"
     experiment = _Experiment(name, duration, start_time)
 
     exp_files = helpers.FilesDict()
     for res_dict in resources:
         inserted_resources = exp_files.add_files_from_dict(
-            NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict)
+            NODES_ASSOCIATIONS_FILE_ASSOCS, res_dict
+        )
         res_dict.update(inserted_resources)
         experiment.add_exp_resources(res_dict)
 
@@ -76,7 +83,8 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
     for site_assoc in sites_assocs:
         assocs = site_assoc.associations
         inserted_assocs = exp_files.add_files_from_dict(
-            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs
+        )
         assocs.update(inserted_assocs)
         experiment.add_site_association(site_assoc)
 
@@ -90,7 +98,7 @@ def submit_experiment(api, name, duration,  # pylint:disable=too-many-arguments
 
 
 def stop_experiment(api, exp_id):
-    """ Stop user experiment submission.
+    """Stop user experiment submission.
 
     :param api: API Rest api object
     :param exp_id: scheduler OAR id submission
@@ -99,7 +107,7 @@ def stop_experiment(api, exp_id):
 
 
 def get_experiments_list(api, state, limit, offset):
-    """ Get the experiment list with the specific restriction:
+    """Get the experiment list with the specific restriction:
     :param state: State of the experiment
     :param limit: maximum number of outputs
     :param offset: offset of experiments to start at
@@ -108,8 +116,8 @@ def get_experiments_list(api, state, limit, offset):
     return api.get_experiments(state, limit, offset)
 
 
-def get_experiment(api, exp_id, option=''):
-    """ Get user experiment's description :
+def get_experiment(api, exp_id, option=""):
+    """Get user experiment's description :
 
     :param api: API Rest api object
     :param exp_id: experiment id
@@ -123,9 +131,9 @@ def get_experiment(api, exp_id, option=''):
             * 'deployment':  deployment info
     """
     result = api.get_experiment_info(exp_id, option)
-    if option == 'data':
+    if option == "data":
         _write_experiment_archive(exp_id, result)
-        result = 'Written'
+        result = "Written"
 
     return result
 
@@ -137,13 +145,13 @@ def get_active_experiments(api, running_only=True):
     :param running_only: if False search for a waiting/starting experiment
     :returns: {'Running': [EXP_ID], 'Waiting': [EXP_ID, EXP_ID]}
     """
-    states = ['Running'] if running_only else helpers.ACTIVE_STATES
+    states = ["Running"] if running_only else helpers.ACTIVE_STATES
     exp_by_states = helpers.exps_by_states_dict(api, states)
     return exp_by_states
 
 
 def load_experiment(api, exp_desc_path, files_list=()):
-    """ Load and submit user experiment description with firmware(s)
+    """Load and submit user experiment description with firmware(s)
 
     Firmwares and scripts required for experiment will be loaded from
     current directory, except if their path is given in files_list
@@ -194,8 +202,8 @@ def _files_with_filespath(files, filespath):
     # Error if there are remaining files in filespath
     if filespathdict:
         raise ValueError(
-            f'Filespath {list(filespathdict.values())} not in '
-            f'files list {sorted(set(files))}'
+            f"Filespath {list(filespathdict.values())} not in "
+            f"files list {sorted(set(files))}"
         )
 
     return sorted(updatedfiles)
@@ -214,15 +222,15 @@ def reload_experiment(api, exp_id, duration=None, start_time=None):
 
     # API needs strings and values shoud be absent if None
     if duration is not None:
-        exp_json['duration'] = str(duration)
+        exp_json["duration"] = str(duration)
     if start_time is not None:
-        exp_json['reservation'] = str(start_time)
+        exp_json["reservation"] = str(start_time)
 
     return api.reload_experiment(exp_id, exp_json)
 
 
 def info_experiment(api, list_id=False, site=None, **selections):
-    """ Print testbed information for user experiment submission:
+    """Print testbed information for user experiment submission:
     * nodes description
     * nodes description in short mode
 
@@ -244,16 +252,16 @@ def script_experiment(api, exp_id, command, *options):
                      list of sites for 'kill', 'status' may be None
     """
     res = None
-    if command == 'run':
+    if command == "run":
         files_dict = _script_run_files_dict(*options)
         res = api.script_command(exp_id, command, files=files_dict)
 
-    elif command in ('kill', 'status'):
+    elif command in ("kill", "status"):
         sites_list = sorted(options)
         res = api.script_command(exp_id, command, json=sites_list)
 
     if res is None:
-        raise ValueError(f'Unknown script command {command!r}')
+        raise ValueError(f"Unknown script command {command!r}")
 
     return res
 
@@ -269,7 +277,7 @@ def _script_run_files_dict(*site_associations):
     """
 
     if not site_associations:
-        raise ValueError(f'Got empty site_associations: {site_associations}')
+        raise ValueError(f"Got empty site_associations: {site_associations}")
 
     _check_sites_uniq(*site_associations)
 
@@ -281,7 +289,8 @@ def _script_run_files_dict(*site_associations):
         for assoctype, assocname in assocs.items():
             _add_siteassoc_to_dict(associations, sites, assoctype, assocname)
         inserted_assocs = files_dict.add_files_from_dict(
-            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs)
+            SITE_ASSOCIATIONS_FILE_ASSOCS, assocs
+        )
         assocs.update(inserted_assocs)
 
     # Add scrit sites association to files_dict
@@ -292,7 +301,7 @@ def _script_run_files_dict(*site_associations):
 def _add_siteassoc_to_dict(assocs, sites, assoctype, assocname):
     """Add given site association to 'assocs' dict."""
     name = site_association_name(assoctype, assocname)
-    assoc = assocs.setdefault(assoctype, AssociationsMap(assoctype, 'sites'))
+    assoc = assocs.setdefault(assoctype, AssociationsMap(assoctype, "sites"))
     assoc.extendvalues(name, sites)
 
 
@@ -312,13 +321,17 @@ def _check_sites_uniq(*site_associations):
     duplicates = [s for s, c in collections.Counter(sites).items() if c > 1]
 
     if duplicates:
-        raise ValueError(f'Sites may only be given once: {duplicates}')
+        raise ValueError(f"Sites may only be given once: {duplicates}")
 
 
-def wait_experiment(api, exp_id, states='Running',
-                    step=5, timeout=WAIT_TIMEOUT_DEFAULT,
-                    cancel_on_timeout=False):
-    # pylint: disable=too-many-arguments
+def wait_experiment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    api,
+    exp_id,
+    states="Running",
+    step=5,
+    timeout=WAIT_TIMEOUT_DEFAULT,
+    cancel_on_timeout=False,
+):
     """Wait for the experiment to be in `states`.
 
     Also returns if Terminated or Error
@@ -330,17 +343,26 @@ def wait_experiment(api, exp_id, states='Running',
     :param timeout: timeout if wait takes too long
     :param cancel_on_timeout: cancel the experiment if the timeout is reached
     """
+
     def _state_function():
         """Get current user experiment state."""
-        return get_experiment(api, exp_id, '')['state']
+        return get_experiment(api, exp_id, "")["state"]
 
     def _stop_function():
         """Cancel submitted user experiment."""
         stop_experiment(api, exp_id)
-    exp_str = f'{exp_id}'
 
-    return wait_state(_state_function, _stop_function,
-                      exp_str, states, step, timeout, cancel_on_timeout)
+    exp_str = f"{exp_id}"
+
+    return wait_state(
+        _state_function,
+        _stop_function,
+        exp_str,
+        states,
+        step,
+        timeout,
+        cancel_on_timeout,
+    )
 
 
 def _states_from_str(states_str):
@@ -348,24 +370,30 @@ def _states_from_str(states_str):
 
     Also verify given states are valid.
     """
-    return helpers.check_experiment_state(states_str).split(',')
+    return helpers.check_experiment_state(states_str).split(",")
 
 
-STOPPED_STATES = set(_states_from_str('Terminated,Error'))
+STOPPED_STATES = set(_states_from_str("Terminated,Error"))
 
 
 def _raise_timeout_msg(exp_str, stop_fct, cancel_on_timeout):
-    msg = 'Timeout reached'
+    msg = "Timeout reached"
     if cancel_on_timeout:
-        msg += f', cancelling experiment {exp_str}'
+        msg += f", cancelling experiment {exp_str}"
         stop_fct()
 
     raise RuntimeError(msg)
 
 
-def wait_state(state_fct, stop_fct, exp_str, states='Running',
-               step=5, timeout=WAIT_TIMEOUT_DEFAULT, cancel_on_timeout=False):
-    # pylint: disable=too-many-arguments
+def wait_state(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    state_fct,
+    stop_fct,
+    exp_str,
+    states="Running",
+    step=5,
+    timeout=WAIT_TIMEOUT_DEFAULT,
+    cancel_on_timeout=False,
+):
     """Wait until `state_fct` returns a state in `states`
     and also Terminated or Error
 
@@ -392,6 +420,7 @@ def wait_state(state_fct, stop_fct, exp_str, states='Running',
         time.sleep(step)
 
     _raise_timeout_msg(exp_str, stop_fct, cancel_on_timeout)
+    return None  # pragma: no cover
 
 
 def _timeout(start_time, timeout):
@@ -404,8 +433,7 @@ def _timeout(start_time, timeout):
     return time.time() > start_time + timeout
 
 
-def exp_resources(nodes, firmware_path=None, profile_name=None,
-                  **associations):
+def exp_resources(nodes, firmware_path=None, profile_name=None, **associations):
     """Create an experiment resources dict.
 
     :param nodes: a list of nodes url or a AliasNodes object
@@ -417,41 +445,42 @@ def exp_resources(nodes, firmware_path=None, profile_name=None,
     """
 
     if isinstance(nodes, AliasNodes):
-        exp_type = 'alias'
+        exp_type = "alias"
     else:
-        exp_type = 'physical'
+        exp_type = "physical"
 
     resources = {
-        'type': exp_type,
-        'nodes': nodes,
-        'firmware': firmware_path,
-        'profile': profile_name,
-        'associations': associations,
+        "type": exp_type,
+        "nodes": nodes,
+        "firmware": firmware_path,
+        "profile": profile_name,
+        "associations": associations,
     }
 
     return resources
 
 
 SiteAssociationTuple = collections.namedtuple(
-    'SiteAssociationTuple', ['sites', 'associations'])
+    "SiteAssociationTuple", ["sites", "associations"]
+)
 
 
 def site_association(*sites, **kwassociations):
     """Return a site_association tuple."""
     if not sites:
-        raise ValueError('No sites given')
+        raise ValueError("No sites given")
 
     if len(sites) != len(set(sites)):
-        raise ValueError(f'Sites are not uniq {sites}')
+        raise ValueError(f"Sites are not uniq {sites}")
 
     # Associations are mandatory
     if not kwassociations:
-        raise ValueError('No association given')
+        raise ValueError("No association given")
 
     return SiteAssociationTuple(sites, kwassociations)
 
 
-class AliasNodes():  # pylint: disable=too-few-public-methods
+class AliasNodes:  # pylint: disable=too-few-public-methods
     """An AliasNodes class
 
     >>> AliasNodes(5, 'grenoble', 'm3:at86rf231', False)
@@ -464,6 +493,7 @@ class AliasNodes():  # pylint: disable=too-few-public-methods
     True
 
     """
+
     _alias = 0  # static count of current alias number
 
     def __init__(self, nbnodes, site, archi, mobile=False, _alias=None):
@@ -513,13 +543,13 @@ class AliasNodes():  # pylint: disable=too-few-public-methods
 # # # # # # # # # #
 
 # Kwargs to initialize 'AssociationsMap' for nodes sorted.
-_NODESMAPKWARGS = dict(resource='nodes', sortkey=helpers.node_url_sort_key)
+_NODESMAPKWARGS = {"resource": "nodes", "sortkey": helpers.node_url_sort_key}
 
 
-class _Experiment():  # pylint:disable=too-many-instance-attributes
-    """ Class describing an experiment """
+class _Experiment:  # pylint:disable=too-many-instance-attributes
+    """Class describing an experiment"""
 
-    ASSOCATTR_FMT = '{}associations'
+    ASSOCATTR_FMT = "{}associations"
 
     def __init__(self, name, duration, start_time=None):
         self.duration = duration
@@ -537,90 +567,103 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
 
     def _firmwareassociations(self):
         """Init and return firmwareassociations."""
-        return setattr_if_none(self, 'firmwareassociations',
-                               AssociationsMap('firmware', **_NODESMAPKWARGS))
+        return setattr_if_none(
+            self, "firmwareassociations", AssociationsMap("firmware", **_NODESMAPKWARGS)
+        )
 
     def _profileassociations(self):
         """Init and return profileassociations."""
-        return setattr_if_none(self, 'profileassociations',
-                               AssociationsMap('profile', **_NODESMAPKWARGS))
+        return setattr_if_none(
+            self, "profileassociations", AssociationsMap("profile", **_NODESMAPKWARGS)
+        )
 
     def _associations(self, assoctype):
         """Init and return associations[assoctype]."""
-        assocs = setattr_if_none(self, 'associations', {})
-        return assocs.setdefault(assoctype,
-                                 AssociationsMap(assoctype, **_NODESMAPKWARGS))
+        assocs = setattr_if_none(self, "associations", {})
+        return assocs.setdefault(
+            assoctype, AssociationsMap(assoctype, **_NODESMAPKWARGS)
+        )
 
     def _siteassociations(self, assoctype):
         """Init and return associations[assoctype]."""
-        assocs = setattr_if_none(self, 'siteassociations', {})
-        return assocs.setdefault(assoctype,
-                                 AssociationsMap(assoctype, 'sites'))
+        assocs = setattr_if_none(self, "siteassociations", {})
+        return assocs.setdefault(assoctype, AssociationsMap(assoctype, "sites"))
 
     @classmethod
     def from_dict(cls, exp_dict):
         """Create an _Experiment object from given `exp_dict`."""
-        experiment = cls(exp_dict.pop('name', None), exp_dict.pop('duration'),
-                         exp_dict.pop('reservation', None))
+        experiment = cls(
+            exp_dict.pop("name", None),
+            exp_dict.pop("duration"),
+            exp_dict.pop("reservation", None),
+        )
 
-        experiment.type = exp_dict.pop('type')
-        experiment.nodes = exp_dict.pop('nodes')
+        experiment.type = exp_dict.pop("type")
+        experiment.nodes = exp_dict.pop("nodes")
 
-        if 'profiles' in exp_dict.keys():
-            experiment.profiles = exp_dict.pop('profiles')
+        if "profiles" in exp_dict.keys():
+            experiment.profiles = exp_dict.pop("profiles")
 
-        if 'mobilities' in exp_dict.keys():
-            experiment.mobilities = exp_dict.pop('mobilities')
+        if "mobilities" in exp_dict.keys():
+            experiment.mobilities = exp_dict.pop("mobilities")
 
         experiment._load_assocs(**exp_dict)  # pylint:disable=protected-access
         # No checking
         return experiment
 
-    def _load_assocs(self, firmwareassociations=None, profileassociations=None,
-                     associations=None, siteassociations=None):
+    def _load_assocs(
+        self,
+        firmwareassociations=None,
+        profileassociations=None,
+        associations=None,
+        siteassociations=None,
+    ):
         """Load associations to AssociationsMap and set attributes."""
         self.firmwareassociations = AssociationsMap.from_list(
-            firmwareassociations, 'firmware', **_NODESMAPKWARGS)
+            firmwareassociations, "firmware", **_NODESMAPKWARGS
+        )
         self.profileassociations = AssociationsMap.from_list(
-            profileassociations, 'profile', **_NODESMAPKWARGS)
-        self.associations = associationsmapdict_from_dict(associations,
-                                                          **_NODESMAPKWARGS)
-        self.siteassociations = associationsmapdict_from_dict(siteassociations,
-                                                              'sites')
+            profileassociations, "profile", **_NODESMAPKWARGS
+        )
+        self.associations = associationsmapdict_from_dict(
+            associations, **_NODESMAPKWARGS
+        )
+        self.siteassociations = associationsmapdict_from_dict(siteassociations, "sites")
 
     def _set_type(self, exp_type):
-        """ Set current experiment type.
+        """Set current experiment type.
         If type was already set and is different ValueError is raised
         """
         if self.type is not None and self.type != exp_type:
             raise ValueError(
-                "Invalid experiment, should be only physical or only alias")
+                "Invalid experiment, should be only physical or only alias"
+            )
         self.type = exp_type
 
     def add_exp_resources(self, resources):
-        """ Add 'exp_resources' to current experiment
+        """Add 'exp_resources' to current experiment
         It will update node type, nodes, firmware and profile associations
         """
         # Alias/Physical
-        self._set_type(resources['type'])
+        self._set_type(resources["type"])
 
         # register nodes in experiment
-        nodes = resources['nodes']
+        nodes = resources["nodes"]
         self._register_nodes(nodes)  # pylint:disable=not-callable
         nodes = self._nodes_to_assoc(nodes)
 
         # register firmware
-        if resources['firmware'] is not None:
-            name = nodes_association_name('firmware', resources['firmware'])
+        if resources["firmware"] is not None:
+            name = nodes_association_name("firmware", resources["firmware"])
             self._firmwareassociations().extendvalues(name, nodes)
 
         # register profile, may be None
-        if resources['profile'] is not None:
-            name = nodes_association_name('profile', resources['profile'])
+        if resources["profile"] is not None:
+            name = nodes_association_name("profile", resources["profile"])
             self._profileassociations().extendvalues(name, nodes)
 
         # Add other associations
-        associations = resources.get('associations', {})
+        associations = resources.get("associations", {})
         for assoctype, assocname in associations.items():
             self._add_nodes_association(nodes, assoctype, assocname)
 
@@ -631,7 +674,7 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
 
     def _nodes_to_assoc(self, nodes):
         """Returns nodes to use in association."""
-        return [nodes.alias] if self.type == 'alias' else nodes
+        return [nodes.alias] if self.type == "alias" else nodes
 
     def add_site_association(self, assoc):
         """Add a site_association."""
@@ -644,8 +687,8 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
         self._siteassociations(assoctype).extendvalues(name, sites)
 
     def set_physical_nodes(self, nodes_list):
-        """Set physical nodes list """
-        self._set_type('physical')
+        """Set physical nodes list"""
+        self._set_type("physical")
 
         # Check that nodes are not already present
         _intersect = list(set(self.nodes) & set(nodes_list))
@@ -654,27 +697,26 @@ class _Experiment():  # pylint:disable=too-many-instance-attributes
 
         self.nodes.extend(nodes_list)
         # Keep unique values and sorted
-        self.nodes = sorted(list(set(self.nodes)),
-                            key=helpers.node_url_sort_key)
+        self.nodes = sorted(list(set(self.nodes)), key=helpers.node_url_sort_key)
 
     def set_alias_nodes(self, alias_nodes):
-        """Set alias nodes list """
-        self._set_type('alias')
+        """Set alias nodes list"""
+        self._set_type("alias")
         self.nodes.append(alias_nodes)
 
     @property
     def _register_nodes(self):
         """Register nodes with the correct method according to exp `type`."""
         _register_fct_dict = {
-            'physical': self.set_physical_nodes,
-            'alias': self.set_alias_nodes,
+            "physical": self.set_physical_nodes,
+            "alias": self.set_alias_nodes,
         }
         return _register_fct_dict[self.type]
 
     def filenames(self):
         """Extract list of filenames required."""
         # No need to check nodes associations if there is only 'firmware'
-        assert NODES_ASSOCIATIONS_FILE_ASSOCS == ('firmware',)
+        assert NODES_ASSOCIATIONS_FILE_ASSOCS == ("firmware",)
 
         files = []
         # Handle None attributes
@@ -698,8 +740,8 @@ def setattr_if_none(obj, attr, default):
 
 
 def _write_experiment_archive(exp_id, data):
-    """ Write experiment archive contained in 'data' to 'exp_id.tar.gz' """
-    with open(f'{exp_id}.tar.gz', 'wb') as archive:
+    """Write experiment archive contained in 'data' to 'exp_id.tar.gz'"""
+    with open(f"{exp_id}.tar.gz", "wb") as archive:
         archive.write(data)
 
 
@@ -708,8 +750,7 @@ def nodes_association_name(assoctype, assocname):
 
     Return basename(assocname) if assoctype is a file-association.
     """
-    return _basename_if_in(assocname, assoctype,
-                           NODES_ASSOCIATIONS_FILE_ASSOCS)
+    return _basename_if_in(assocname, assoctype, NODES_ASSOCIATIONS_FILE_ASSOCS)
 
 
 def site_association_name(assoctype, assocname):

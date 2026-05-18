@@ -2,8 +2,7 @@ pytest
 pytest-cov
 mock
 pylint
-pycodestyle
-# issues with pep8 >= 1.6
-flake8==2.3.0
+ruff
+isort
 codecov>=1.4.0
 twine
