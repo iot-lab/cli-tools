@@ -109,6 +109,10 @@ class _Association(
     def _sort(self):
         """Sort values with key."""
         self._value().sort(key=self.VALUE_SORT_KEY)
+        # Sync C-level dict storage so CPython's json C encoder (which uses
+        # PyDict_GET_SIZE bypassing __len__) sees the correct data (Python>=3.12)
+        dict.clear(self)
+        dict.update(self, self.__dict__)
 
     # Get actual attributes name
 
