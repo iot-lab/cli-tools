@@ -23,6 +23,7 @@
 
 import json
 import time
+from dataclasses import dataclass
 from os.path import basename
 
 try:
@@ -285,7 +286,8 @@ def _script_run_files_dict(*site_associations):
 
     # Save association and files
     associations = {}
-    for sites, assocs in site_associations:
+    for site_assoc in site_associations:
+        sites, assocs = site_assoc.sites, site_assoc.associations
         for assoctype, assocname in assocs.items():
             _add_siteassoc_to_dict(associations, sites, assoctype, assocname)
         inserted_assocs = files_dict.add_files_from_dict(
@@ -460,9 +462,12 @@ def exp_resources(nodes, firmware_path=None, profile_name=None, **associations):
     return resources
 
 
-SiteAssociationTuple = collections.namedtuple(
-    "SiteAssociationTuple", ["sites", "associations"]
-)
+@dataclass(frozen=True)
+class SiteAssociationTuple:
+    """Holds the sites and keyword associations for a site association."""
+
+    sites: tuple
+    associations: dict
 
 
 def site_association(*sites, **kwassociations):

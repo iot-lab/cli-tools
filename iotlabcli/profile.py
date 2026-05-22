@@ -21,9 +21,12 @@
 
 """Class python for Profile serialization JSON"""
 
+from dataclasses import dataclass, field
+
 # pylint:disable=too-few-public-methods
 
 
+@dataclass
 class ProfileM3A8:
     """A generic Profile for M3 and A8"""
 
@@ -41,13 +44,16 @@ class ProfileM3A8:
     }
     arch = None
 
-    def __init__(self, profilename, power):
-        assert power in self.choices["power_mode"]
+    profilename: str
+    power: str
+    nodearch: str = field(init=False)
+    consumption: dict | None = field(init=False)
+    radio: dict | None = field(init=False)
+
+    def __post_init__(self):
+        assert self.power in self.choices["power_mode"]
         assert self.arch is not None, "Using Generic class"
         self.nodearch = self.arch
-        self.profilename = profilename
-        self.power = power
-
         self.consumption = None
         self.radio = None
 
@@ -120,9 +126,6 @@ class ProfileM3A8:
         self.radio["period"] = None
         self.radio["num_per_channel"] = None
 
-    def __eq__(self, other):  # pragma: no cover
-        return self.__dict__ == other.__dict__
-
 
 class ProfileM3(ProfileM3A8):
     """A Profile measure class for M3."""
@@ -142,6 +145,7 @@ class ProfileCustom(ProfileM3A8):
     arch = "custom"
 
 
+@dataclass
 class ProfileWSN430:
     """A Profile measure class for WSN430"""
 
@@ -152,12 +156,16 @@ class ProfileWSN430:
         "sensor": {"frequency": [30000, 10000, 5000, 1000]},
     }
 
-    def __init__(self, profilename, power):
-        assert power in ProfileWSN430.choices["power_mode"]
-        self.nodearch = "wsn430"
-        self.profilename = profilename
-        self.power = power
+    profilename: str
+    power: str
+    nodearch: str = field(init=False)
+    consumption: dict | None = field(init=False)
+    radio: dict | None = field(init=False)
+    sensor: dict | None = field(init=False)
 
+    def __post_init__(self):
+        assert self.power in ProfileWSN430.choices["power_mode"]
+        self.nodearch = "wsn430"
         self.consumption = None
         self.radio = None
         self.sensor = None
@@ -200,6 +208,3 @@ class ProfileWSN430:
             "luminosity": luminosity,
             "temperature": temperature,
         }
-
-    def __eq__(self, other):  # pragma: no cover
-        return self.__dict__ == other.__dict__
