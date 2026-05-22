@@ -510,7 +510,10 @@ class TestSiteAssociation(unittest.TestCase):
         """Test working site associations."""
         # One site / assoc
         assocs = experiment.site_association("grenoble", script="script.sh")
-        self.assertEqual(assocs, (("grenoble",), {"script": "script.sh"}))
+        self.assertEqual(
+            assocs,
+            experiment.SiteAssociationTuple(("grenoble",), {"script": "script.sh"}),
+        )
 
         # Multiple sites / asocs
         assocs = experiment.site_association(
@@ -518,7 +521,9 @@ class TestSiteAssociation(unittest.TestCase):
         )
         self.assertEqual(
             assocs,
-            (("grenoble", "strasbourg"), {"script": "script.sh", "ipv6": "2001::"}),
+            experiment.SiteAssociationTuple(
+                ("grenoble", "strasbourg"), {"script": "script.sh", "ipv6": "2001::"}
+            ),
         )
         self.assertEqual(assocs.sites, ("grenoble", "strasbourg"))
         self.assertEqual(assocs.associations, {"script": "script.sh", "ipv6": "2001::"})
