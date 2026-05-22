@@ -28,7 +28,7 @@ from argparse import RawTextHelpFormatter
 
 from iotlabcli import auth, helpers, rest
 from iotlabcli.parser import common, help_msgs
-from iotlabcli.profile import ProfileA8, ProfileCustom, ProfileM3, ProfileWSN430
+from iotlabcli.profile import ProfileA8, ProfileCustom, ProfileM3
 
 PROFILE_PARSER = """
 
@@ -53,13 +53,6 @@ def parse_options():
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True  # not required by default in Python3
-
-    add_wsn430_parser = subparsers.add_parser(
-        "addwsn430",
-        help="add wsn430 user profile",
-        epilog=help_msgs.ADD_EPILOG_WSN430,
-        formatter_class=RawTextHelpFormatter,
-    )
 
     #
     # m3 profile
@@ -94,76 +87,6 @@ def parse_options():
     del_parser = subparsers.add_parser("del", help="delete user profile")
     get_parser = subparsers.add_parser("get", help="get user's profile")
     load_parser = subparsers.add_parser("load", help="load user profile")
-
-    #
-    # WSN430 profile
-    #
-    add_wsn430_parser.add_argument("-n", "--name", required=True, help="profile name")
-    add_wsn430_parser.add_argument(
-        "-j",
-        "--json",
-        action="store_true",
-        help="print profile JSON representation without add it",
-    )
-
-    add_wsn430_parser.add_argument(
-        "-p",
-        "--power",
-        dest="power_mode",
-        default="dc",
-        help="power mode (dc by default)",
-        choices=ProfileWSN430.choices["power_mode"],
-    )
-
-    # WSN430 Consumption
-    group_wsn430_consumption = add_wsn430_parser.add_argument_group(
-        "Consumption measure"
-    )
-
-    group_wsn430_consumption.add_argument(
-        "-cfreq",
-        dest="cfreq",
-        type=int,
-        choices=ProfileWSN430.choices["consumption"]["frequency"],
-        help="frequency measure (ms)",
-    )
-
-    group_wsn430_consumption.add_argument(
-        "-power", action="store_true", help="power measure"
-    )
-    group_wsn430_consumption.add_argument(
-        "-voltage", action="store_true", help="voltage measure"
-    )
-    group_wsn430_consumption.add_argument(
-        "-current", action="store_true", help="current measure"
-    )
-
-    # WSN430 Radio
-    group_wsn430_radio = add_wsn430_parser.add_argument_group("Radio measure")
-    group_wsn430_radio.add_argument(
-        "-rfreq",
-        dest="rfreq",
-        type=int,
-        choices=ProfileWSN430.choices["radio"]["frequency"],
-        help="frequency measure (ms)",
-    )
-
-    # WSN430 Sensor
-    group_wsn430_sensor = add_wsn430_parser.add_argument_group("Sensor measure")
-    group_wsn430_sensor.add_argument(
-        "-sfreq",
-        dest="sfreq",
-        type=int,
-        choices=ProfileWSN430.choices["sensor"]["frequency"],
-        help="frequency measure (ms)",
-    )
-
-    group_wsn430_sensor.add_argument(
-        "-temperature", action="store_true", help="temperature measure"
-    )
-    group_wsn430_sensor.add_argument(
-        "-luminosity", action="store_true", help="luminosity measure"
-    )
 
     # Delete Profile
     del_parser.add_argument("-n", "--name", required=True, help="profile name")
@@ -294,22 +217,6 @@ def add_m3_a8_parser(node_type, subparser):
     )
 
 
-def _wsn430_profile(opts):
-    """Create a wsn430 profile from namespace object"""
-    profile = ProfileWSN430(profilename=opts.name, power=opts.power_mode)
-    profile.set_consumption(
-        frequency=opts.cfreq,
-        power=opts.power,
-        voltage=opts.voltage,
-        current=opts.current,
-    )
-    profile.set_radio(frequency=opts.rfreq)
-    profile.set_sensors(
-        frequency=opts.sfreq, temperature=opts.temperature, luminosity=opts.luminosity
-    )
-    return profile
-
-
 def _m3_a8_profile(opts, node_class):
     """Create a node_class profile from namespace object"""
     profile = node_class(profilename=opts.name, power=opts.power_mode)
@@ -360,7 +267,6 @@ def add_profile_parser(api, opts):
     :type opts:  Namespace object with opts attribute
     """
     profile_func_d = {
-        "addwsn430": _wsn430_profile,
         "addm3": _m3_profile,
         "adda8": _a8_profile,
         "addcustom": _custom_profile,
@@ -419,7 +325,6 @@ def profile_parse_and_run(opts):
     api = rest.Api(user, passwd)
 
     fct_parser = {
-        "addwsn430": add_profile_parser,
         "addm3": add_profile_parser,
         "adda8": add_profile_parser,
         "addcustom": add_profile_parser,
