@@ -150,19 +150,6 @@ Examples:
 """
 
 
-ADD_EPILOG_WSN430 = """
-
-Examples :
-    # Add a profile with consumption measure configuration
-    $ iotlab-profile addwsn430 -n consum -current -voltage -power -cfreq 5000
-
-    # Add a profile with radio rssi measures
-    $ iotlab-profile addwsn430 -n rssi_profile -rfreq 500
-
-    # Add a profile with sensor measures
-    $ iotlab-profile addwsn430 -n sensors -sfreq 1000 -temperature -luminosity
-"""
-
 ADD_EPILOG_M3_A8 = """
 
 Examples :
