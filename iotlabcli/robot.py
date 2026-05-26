@@ -21,10 +21,14 @@
 
 """Implement the 'robot' requests"""
 
+from typing import Any
+
 from iotlabcli.rest import Api
 
 
-def robot_command(api, command, exp_id, nodes_list=()):
+def robot_command(
+    api: Api, command: str, exp_id: int, nodes_list: list[str] | tuple[()] = ()
+) -> Any:
     """Launch commands ('status',) on nodes_list
 
     :param api: API Rest api object
@@ -38,7 +42,9 @@ def robot_command(api, command, exp_id, nodes_list=()):
     return result
 
 
-def robot_update_mobility(api, exp_id, name, nodes_list=()):
+def robot_update_mobility(
+    api: Api, exp_id: int, name: str, nodes_list: list[str] | tuple[()] = ()
+) -> Any:
     """Update robot mobility on nodes_list.
 
     :param api: API Rest api object
@@ -51,7 +57,9 @@ def robot_update_mobility(api, exp_id, name, nodes_list=()):
     return result
 
 
-def circuit_command(api, command, name=None, **selection):
+def circuit_command(
+    api: Api, command: str, name: str | None = None, **selection: str
+) -> Any:
     """Run mobilities circuit commands.
 
     :param command: in ['list', 'get']
@@ -76,7 +84,7 @@ def circuit_command(api, command, name=None, **selection):
     return result
 
 
-def robot_get_map(site):
+def robot_get_map(site: str) -> dict[str, Any]:
     """Download all robot map files
 
     Download robot site config, map and docks list"""

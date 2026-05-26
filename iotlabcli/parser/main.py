@@ -23,6 +23,7 @@
 
 import sys
 from argparse import ArgumentParser
+from typing import Any
 
 import iotlabcli.parser.auth
 import iotlabcli.parser.experiment
@@ -56,7 +57,7 @@ except (ImportError, SyntaxError, TypeError):
     oml_plot_tools = None  # pylint:disable=invalid-name
 
 
-def parse_subcommands(commands, args):
+def parse_subcommands(commands: dict[str, Any], args: list[str]) -> Any:
     """common function to parse `iotlab` or other with subcommands"""
 
     parser = ArgumentParser()
@@ -69,7 +70,7 @@ def parse_subcommands(commands, args):
     return commands[opts.command](args[1:])
 
 
-def oml_plot(args):
+def oml_plot(args: list[str]) -> None:
     """'iotlab oml-plot' main function."""
 
     commands = {
@@ -80,7 +81,7 @@ def oml_plot(args):
     parse_subcommands(commands, args)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> Any:
     """'iotlab' main function."""
     args = args or sys.argv[1:]
 

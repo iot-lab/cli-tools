@@ -27,7 +27,7 @@ CUR_DIR = os.path.dirname(__file__)
 HELP_DIR = os.path.join(CUR_DIR, "help")
 
 
-def _read_help_file(name):
+def _read_help_file(name: str) -> str:
     """Read help file."""
     help_file = os.path.join(HELP_DIR, name)
 

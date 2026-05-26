@@ -24,7 +24,8 @@
 import argparse
 import getpass
 import sys
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter
+from typing import Any
 
 from iotlabcli import auth
 from iotlabcli.parser import common
@@ -38,7 +39,7 @@ with username and password.
 """
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-auth command-line options with argparse"""
     parent_parser = common.base_parser()
     # We create top level parser
@@ -73,7 +74,7 @@ def parse_options():
     return parser
 
 
-def auth_parse_and_run(opts):  # noqa: C901
+def auth_parse_and_run(opts: argparse.Namespace) -> Any:  # noqa: C901
     """Parse namespace 'opts' object and execute requested command
     :returns: result object
     """
@@ -103,7 +104,7 @@ def auth_parse_and_run(opts):  # noqa: C901
     raise RuntimeError("Wrong login:password")
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()

@@ -26,6 +26,7 @@ import sys
 import time
 from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
+from typing import Any
 
 from iotlabcli import auth, experiment, helpers, rest
 from iotlabcli.parser import common, help_msgs
@@ -37,7 +38,7 @@ iotlab-experiment command-line manages experiments on testbed.
 """
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-experiment command-line options with argparse"""
     parent_parser = common.base_parser()
 
@@ -277,7 +278,7 @@ def parse_options():
     return parser
 
 
-def parser_add_submit_subparser(subparsers):
+def parser_add_submit_subparser(subparsers: Any) -> None:
     """Add 'submit' subparser and return it."""
     submit_parser = subparsers.add_parser(
         "submit",
@@ -336,8 +337,8 @@ def parser_add_submit_subparser(subparsers):
 
 
 def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
-    subparser, duration_required
-):
+    subparser: Any, duration_required: bool
+) -> None:
     """Add a 'duration' and a 'reservation' argument to subparser.
 
     :param subparser: subparser instance
@@ -359,7 +360,9 @@ def _parser_add_duration_and_reservation(  # pylint:disable=invalid-name
     )
 
 
-def parser_add_wait_subparser(subparsers, expid_required=False):
+def parser_add_wait_subparser(
+    subparsers: Any, expid_required: bool = False
+) -> ArgumentParser:
     """Add wait experiment subparser and return it."""
     wait_parser = subparsers.add_parser(
         "wait",
@@ -393,7 +396,7 @@ def parser_add_wait_subparser(subparsers, expid_required=False):
     return wait_parser
 
 
-def parser_add_script_subparser(subparsers):
+def parser_add_script_subparser(subparsers: Any) -> ArgumentParser:
     """Add suparser for 'script'."""
     _script_parser = subparsers.add_parser(
         "script",
@@ -433,7 +436,7 @@ def parser_add_script_subparser(subparsers):
     return _script_parser
 
 
-def exp_infos_from_str(exp_str):
+def exp_infos_from_str(exp_str: str) -> tuple[Any, dict[str, str]]:
     """Extract nodes and associations."""
     try:
         params = exp_str.split(",")
@@ -447,7 +450,7 @@ def exp_infos_from_str(exp_str):
     return nodes, associations
 
 
-def exp_resources_from_str(exp_str):
+def exp_resources_from_str(exp_str: str) -> dict[str, Any]:
     """Extract an 'experiment.exp_resources' from parameter string.
 
     Accepted formats:
@@ -462,7 +465,7 @@ def exp_resources_from_str(exp_str):
     return experiment.exp_resources(nodes, firmware_path, profile_name, **associations)
 
 
-def site_association_from_str(site_assoc_str):
+def site_association_from_str(site_assoc_str: str) -> Any:
     """Extract site_association from given string.
 
     Format is:
@@ -489,13 +492,13 @@ RUN_SITE_ASSOCIATIONS_STR = "script=script_path[,scriptconfig=scriptconfig_path]
 RUN_SITE_ASSOCIATION_METAVAR = f"site,site,{RUN_SITE_ASSOCIATIONS_STR}"
 
 
-def _run_associations_arg_check(script, scriptconfig=None):
+def _run_associations_arg_check(script: str, scriptconfig: str | None = None) -> None:
     # pylint:disable=unused-argument,unnecessary-pass
     """To be used with **associations to check given arguments."""
     pass
 
 
-def run_site_association_from_str(site_assoc_str):
+def run_site_association_from_str(site_assoc_str: str) -> Any:
     """Extract site_association and verify given associations.
 
     'script' association is mandatory.
@@ -515,7 +518,7 @@ def run_site_association_from_str(site_assoc_str):
     return site_association
 
 
-def _valid_param(param):
+def _valid_param(param: str) -> None:
     """Check parameter are valid for _args_kwargs.
 
     * no space
@@ -527,7 +530,7 @@ def _valid_param(param):
         raise ValueError(f"name required for kwarg '{param}'")
 
 
-def _args_kwargs(params):
+def _args_kwargs(params: list[str]) -> tuple[list[str], dict[str, str]]:
     """Separate args and kwargs from params.
 
     `args` must all be at first and `kwargs` at the end
@@ -589,7 +592,7 @@ def _args_kwargs(params):
     return args, kwargs
 
 
-def _check_args_then_kwargs(params):
+def _check_args_then_kwargs(params: list[str]) -> None:
     """Check that args are first, and then kwargs only."""
     is_kwargs = ["=" in param for param in params]
     # Should be many False then many True
@@ -597,7 +600,7 @@ def _check_args_then_kwargs(params):
         raise ValueError("got argument after keyword argument")
 
 
-def _add_key_value(kwargs, key, value=""):
+def _add_key_value(kwargs: dict[str, str], key: str, value: str = "") -> None:
     """Add `key`,`value` if value is not empty.
 
     Raise an error if key exists.
@@ -609,7 +612,7 @@ def _add_key_value(kwargs, key, value=""):
         kwargs[key] = value
 
 
-def _submit_args_to_dict(firmware="", profile=""):
+def _submit_args_to_dict(firmware: str = "", profile: str = "") -> dict[str, str]:
     """Return kwargs for this arguments. Remove empty values"""
     kwargs = {}
     if firmware:
@@ -619,7 +622,9 @@ def _submit_args_to_dict(firmware="", profile=""):
     return kwargs
 
 
-def _merge_assocs_args_d_kwargs(args_dict, kwargs):
+def _merge_assocs_args_d_kwargs(
+    args_dict: dict[str, str], kwargs: dict[str, str]
+) -> dict[str, str]:
     """Merge args_dict and kwargs. Detect duplicate keys."""
 
     error_str = 'Association "%s" provided by argument and keyword argument'
@@ -636,7 +641,7 @@ def _merge_assocs_args_d_kwargs(args_dict, kwargs):
 SUBMIT_ASSOC_ARGS_KWARGS = "[firmware][,profile][,assoc=value][,assoc=...]"
 
 
-def _extract_associations(params):
+def _extract_associations(params: list[str]) -> dict[str, str]:
     """Extract 'associations'.
 
     Firmware, profile at positional args then keyword arguments.
@@ -654,7 +659,7 @@ def _extract_associations(params):
     return associations
 
 
-def get_alias_properties(properties_str):
+def get_alias_properties(properties_str: str) -> tuple[str, str, str | None]:
     """Extract nodes selection properties from given properties_str
 
     >>> get_alias_properties("site=grenoble+archi=wsn430:cc1101+mobile=True")
@@ -685,7 +690,9 @@ def get_alias_properties(properties_str):
     return site, archi, mobile
 
 
-def _alias_properties_from_kwargs(site, archi, mobile=None):
+def _alias_properties_from_kwargs(
+    site: str, archi: str, mobile: str | None = None
+) -> tuple[str, str, str | None]:
     """To be used with **properties, checks given keys.
 
     Returns values.
@@ -693,7 +700,7 @@ def _alias_properties_from_kwargs(site, archi, mobile=None):
     return site, archi, mobile
 
 
-def _properties_str_to_dict(properties_str):
+def _properties_str_to_dict(properties_str: str) -> dict[str, str]:
     """Extract a properties string to a dict:
 
     >>> _properties_str_to_dict('a=1+b=3') == {'a': '1', 'b': '3'}
@@ -721,7 +728,7 @@ def _properties_str_to_dict(properties_str):
     return prop_dict
 
 
-def mobile_from_mobile_str(mobile_str=None):
+def mobile_from_mobile_str(mobile_str: str | None = None) -> bool:
     """Return the value to put in experiment json from mobile_str.
 
     >>> mobile_from_mobile_str(None)
@@ -755,18 +762,18 @@ def mobile_from_mobile_str(mobile_str=None):
     raise ValueError("Invalid 'mobile' property: %r. Should be in 'true|false|0|1'")
 
 
-def _mobile_str_true_false(mobile_str):
+def _mobile_str_true_false(mobile_str: str) -> bool:
     """Try checking for 'true', 'false' in any case."""
     mobile_str = mobile_str.title()  # upper first letter
     return {"True": True, "False": False}[mobile_str]
 
 
-def _mobile_str_as_bool(mobile_str):
+def _mobile_str_as_bool(mobile_str: str) -> bool:
     """Try converting to an int-bool."""
     return bool(int(mobile_str))
 
 
-def _extract_firmware_nodes_list(param_list):
+def _extract_firmware_nodes_list(param_list: list[str]) -> tuple[Any, list[str]]:
     """
     Extract a firmware nodes list from param_list
     param_list is modified by the function call
@@ -796,7 +803,7 @@ def _extract_firmware_nodes_list(param_list):
     return nodes, param_list
 
 
-def submit_experiment_parser(opts):
+def submit_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' and execute requested 'submit' command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -812,7 +819,7 @@ def submit_experiment_parser(opts):
     )
 
 
-def script_parser(opts):
+def script_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' and execute requestes 'run' command."""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -823,7 +830,7 @@ def script_parser(opts):
     return experiment.script_experiment(api, exp_id, command, *options)
 
 
-def _script_command_options(opts):
+def _script_command_options(opts: argparse.Namespace) -> tuple[str, list[Any]]:
     """Extract `command` and `options` from argparse 'opts'."""
     if opts.run_script_site is not None:
         command = "run"
@@ -840,7 +847,7 @@ def _script_command_options(opts):
     return command, options
 
 
-def stop_experiment_parser(opts):
+def stop_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'stop' command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -849,7 +856,7 @@ def stop_experiment_parser(opts):
     return experiment.stop_experiment(api, exp_id)
 
 
-def get_experiment_parser(opts):
+def get_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'get' command"""
 
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
@@ -867,7 +874,7 @@ def get_experiment_parser(opts):
         return experiment.get_experiment(api, exp_id, _deprecate_cmd(opts.get_cmd))
 
 
-def _deprecate_cmd(cmd):
+def _deprecate_cmd(cmd: str) -> str:
     if cmd == "resources":
         new_cmd = "nodes"
         helpers.deprecate_warn_cmd(cmd, new_cmd, 8)
@@ -878,7 +885,7 @@ def _deprecate_cmd(cmd):
     return cmd
 
 
-def _get_experiment_attr(api, opts):
+def _get_experiment_attr(api: Any, opts: argparse.Namespace) -> dict[str, Any]:
     """Return start_time or state experiment attribute with old api format"""
     assert opts.get_cmd in (
         "state",
@@ -897,7 +904,7 @@ def _get_experiment_attr(api, opts):
     return {"start_time": int(timestamp), "local_date": local_date}
 
 
-def load_experiment_parser(opts):
+def load_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'load' command"""
 
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
@@ -906,7 +913,7 @@ def load_experiment_parser(opts):
     return experiment.load_experiment(api, opts.path_file, files)
 
 
-def reload_experiment_parser(opts):
+def reload_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'reload' command."""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -915,7 +922,7 @@ def reload_experiment_parser(opts):
     )
 
 
-def info_experiment_parser(opts):
+def info_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'info' command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -925,7 +932,7 @@ def info_experiment_parser(opts):
     return experiment.info_experiment(api, opts.list_id, **selection)
 
 
-def wait_experiment_parser(opts):
+def wait_experiment_parser(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested 'wait' command"""
 
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
@@ -940,7 +947,7 @@ def wait_experiment_parser(opts):
     )
 
 
-def experiment_parse_and_run(opts):
+def experiment_parse_and_run(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested command
     Return result object
     """
@@ -958,7 +965,7 @@ def experiment_parse_and_run(opts):
     return command(opts)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop."""
     args = args or sys.argv[1:]
     parser = parse_options()

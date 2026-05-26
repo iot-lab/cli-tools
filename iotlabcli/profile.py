@@ -50,7 +50,7 @@ class ProfileM3A8:
     consumption: dict | None = field(init=False)
     radio: dict | None = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert self.power in self.choices["power_mode"]
         assert self.arch is not None, "Using Generic class"
         self.nodearch = self.arch
@@ -58,8 +58,13 @@ class ProfileM3A8:
         self.radio = None
 
     def set_consumption(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-        self, period, average, power=False, voltage=False, current=False
-    ):
+        self,
+        period: int | None,
+        average: int | None,
+        power: bool = False,
+        voltage: bool = False,
+        current: bool = False,
+    ) -> None:
         """Configure consumption measures"""
         if not power and not voltage and not current:
             return
@@ -76,7 +81,13 @@ class ProfileM3A8:
             "current": current,
         }
 
-    def set_radio(self, mode, channels, period=None, num_per_channel=None):
+    def set_radio(
+        self,
+        mode: str | None,
+        channels: list[int] | None,
+        period: int | None = None,
+        num_per_channel: int | None = None,
+    ) -> None:
         """Configure radio measures"""
         if not mode:
             return
@@ -93,7 +104,12 @@ class ProfileM3A8:
         }
         config_radio[mode](channels, period, num_per_channel)
 
-    def _cfg_radio_rssi(self, channels, period, num_per_channel=None):
+    def _cfg_radio_rssi(
+        self,
+        channels: list[int],
+        period: int,
+        num_per_channel: int | None = None,
+    ) -> None:
         """Check parameters for rssi measures and set config"""
         num_per_channel = num_per_channel or 0
 
@@ -112,7 +128,12 @@ class ProfileM3A8:
         self.radio["period"] = period
         self.radio["num_per_channel"] = num_per_channel
 
-    def _cfg_radio_sniffer(self, channels, period=None, num_per_channel=None):
+    def _cfg_radio_sniffer(
+        self,
+        channels: list[int],
+        period: int | None = None,
+        num_per_channel: int | None = None,
+    ) -> None:
         """Check parameters for sniffer measures and set the configuration"""
 
         # 'Period' and multiple channels should be handled later when supported

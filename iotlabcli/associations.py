@@ -34,14 +34,16 @@ Dumped JSON format is:
 
 import abc
 import collections.abc
+from collections.abc import Callable
+from typing import Any
 
 
-def _disabled_method(*_):
+def _disabled_method(*_: Any) -> None:
     """Disabled method."""
     raise AttributeError
 
 
-def setattrdefault(obj, attribute, default=None):
+def setattrdefault(obj: Any, attribute: str, default: Any = None) -> Any:
     """Setdefault for attribute.
 
     Returns 'attribute' value if defined or set it to default and return it.
@@ -69,7 +71,7 @@ class _Association(
     VALUE = None
     VALUE_SORT_KEY = None
 
-    def __init__(self, key, value):  # pylint:disable=super-init-not-called
+    def __init__(self, key: Any, value: Any) -> None:  # pylint:disable=super-init-not-called
         # Don't call 'dict' init, only used for json dumping
         self._concrete_class()
         self.key = key
@@ -135,7 +137,7 @@ class _Association(
         return cls(assocdict[cls._keyattr()], assocdict[cls._valueattr()])
 
     @staticmethod
-    def staticclassattribute(function):
+    def staticclassattribute(function: Callable[..., Any] | None) -> Any:
         """Return given function as a staticmethod, handle None as None.
 
         This allows storing the function as a class attribute.
@@ -143,7 +145,9 @@ class _Association(
         return staticmethod(function) if function is not None else None
 
     @classmethod
-    def for_key_value(cls, key, value, sortkey=None):
+    def for_key_value(
+        cls, key: str, value: str, sortkey: Callable[..., Any] | None = None
+    ) -> type["_Association"]:
         """Create association class for assoctype."""
         name = f"{key.title()}{value.title()}Association"
 
@@ -222,12 +226,14 @@ class AssociationsMap(
     Inherit list to be json serialized to a list.
     """
 
-    def __init__(self, assoctype, resource, sortkey=None):
+    def __init__(
+        self, assoctype: str, resource: str, sortkey: Callable[..., Any] | None = None
+    ) -> None:
         # pylint:disable=super-init-not-called
 
         list.__init__(self)
         self.assoc_class = _Association.for_key_value(assoctype, resource, sortkey)
-        self._map = {}
+        self._map: dict[Any, Any] = {}
 
     def __getitem__(self, key):
         return self._map[key].value
@@ -244,7 +250,7 @@ class AssociationsMap(
         except KeyError:
             self._add(key, value)
 
-    def extendvalues(self, key, values):
+    def extendvalues(self, key: Any, values: Any) -> Any:
         """Extend values for `key`."""
         self.setdefault(key, []).extend(values)
         return self[key]
@@ -261,7 +267,13 @@ class AssociationsMap(
         list.sort(self, key=lambda x: x.key)
 
     @classmethod
-    def from_list(cls, assoclist, assoctype, resource, sortkey=None):
+    def from_list(
+        cls,
+        assoclist: list[Any] | None,
+        assoctype: str,
+        resource: str,
+        sortkey: Callable[..., Any] | None = None,
+    ) -> "AssociationsMap | None":
         """Create AssociationsMap from assoclist."""
         if assoclist is None:
             return None
@@ -306,7 +318,11 @@ class AssociationsMap(
     __setslice__ = property(_disabled_method)
 
 
-def associationsmapdict_from_dict(assocsdict, resource, sortkey=None):
+def associationsmapdict_from_dict(
+    assocsdict: dict[str, Any] | None,
+    resource: str,
+    sortkey: Callable[..., Any] | None = None,
+) -> dict[str, AssociationsMap] | None:
     """Create a dict of AssociationsMap from `assocsdict` for `resource`."""
     if assocsdict is None:
         return None
