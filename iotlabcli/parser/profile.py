@@ -24,7 +24,8 @@
 import argparse
 import json
 import sys
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter
+from typing import Any
 
 from iotlabcli import auth, helpers, rest
 from iotlabcli.parser import common, help_msgs
@@ -40,7 +41,7 @@ of a power supply mode and an automatic measure configuration
 """
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-profile command-line opts with argparse"""
     parent_parser = common.base_parser()
     # We create top level parser
@@ -117,7 +118,7 @@ def parse_options():
     return parser
 
 
-def add_m3_a8_parser(node_type, subparser):
+def add_m3_a8_parser(node_type: str, subparser: ArgumentParser) -> None:
     """Add options for m3 and a8 parsers as they are the same"""
     node_class = {"M3": ProfileM3, "A8": ProfileA8, "CUSTOM": ProfileCustom}[node_type]
 
@@ -217,7 +218,7 @@ def add_m3_a8_parser(node_type, subparser):
     )
 
 
-def _m3_a8_profile(opts, node_class):
+def _m3_a8_profile(opts: argparse.Namespace, node_class: type) -> Any:
     """Create a node_class profile from namespace object"""
     profile = node_class(profilename=opts.name, power=opts.power_mode)
     profile.set_consumption(
@@ -236,22 +237,22 @@ def _m3_a8_profile(opts, node_class):
     return profile
 
 
-def _m3_profile(opts):
+def _m3_profile(opts: argparse.Namespace) -> Any:
     """Create a m3 profile from namespace object"""
     return _m3_a8_profile(opts, ProfileM3)
 
 
-def _a8_profile(opts):
+def _a8_profile(opts: argparse.Namespace) -> Any:
     """Create a a8 profile from namespace object"""
     return _m3_a8_profile(opts, ProfileA8)
 
 
-def _custom_profile(opts):
+def _custom_profile(opts: argparse.Namespace) -> Any:
     """Create a a8 profile from namespace object"""
     return _m3_a8_profile(opts, ProfileCustom)
 
 
-def _add_profile(api, profile, json_out=False):
+def _add_profile(api: Any, profile: Any, json_out: bool = False) -> Any:
     """Add user profile. if json, dump json dict to stdout"""
     if json_out:
         return profile
@@ -259,7 +260,7 @@ def _add_profile(api, profile, json_out=False):
     return api.add_profile(profile)
 
 
-def add_profile_parser(api, opts):
+def add_profile_parser(api: Any, opts: argparse.Namespace) -> Any:
     """Add user profile with JSON Encoder serialization object Profile.
 
     :param api: API Rest api object
@@ -279,7 +280,7 @@ def add_profile_parser(api, opts):
         raise ValueError(str(err))
 
 
-def load_profile_parser(api, opts):
+def load_profile_parser(api: Any, opts: argparse.Namespace) -> Any:
     """Load and add user profile description
 
     :param api: API Rest api object
@@ -290,7 +291,7 @@ def load_profile_parser(api, opts):
     return _add_profile(api, profile)
 
 
-def del_profile_parser(api, opts):
+def del_profile_parser(api: Any, opts: argparse.Namespace) -> Any:
     """Delete user profile description
 
     :param api: API Rest api object
@@ -300,7 +301,7 @@ def del_profile_parser(api, opts):
     return api.del_profile(opts.name)
 
 
-def get_profile_parser(api, opts):
+def get_profile_parser(api: Any, opts: argparse.Namespace) -> Any:
     """Get user profile description
     _ print JSONObject profile description
     _ print JSONObject profile's list description
@@ -319,7 +320,7 @@ def get_profile_parser(api, opts):
     return profile_dict
 
 
-def profile_parse_and_run(opts):
+def profile_parse_and_run(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -336,7 +337,7 @@ def profile_parse_and_run(opts):
     return fct_parser(api, opts)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()

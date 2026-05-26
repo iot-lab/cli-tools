@@ -23,7 +23,8 @@
 
 import argparse
 import sys
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter
+from typing import Any
 
 import iotlabcli.node
 from iotlabcli import auth, helpers, rest
@@ -54,7 +55,7 @@ Examples:
 """
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-node command-line options with argparse"""
 
     parent_parser = common.base_parser()
@@ -170,7 +171,7 @@ def parse_options():
     return parser
 
 
-def node_parse_and_run(opts):
+def node_parse_and_run(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -189,7 +190,7 @@ def node_parse_and_run(opts):
     return iotlabcli.node.node_command(api, command, exp_id, nodes, cmd_opt)
 
 
-def _deprecate_cmd(opts):
+def _deprecate_cmd(opts: argparse.Namespace) -> None:
     if opts.command == "update-idle":
         new_cmd = "flash-idle"
         helpers.deprecate_warn_cmd(opts.command, new_cmd, 7)
@@ -199,7 +200,7 @@ def _deprecate_cmd(opts):
         opts.firmware_path = opts.up_firmware_path
 
 
-def _node_parse_command_and_opt(**opts_dict):
+def _node_parse_command_and_opt(**opts_dict: Any) -> tuple[str, str]:
     """Return 'command' and 'command_opt' from **opts_dict.
 
 
@@ -247,7 +248,7 @@ def _node_parse_command_and_opt(**opts_dict):
     raise ValueError("Unknown command")
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()

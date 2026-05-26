@@ -23,7 +23,8 @@
 
 import argparse
 import sys
-from argparse import RawTextHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter
+from typing import Any
 
 import iotlabcli.status
 from iotlabcli import auth, rest
@@ -51,7 +52,7 @@ Examples:
 """
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-status command-line options with argparse"""
 
     parent_parser = common.base_parser()
@@ -128,7 +129,7 @@ def parse_options():
     return parser
 
 
-def status_parse_and_run(opts):
+def status_parse_and_run(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -136,7 +137,7 @@ def status_parse_and_run(opts):
     return iotlabcli.status.status_command(api, opts.command, **selection)
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()

@@ -27,6 +27,8 @@ import json
 import os
 import sys
 import warnings
+from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 OAR_STATES = [
     "Waiting",
@@ -47,7 +49,9 @@ DEPRECATION_MESSAGE = (
 )
 
 
-def get_current_experiment(api, experiment_id=None, running_only=True):
+def get_current_experiment(
+    api: Any, experiment_id: int | None = None, running_only: bool = True
+) -> int:
     """Return the given experiment or get the currently running one.
     If running_only is false, try to return the experiment the most advanced
     Waiting < toLaunch < Launching < Running"""
@@ -68,7 +72,7 @@ def get_current_experiment(api, experiment_id=None, running_only=True):
     return exp_id
 
 
-def exps_by_states_dict(api, states):
+def exps_by_states_dict(api: Any, states: list[str]) -> dict[str, list[int]]:
     """Return current experiment in `states` as a per state dict"""
 
     # exps == [{'state': 'Waiting', 'id': 10134, ...},
@@ -83,7 +87,7 @@ def exps_by_states_dict(api, states):
     return exp_states_d  # {'Waiting': [10134, 10135], 'Running': [10130]}
 
 
-def get_current_exp(exp_by_states, states):  # noqa: C901
+def get_current_exp(exp_by_states: dict[str, list[int]], states: list[str]) -> int:  # noqa: C901
     """Current experiment is the first state in `states` where there is only
     one experiment in `exp_by_states`.
     :raises: ValueError if there is no experiment or if there are multiple
@@ -135,7 +139,7 @@ def get_current_exp(exp_by_states, states):  # noqa: C901
     return res
 
 
-def node_url_sort_key(node_url):
+def node_url_sort_key(node_url: str) -> int | tuple[str, str, int]:
     """
     >>> node_url_sort_key("m3-2.grenoble.iot-lab.info")
     ('grenoble', 'm3', 2)
@@ -164,7 +168,7 @@ def node_url_sort_key(node_url):
     return site, node_type, int(num_str)
 
 
-def md5(data):
+def md5(data: bytes) -> str:
     """calculate the md5 hash of the file"""
     hash_md5 = hashlib.md5()
     hash_md5.update(data)
@@ -177,17 +181,17 @@ class FilesDict(dict):
     so __setitem__ is overriden to check that
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         dict.__init__(self)
 
-    def __setitem__(self, key, val):
+    def __setitem__(self, key: str, val: str | bytes) -> None:
         """Prevent adding a new different value to an existing key"""
         if key not in self:
             dict.__setitem__(self, key, val)
         elif self[key] != val:
             raise ValueError(f"Has different values for same key {key!r}")
 
-    def add_file(self, file_path):
+    def add_file(self, file_path: str | None) -> str | None:
         """Add a file to the dictionary.
         :param file_path the path of the file to add
         :returns the id of the file in the dict
@@ -198,7 +202,7 @@ class FilesDict(dict):
         if file_path is None:
             return None
         key = os.path.basename(file_path)
-        value = read_file(file_path, "b")
+        value = cast(bytes, read_file(file_path, "b"))
         try:
             self[key] = value
         except ValueError:
@@ -209,7 +213,9 @@ class FilesDict(dict):
 
         return key
 
-    def add_files_from_dict(self, keys, files_dict):
+    def add_files_from_dict(
+        self, keys: tuple[str, ...] | list[str], files_dict: dict[str, Any]
+    ) -> dict[str, str]:
         """Add 'keys' files from 'files_dict' if present.
         :param keys: which keys to consider inside the input files dict
         :param files_dict:
@@ -225,14 +231,14 @@ class FilesDict(dict):
     add_firmware = add_file  # Deprecated
 
 
-def read_custom_api_url():
+def read_custom_api_url() -> str | None:
     """Return the customized api url from:
     * config file in <HOME_DIR>/.iotlab.api-url
     * or environment variable IOTLAB_API_URL
     """
     try:
         # try getting url from config file
-        api_url = read_file("~/.iotlab.api-url").strip()
+        api_url = cast(str, read_file("~/.iotlab.api-url")).strip()
     except IOError:
         # try getting url from environment variable, None if undefined
         api_url = os.getenv("IOTLAB_API_URL")
@@ -242,13 +248,13 @@ def read_custom_api_url():
     return api_url
 
 
-def read_file(file_path, opt=""):
+def read_file(file_path: str, opt: str = "") -> str | bytes:
     """Open and read a file"""
     with open(os.path.expanduser(file_path), "r" + opt) as _fd:  # expand '~'
         return _fd.read()
 
 
-def check_experiment_state(state_str=None):
+def check_experiment_state(state_str: str | None = None) -> str:
     """Check that given states are valid if None given, return all states
 
     >>> check_experiment_state('Running')
@@ -275,7 +281,7 @@ def check_experiment_state(state_str=None):
     return state_str
 
 
-def json_dumps(obj):
+def json_dumps(obj: Any) -> str:
     """Dumps data to json"""
 
     class _Encoder(json.JSONEncoder):  # pylint: disable=too-few-public-methods
@@ -287,7 +293,7 @@ def json_dumps(obj):
     return json.dumps(obj, cls=_Encoder, sort_keys=True, indent=4)
 
 
-def flatten_list_list(list_list):
+def flatten_list_list(list_list: Iterable[Iterable[Any]]) -> list[Any]:
     """Flatten given list of list.
 
     >>> flatten_list_list([[1, 2, 3], [4], [5], [6, 7, 8]])
@@ -296,7 +302,7 @@ def flatten_list_list(list_list):
     return list(itertools.chain.from_iterable(list_list))
 
 
-def deprecate_warn_cmd(old_cmd, new_cmd, stacklevel):
+def deprecate_warn_cmd(old_cmd: str, new_cmd: str, stacklevel: int) -> None:
     """Display a deprecation warning message"""
     warnings.simplefilter("always", DeprecationWarning)
     warnings.warn(
@@ -306,7 +312,7 @@ def deprecate_warn_cmd(old_cmd, new_cmd, stacklevel):
     )
 
 
-def deprecate_cmd(cmd_func, old_cmd, new_cmd):
+def deprecate_cmd(cmd_func: Callable[[], None], old_cmd: str, new_cmd: str) -> None:
     """Display a deprecation warning message and run command."""
     deprecate_warn_cmd(old_cmd, new_cmd, 4)
     cmd_func()

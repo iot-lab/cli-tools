@@ -23,6 +23,8 @@
 
 import argparse
 import sys
+from argparse import ArgumentParser
+from typing import Any
 
 import iotlabcli.robot
 from iotlabcli import auth, helpers, rest
@@ -32,7 +34,7 @@ ROBOT_PARSER = """iotlab-robot manages interaction with nodes \
 on a turtlebot."""
 
 
-def parse_options():
+def parse_options() -> ArgumentParser:
     """Handle iotlab-robot command-line options with argparse"""
 
     parent_parser = common.base_parser()
@@ -84,7 +86,7 @@ def parse_options():
     return parser
 
 
-def robot_parse_and_run(opts):  # noqa  # Too complex but straightforward
+def robot_parse_and_run(opts: argparse.Namespace) -> Any:  # noqa  # Too complex but straightforward
     """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
     api = rest.Api(user, passwd)
@@ -111,7 +113,7 @@ def robot_parse_and_run(opts):  # noqa  # Too complex but straightforward
     return ret
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main command-line execution loop." """
     args = args or sys.argv[1:]
     parser = parse_options()

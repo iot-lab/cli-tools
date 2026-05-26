@@ -25,7 +25,10 @@ import argparse
 import contextlib
 import errno
 import sys
+from argparse import ArgumentParser
 from collections import OrderedDict
+from collections.abc import Callable, Generator
+from typing import Any
 
 # pylint: disable=wrong-import-order
 try:
@@ -43,7 +46,7 @@ from iotlabcli import helpers, rest
 DOMAIN_DNS = "iot-lab.info"
 
 
-def base_parser(user_required=False):
+def base_parser(user_required: bool = False) -> ArgumentParser:
     """Base parser giving 'user' 'password' and 'version' arguments
     :param user_required: set 'user' argument as required or not"""
     parser = argparse.ArgumentParser(add_help=False)
@@ -54,21 +57,21 @@ def base_parser(user_required=False):
     return parser
 
 
-def add_auth_arguments(parser, usr_required=False):
+def add_auth_arguments(parser: ArgumentParser, usr_required: bool = False) -> None:
     """Add 'user' and 'password' arguments
     :param user_required: set 'user' argument as required or not"""
     parser.add_argument("-u", "--user", dest="username", required=usr_required)
     parser.add_argument("-p", "--password", dest="password")
 
 
-def add_version(parser):
+def add_version(parser: ArgumentParser) -> None:
     """Add 'version' argument"""
     parser.add_argument(
         "-v", "--version", action="version", version=iotlabcli.__version__
     )
 
 
-def add_output_formatter(parser):
+def add_output_formatter(parser: ArgumentParser) -> None:
     """Add '--jmespath' argument"""
     group = parser.add_argument_group("Output Format")
     group.add_argument(
@@ -85,7 +88,7 @@ def add_output_formatter(parser):
     )
 
 
-def add_expid_arg(parser, required=False):
+def add_expid_arg(parser: ArgumentParser, required: bool = False) -> None:
     """Add '-i' / '--id' for 'experiment_id' option."""
     parser.add_argument(
         "-i",
@@ -102,12 +105,18 @@ class HelpAction(argparse.Action):
 
     HELPMSG = None
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
         print(self.HELPMSG, end="")
         parser.exit()
 
     @classmethod
-    def for_message(cls, msg):
+    def for_message(cls, msg: str) -> type["HelpAction"]:
         """Create action for help message."""
 
         class HelpActionWithMessage(cls):
@@ -118,7 +127,9 @@ class HelpAction(argparse.Action):
         return HelpActionWithMessage
 
     @classmethod
-    def add_help(cls, parser, name, description, msg):
+    def add_help(
+        cls, parser: ArgumentParser, name: str, description: str, msg: str
+    ) -> None:
         """Method to add a custom help option.
 
         :param parser: parser object to add to
@@ -130,7 +141,11 @@ class HelpAction(argparse.Action):
         parser.add_argument(name, action=action, nargs=0, help=description)
 
 
-def print_result(result, jmespath_expr=None, format_function=None):  # noqa: C901
+def print_result(  # noqa: C901
+    result: Any,
+    jmespath_expr: Any = None,
+    format_function: Callable[[Any], str] | None = None,
+) -> None:
     """Print result vule"""
     format_function = format_function or helpers.json_dumps
 
@@ -155,7 +170,7 @@ def print_result(result, jmespath_expr=None, format_function=None):  # noqa: C90
 
 
 @contextlib.contextmanager
-def catch_missing_auth_cli():
+def catch_missing_auth_cli() -> Generator[None, None, None]:
     """Catch HTTPError 401 and display a message on missing iotlab-auth."""
 
     auth_cli_err = (
@@ -171,7 +186,11 @@ def catch_missing_auth_cli():
         sys.exit(1)
 
 
-def main_cli(function, parser, args=None):  # noqa: C901
+def main_cli(  # noqa: C901
+    function: Callable[[argparse.Namespace], Any],
+    parser: ArgumentParser,
+    args: list[str] | None = None,
+) -> None:
     """Main command-line execution."""
     args = args or sys.argv[1:]
     try:
@@ -194,13 +213,15 @@ def main_cli(function, parser, args=None):  # noqa: C901
     sys.exit(1)
 
 
-def sites_list():
+def sites_list() -> list[str]:
     """Return the list of sites"""
     sites_dict = rest.Api.get_sites()
     return [site["site"] for site in sites_dict["items"]]
 
 
-def check_site_with_server(site_name, _sites_list=None):
+def check_site_with_server(
+    site_name: str, _sites_list: list[str] | None = None
+) -> None:
     """Check if the given site exists by requesting the server list.
     If sites_list is given, it is used instead of doing a remote request
 
@@ -217,13 +238,13 @@ def check_site_with_server(site_name, _sites_list=None):
     raise argparse.ArgumentTypeError(f"Unknown site name {site_name!r}")
 
 
-def site_with_domain_checked(site, domain=DOMAIN_DNS):
+def site_with_domain_checked(site: str, domain: str = DOMAIN_DNS) -> str:
     """Return site with domain and check site exists."""
     check_site_with_server(site)
     return f"{site}.{domain}"
 
 
-def nodes_list_from_info(site, archi, nodes_str):
+def nodes_list_from_info(site: str, archi: str, nodes_str: str) -> list[str]:
     """ Cheks archi, nodes_str format and return nodes list
 
     >>> nodes_list_from_info('grenoble', 'm3', '1-4+6+7-8')
@@ -248,7 +269,7 @@ def nodes_list_from_info(site, archi, nodes_str):
     return nodes_url_list
 
 
-def nodes_id_list(archi, nodes_list):
+def nodes_id_list(archi: str, nodes_list: str) -> list[str]:
     """Expand short nodes_list 'archi', '1-5+6+8-12'
     to a regular nodes list
     """
@@ -261,7 +282,7 @@ def nodes_id_list(archi, nodes_list):
     return nodes
 
 
-def _expand_minus_str(minus_nodes_str):
+def _expand_minus_str(minus_nodes_str: str) -> list[int] | range:
     """Expand a '1-5' or '6' string to a list on integer
     :raises: ValueError on invalid values
     """
@@ -283,7 +304,7 @@ def _expand_minus_str(minus_nodes_str):
     return res
 
 
-def expand_short_nodes_list(nodes_str):
+def expand_short_nodes_list(nodes_str: str) -> list[int]:
     """Expand short nodes_list '1-5+6+8-12' to a regular nodes list
 
     >>> expand_short_nodes_list('1-4+6+7-8')
@@ -319,7 +340,7 @@ def expand_short_nodes_list(nodes_str):
         raise ValueError(f"Invalid nodes list: {nodes_str} ([0-9+-])")
 
 
-def add_nodes_selection_list(parser):
+def add_nodes_selection_list(parser: ArgumentParser) -> None:
     """Add '-l' and '-e' experiment nodes selection"""
     list_group = parser.add_mutually_exclusive_group()
 
@@ -341,7 +362,12 @@ def add_nodes_selection_list(parser):
     )
 
 
-def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
+def list_nodes(
+    api: Any,
+    exp_id: int,
+    nodes_ll: list[list[str]] | None = None,
+    excl_nodes_ll: list[list[str]] | None = None,
+) -> list[str]:
     """Return the list of nodes where the command will apply"""
 
     if nodes_ll is not None:
@@ -361,14 +387,14 @@ def list_nodes(api, exp_id, nodes_ll=None, excl_nodes_ll=None):
     return sorted(nodes, key=helpers.node_url_sort_key)
 
 
-def _get_experiment_nodes_list(api, exp_id):
+def _get_experiment_nodes_list(api: Any, exp_id: int) -> list[str]:
     """Get the nodes_list for given experiment"""
     exp_nodes = api.get_experiment_info(exp_id, "nodes")
     nodes = [res["network_address"] for res in exp_nodes["items"]]
     return nodes
 
 
-def nodes_list_from_str(nodes_list_str):
+def nodes_list_from_str(nodes_list_str: str) -> list[str]:
     """Convert the nodes_list_str to a list of nodes hostname
     Checks that given site exist
     :param nodes_list_str: short nodes format: site_name,archi,node_id_list

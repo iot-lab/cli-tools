@@ -29,6 +29,7 @@ first parameter to the function.
 """
 
 import sys
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -75,7 +76,7 @@ class Api:  # pylint:disable=too-many-public-methods
     _cache = {}
     url = helpers.read_custom_api_url() or "https://www.iot-lab.info/api/"
 
-    def __init__(self, username, password):
+    def __init__(self, username: str | None, password: str | None) -> None:
         """
         :param username: username for Basic password auth
         :param password: password for Basic auth
@@ -83,11 +84,13 @@ class Api:  # pylint:disable=too-many-public-methods
         """
         self.auth = HTTPBasicAuth(username, password)
 
-    def get_sites_details(self):
+    def get_sites_details(self) -> Any:
         """Get testbed sites details"""
         return self.method("sites/details")
 
-    def get_nodes(self, list_id=False, site=None, **selections):
+    def get_nodes(
+        self, list_id: bool = False, site: str | None = None, **selections: str
+    ) -> Any:
         """Get testbed nodes description
 
         :param list_id: return result in 'exp_list' format '3-12+35'
@@ -104,7 +107,7 @@ class Api:  # pylint:disable=too-many-public-methods
             url += "?" + urlencode(sorted(list(selections.items())))
         return self.method(url)
 
-    def submit_experiment(self, files):
+    def submit_experiment(self, files: dict[str, Any]) -> Any:
         """Submit user experiment
 
         :param files: experiment description and firmware(s)
@@ -113,18 +116,20 @@ class Api:  # pylint:disable=too-many-public-methods
         """
         return self.method("experiments", "post", files=files)
 
-    def get_experiments(self, state="Running", limit=0, offset=0):
+    def get_experiments(
+        self, state: str = "Running", limit: int = 0, offset: int = 0
+    ) -> Any:
         """Get user's experiment
         :returns JSONObject
         """
         queryset = f"state={state}&limit={limit}&offset={offset}"
         return self.method(f"experiments?{queryset}")
 
-    def get_running_experiments(self):
+    def get_running_experiments(self) -> Any:
         """Get testbed running experiments"""
         return self.method("experiments/running")
 
-    def get_experiment_info(self, expid, option=""):
+    def get_experiment_info(self, expid: int, option: str = "") -> Any:
         """Get user experiment description.
         :param expid: experiment id submission (e.g. OAR scheduler)
         :param option: Restrict to some values:
@@ -141,14 +146,16 @@ class Api:  # pylint:disable=too-many-public-methods
             url += f"/{option}"
         return self.method(url, raw=option == "data")
 
-    def stop_experiment(self, expid):
+    def stop_experiment(self, expid: int) -> Any:
         """Stop user experiment.
 
         :param id: experiment id submission (e.g. OAR scheduler)
         """
         return self.method(f"experiments/{expid}", "delete")
 
-    def reload_experiment(self, expid, exp_json=None):
+    def reload_experiment(
+        self, expid: int, exp_json: dict[str, str] | None = None
+    ) -> Any:
         """Reload user experiment.
 
         :param expid: experiment id submission (e.g. OAR scheduler)
@@ -160,7 +167,13 @@ class Api:  # pylint:disable=too-many-public-methods
 
     # Node commands
 
-    def node_command(self, command, expid, nodes=(), option=None):
+    def node_command(
+        self,
+        command: str,
+        expid: int,
+        nodes: list[str] | tuple[()] = (),
+        option: str | None = None,
+    ) -> Any:
         """Lanch 'command' on user experiment list nodes
 
         :param id: experiment id submission (e.g. OAR scheduler)
@@ -173,7 +186,9 @@ class Api:  # pylint:disable=too-many-public-methods
             url += f"/{option}"
         return self.method(url, "post", json=nodes)
 
-    def node_update(self, expid, files, binary=False):
+    def node_update(
+        self, expid: int, files: dict[str, Any], binary: bool = False
+    ) -> Any:
         """Launch update command (flash firmware) on user
         experiment list nodes
 
@@ -187,7 +202,7 @@ class Api:  # pylint:disable=too-many-public-methods
             url += "/binary"
         return self.method(url, "post", files=files)
 
-    def node_profile_load(self, expid, files):
+    def node_profile_load(self, expid: int, files: dict[str, Any]) -> Any:
         """Update profile with profile json on user
         experiment list nodes
 
@@ -199,7 +214,13 @@ class Api:  # pylint:disable=too-many-public-methods
         return self.method(f"experiments/{expid}/nodes/monitoring", "post", files=files)
 
     # script
-    def script_command(self, expid, command, files=None, json=None):
+    def script_command(
+        self,
+        expid: int,
+        command: str,
+        files: dict[str, Any] | None = None,
+        json: Any = None,
+    ) -> Any:
         """Execute scripts on sites.
 
         :param expid: experiment id submission (e.g. OAR scheduler)
@@ -219,7 +240,7 @@ class Api:  # pylint:disable=too-many-public-methods
 
     # Profile methods
 
-    def get_profiles(self, archi=None):
+    def get_profiles(self, archi: str | None = None) -> Any:
         """Get user's list profile description
 
         :returns JSONObject
@@ -229,7 +250,7 @@ class Api:  # pylint:disable=too-many-public-methods
             url += f"?archi={archi}"
         return self.method(url)
 
-    def get_profile(self, name):
+    def get_profile(self, name: str) -> Any:
         """Get user profile description.
 
         :param name: profile name
@@ -238,7 +259,7 @@ class Api:  # pylint:disable=too-many-public-methods
         """
         return self.method(f"monitoring/{name}")
 
-    def add_profile(self, profile):
+    def add_profile(self, profile: Any) -> Any:
         """Add user profile
 
         :param profile: profile description
@@ -250,7 +271,7 @@ class Api:  # pylint:disable=too-many-public-methods
         ret = self.method("monitoring", "post", json=profile)
         return ret
 
-    def del_profile(self, name):
+    def del_profile(self, name: str) -> Any:
         """Delete user profile
 
         :param profile_name: name
@@ -259,7 +280,7 @@ class Api:  # pylint:disable=too-many-public-methods
         ret = self.method(f"monitoring/{name}", "delete")
         return ret
 
-    def check_credential(self):
+    def check_credential(self) -> bool:
         """Check that the credentials are valid"""
         try:
             self.method("user")
@@ -271,18 +292,20 @@ class Api:  # pylint:disable=too-many-public-methods
 
     # ssh keys api
 
-    def get_ssh_keys(self):
+    def get_ssh_keys(self) -> Any:
         """Get user's registered ssh keys"""
         ret = self.method("user/keys")
         return ret
 
-    def set_ssh_keys(self, ssh_keys_json):
+    def set_ssh_keys(self, ssh_keys_json: Any) -> None:
         """Set user's ssh keys"""
         self.method("user/keys", "post", json=ssh_keys_json, raw=True)
 
     # robot
 
-    def robot_command(self, command, expid, nodes=()):
+    def robot_command(
+        self, command: str, expid: int, nodes: list[str] | tuple[()] = ()
+    ) -> Any:
         """Run 'status' on user experiment robot list nodes.
 
         :param id: experiment id submission (e.g. OAR scheduler)
@@ -291,7 +314,9 @@ class Api:  # pylint:disable=too-many-public-methods
         assert command in ("status",)
         return self.method(f"experiments/{expid}/robots/{command}", "post", json=nodes)
 
-    def robot_update_mobility(self, expid, name, nodes=()):
+    def robot_update_mobility(
+        self, expid: int, name: str, nodes: list[str] | tuple[()] = ()
+    ) -> Any:
         """Update mobility on user experiment robot list nodes.
 
         :param id: experiment id submission (e.g. OAR scheduler)
@@ -301,7 +326,7 @@ class Api:  # pylint:disable=too-many-public-methods
         return self.method(url, "post", json=nodes)
 
     @classmethod
-    def get_robot_mapfile(cls, site, mapfile):
+    def get_robot_mapfile(cls, site: str, mapfile: str) -> Any:
         """Download robot mapfile.
 
         :params site: Map info for site
@@ -315,7 +340,7 @@ class Api:  # pylint:disable=too-many-public-methods
         url = f"robots/{site}/{mapfile}"
         return api.method(url, raw=raw)
 
-    def get_circuits(self, **selections):
+    def get_circuits(self, **selections: str) -> Any:
         """List circuits mobilities."""
         url = "mobilities/circuits"
         if selections:
@@ -324,18 +349,18 @@ class Api:  # pylint:disable=too-many-public-methods
             url += "?" + urlencode(sorted(list(selections.items())))
         return self.method(url)
 
-    def get_circuit(self, name):
+    def get_circuit(self, name: str) -> Any:
         """Get user mobilities."""
         return self.method(f"mobilities/circuits/{name}")
 
     def method(  # pylint:disable=too-many-arguments,too-many-positional-arguments
         self,
-        url,
-        method="get",
-        json=None,
-        files=None,
-        raw=False,
-    ):
+        url: str,
+        method: str = "get",
+        json: Any = None,
+        files: dict[str, Any] | None = None,
+        raw: bool = False,
+    ) -> Any:
         """Call http `method` on iot-lab-url/'url'.
 
         :param url: url of API.
@@ -357,7 +382,7 @@ class Api:  # pylint:disable=too-many-public-methods
         return self._raise_http_error(_url, req)
 
     @staticmethod
-    def _request(url, method, **kwargs):
+    def _request(url: str, method: str, **kwargs: Any) -> requests.Response:
         """Call http `method` on 'url'
 
         :param url: url of API.
@@ -369,7 +394,7 @@ class Api:  # pylint:disable=too-many-public-methods
             raise RuntimeError(sys.exc_info())
 
     @staticmethod
-    def _raise_http_error(url, req):
+    def _raise_http_error(url: str, req: requests.Response) -> None:
         """Raises HTTP error for 'url' and 'req'"""
         # Indent req.text to pretty print it later
         indented_lines = ["\t" + line for line in req.text.splitlines(True)]
@@ -377,7 +402,7 @@ class Api:  # pylint:disable=too-many-public-methods
         raise HTTPError(url, req.status_code, msg, req.headers, None)
 
     @classmethod
-    def get_sites(cls):
+    def get_sites(cls) -> Any:
         """Get testbed sites description
         May be run unauthicated
 
@@ -386,7 +411,7 @@ class Api:  # pylint:disable=too-many-public-methods
         return cls._get_with_cache("sites")
 
     @classmethod
-    def _get_with_cache(cls, url):
+    def _get_with_cache(cls, url: str) -> Any:
         """Get resource from either cache or rest
         :returns JSONObject
         """

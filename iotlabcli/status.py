@@ -21,8 +21,10 @@
 
 """Implement the 'status' requests"""
 
+from typing import Any
 
-def status_command(api, command, **selections):
+
+def status_command(api: Any, command: str, **selections: str) -> Any:
     """Launch testbed status commands
 
     :param api: API Rest api object

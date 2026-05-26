@@ -22,6 +22,7 @@
 """Implement the 'node' requests"""
 
 import json
+from typing import Any
 
 from iotlabcli import helpers
 
@@ -29,7 +30,9 @@ NODE_FILENAME = "nodes.json"
 EXPERIMENT = "experiment.json"
 
 
-def _node_command_flash(api, exp_id, nodes_list, cmd_opt):
+def _node_command_flash(
+    api: Any, exp_id: int, nodes_list: list[str], cmd_opt: str
+) -> Any:
     assert cmd_opt is not None, "`cmd_opt` required for update"
     files = helpers.FilesDict()
 
@@ -42,7 +45,9 @@ def _node_command_flash(api, exp_id, nodes_list, cmd_opt):
     return api.node_update(exp_id, files)
 
 
-def _node_command_profile_load(api, exp_id, nodes_list, cmd_opt):
+def _node_command_profile_load(
+    api: Any, exp_id: int, nodes_list: list[str], cmd_opt: str
+) -> Any:
     assert cmd_opt is not None, "`cmd_opt` required for update"
     files = helpers.FilesDict()
 
@@ -51,7 +56,13 @@ def _node_command_profile_load(api, exp_id, nodes_list, cmd_opt):
     return api.node_profile_load(exp_id, files)
 
 
-def node_command(api, command, exp_id, nodes_list=(), cmd_opt=None):
+def node_command(
+    api: Any,
+    command: str,
+    exp_id: int,
+    nodes_list: list[str] | tuple[()] = (),
+    cmd_opt: str | None = None,
+) -> Any:
     """Launch commands (start, stop, reset, update)
     on nodes (JSONArray) user experiment
 

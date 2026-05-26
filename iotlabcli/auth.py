@@ -32,7 +32,9 @@ import logging
 RC_FILE = os.getenv("IOTLAB_PASSWORD_FILE") or os.path.expanduser("~/.iotlabrc")
 
 
-def get_user_credentials(username=None, password=None):
+def get_user_credentials(
+    username: str | None = None, password: str | None = None
+) -> tuple[str | None, str | None]:
     """Return user credentials.
     If provided in arguments return them, if password missing, ask on console,
     or try to read them from password file"""
@@ -46,13 +48,13 @@ def get_user_credentials(username=None, password=None):
     return username, password
 
 
-def check_user_credentials(username, password):
+def check_user_credentials(username: str, password: str) -> bool:
     """Check that the given credentials are valid"""
     api = Api(username, password)
     return api.check_credential()
 
 
-def write_password_file(username, password):
+def write_password_file(username: str, password: str) -> None:
     """Create a password file for basic authentication http when
     command-line option username and password are used We write .iotlabrc
     file in user home directory with format username:base64(password)
@@ -69,7 +71,7 @@ def write_password_file(username, password):
         pass_file.write(f"{username}:{enc_password}")
 
 
-def _read_password_file():
+def _read_password_file() -> tuple[str | None, str | None]:
     """Try to read password file (.iotlabrc) in user home directory when
     command-line option username and password are not used. If password
     file exist whe return username and password for basic auth http
@@ -91,7 +93,7 @@ def _read_password_file():
 IDENTITY_FILE = os.path.expanduser("~/.ssh/id_rsa")
 
 
-def add_ssh_key(identity_file=None):
+def add_ssh_key(identity_file: str | None = None) -> None:
     """Install ssh key into user's iot-lab account"""
 
     if identity_file is None:
@@ -113,7 +115,7 @@ def add_ssh_key(identity_file=None):
     api.set_ssh_keys(keys_json)
 
 
-def ssh_keys():
+def ssh_keys() -> None:
     """List ssh keys configured into user's iot-lab account"""
 
     api = Api(*get_user_credentials())
