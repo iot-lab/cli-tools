@@ -22,12 +22,12 @@
 """Authentication file management"""
 
 import getpass
+import logging
 import os
 import os.path
 from base64 import b64decode, b64encode
 
 from iotlabcli.rest import Api
-import logging
 
 RC_FILE = os.getenv("IOTLAB_PASSWORD_FILE") or os.path.expanduser("~/.iotlabrc")
 
@@ -78,7 +78,7 @@ def _read_password_file() -> tuple[str | None, str | None]:
     authentication
     """
     if not os.path.exists(RC_FILE):
-        logging.info(f"Reading password file: no such file or directory: '{RC_FILE}'")
+        logging.info("Reading password file: no such file or directory: '%s'", RC_FILE)
         return None, None
     try:
         with open(RC_FILE, "r") as password_file:
