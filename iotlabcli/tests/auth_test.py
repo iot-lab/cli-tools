@@ -25,10 +25,9 @@
 
 import os
 import unittest
+from unittest.mock import mock_open, patch
 
 from iotlabcli import auth
-
-from .c23 import mock_open, patch
 
 TEST_RC_FILE = "test_iotlabrc_file"
 
@@ -133,7 +132,7 @@ class TestSSHKeyFeature(unittest.TestCase):
         test_keys["sshkeys"].append(TEST_SSHKEYS)
         api.set_ssh_keys.assert_called_with(test_keys)
 
-        api.get_ssh_keys.call_count = 0
+        api.get_ssh_keys.reset_mock()
         # Cannot add a key that is already stored (here it's in test_keys)
         self.assertRaises(ValueError, auth.add_ssh_key, TEST_SSH_IDENTITY_FILE)
         api.get_ssh_keys.assert_called_once()

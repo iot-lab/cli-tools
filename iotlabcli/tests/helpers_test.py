@@ -25,13 +25,12 @@
 import sys
 import unittest
 import warnings
+from unittest.mock import patch
 
 import pytest
 
 from iotlabcli import helpers
 from iotlabcli.tests import my_mock
-
-from .c23 import patch
 
 
 class TestHelpers(unittest.TestCase):

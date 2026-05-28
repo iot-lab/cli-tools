@@ -25,14 +25,15 @@
 import argparse
 import sys
 import unittest
+from io import StringIO
+from unittest.mock import Mock, patch
+from urllib.error import HTTPError
 
 from iotlabcli.parser import common
 from iotlabcli.parser.common import print_result
 from iotlabcli.tests.my_mock import api_mock, api_mock_stop
 
-from .c23 import HTTPError, Mock, StringIO, patch
-
-BUILTIN = "builtins" if sys.version_info[0] == 3 else "__builtin__"
+BUILTIN = "builtins"
 
 
 class TestCommonParser(unittest.TestCase):

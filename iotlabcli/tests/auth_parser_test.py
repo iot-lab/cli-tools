@@ -23,11 +23,10 @@
 
 import sys
 import unittest
+from unittest.mock import patch
 
 import iotlabcli.parser.auth as auth_parser
 from iotlabcli import auth
-
-from .c23 import patch
 
 # pylint: disable=missing-docstring,too-many-public-methods
 
@@ -84,7 +83,7 @@ class TestMainAuthParser(unittest.TestCase):
 
             # List ssh key with -u/-p options
             ssh_key_m.reset_mock()
-            ssh_keys_m.call_count = 0
+            ssh_keys_m.reset_mock()
             api.check_credential.return_value = True
             store_m.return_value = "Written"
             auth_parser.main(["-u", "super_user", "-p", "password", "--list-ssh-keys"])

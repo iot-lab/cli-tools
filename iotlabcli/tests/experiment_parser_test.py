@@ -25,13 +25,13 @@
 
 import argparse
 import unittest
+from io import StringIO
+from unittest.mock import patch
 
 import iotlabcli.parser.experiment as experiment_parser
 from iotlabcli import experiment
 from iotlabcli.tests import resource_file
 from iotlabcli.tests.my_mock import MainMock
-
-from .c23 import StringIO, patch
 
 
 class TestMainInfoParser(MainMock):

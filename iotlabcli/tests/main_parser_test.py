@@ -24,12 +24,11 @@
 import argparse
 import subprocess
 import sys
+from unittest.mock import patch
 
 import pytest
 
 import iotlabcli.parser.main as main_parser
-
-from .c23 import patch, version_info
 
 
 @pytest.mark.parametrize(
@@ -70,14 +69,7 @@ try:
 except ImportError:
     iotlabsshcli = None
 
-try:
-    import iotlabaggregator
-
-    if version_info[0] != 2:
-        # pylint: disable=invalid-name
-        iotlabaggregator = None  # noqa
-except (ImportError, TypeError):
-    iotlabaggregator = None
+iotlabaggregator = None  # pylint: disable=invalid-name
 
 try:
     import oml_plot_tools

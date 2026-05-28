@@ -33,11 +33,11 @@
 
 import json
 import unittest
+from unittest import mock
+from unittest.mock import mock_open, patch
 
 from iotlabcli import experiment, helpers, rest, tests
 from iotlabcli.tests.my_mock import API_RET, CommandMock, RequestRet
-
-from .c23 import mock, mock_open, patch
 
 SCRIPTS = {
     "script.sh": (b'#! /bin/sh\necho "script.sh"\n'),
