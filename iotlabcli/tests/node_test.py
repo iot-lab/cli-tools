@@ -26,11 +26,10 @@
 # pylint: disable=no-member,maybe-no-member,too-many-statements
 import json
 import unittest
+from unittest.mock import patch
 
 from iotlabcli import node
 from iotlabcli.tests import my_mock
-
-from .c23 import patch
 
 
 class TestNode(unittest.TestCase):

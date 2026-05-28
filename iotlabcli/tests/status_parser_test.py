@@ -21,10 +21,10 @@
 
 """Test the iotlabcli.parser.status module"""
 
+from unittest.mock import patch
+
 import iotlabcli.parser.status as status_parser
 from iotlabcli.tests.my_mock import MainMock
-
-from .c23 import patch
 
 
 @patch("iotlabcli.status.status_command")
