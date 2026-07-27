@@ -25,4 +25,4 @@ from iotlabcli.auth import get_user_credentials
 from iotlabcli.helpers import get_current_experiment
 from iotlabcli.rest import Api
 
-__version__ = "3.3.2"
+__version__ = "3.3.2-dev0"
