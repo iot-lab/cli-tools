@@ -618,6 +618,35 @@ class TestAssociationParser(unittest.TestCase):
         )
         self._assert_assoc(["", "firmware=m3.elf"], {"firmware": "m3.elf"})
 
+    def test_image_assoc(self):
+        """Image association: OCI image reference."""
+        self._assert_assoc(
+            ["", "image=docker.io/jdoe/orin-ros:1.0"],
+            {"image": "docker.io/jdoe/orin-ros:1.0"},
+        )
+        self._assert_assoc(
+            ["fw.elf", "image=jdoe/img@sha256:" + "a" * 64],
+            {"firmware": "fw.elf", "image": "jdoe/img@sha256:" + "a" * 64},
+        )
+        self._assert_fail_assoc(["image=jdoe/Image"])
+        self._assert_fail_assoc(["image=--help"])
+        self._assert_fail_assoc(["image=jdoe/img:1;reboot"])
+
+    @patch("iotlabcli.parser.common.sites_list", return_value=["saclay"])
+    def test_image_resources(self, _sites_list):
+        """Image association in the experiment resources."""
+        resources = experiment_parser.exp_resources_from_str(
+            "saclay,custom,8,image=docker.io/jdoe/orin-ros:1.0"
+        )
+        self.assertEqual(
+            resources["associations"], {"image": "docker.io/jdoe/orin-ros:1.0"}
+        )
+        self.assertRaises(
+            argparse.ArgumentTypeError,
+            experiment_parser.exp_resources_from_str,
+            "saclay,custom,8,image=Bad",
+        )
+
     def test_invalid_legacy_assocs(self):
         """Invalid legacy mode associations."""
         self._assert_fail_assoc(["tuto.elf", "battery", "extra_unknown"])
