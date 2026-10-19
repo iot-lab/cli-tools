@@ -22,6 +22,7 @@
 """Experiment parser"""
 
 import argparse
+import re
 import sys
 import time
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -641,6 +642,29 @@ def _merge_assocs_args_d_kwargs(
 SUBMIT_ASSOC_ARGS_KWARGS = "[firmware][,profile][,assoc=value][,assoc=...]"
 
 
+# Open Linux image of the user, OCI reference [registry/]path[:tag][@sha256:digest]
+IMAGE_NAME_RE = re.compile(
+    r"^(?:[a-z0-9.-]+(?::[0-9]+)?/)?"
+    r"[a-z0-9]+(?:[._-][a-z0-9]+)*(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)*"
+    r"(?::[A-Za-z0-9_][A-Za-z0-9_.-]{0,127})?(?:@sha256:[0-9a-f]{64})?$"
+)
+
+
+def _check_image(image: str) -> str:
+    """Check the image association value.
+
+    >>> _check_image("docker.io/jdoe/orin-ros:1.0")
+    'docker.io/jdoe/orin-ros:1.0'
+    >>> _check_image("jdoe/Image")
+    Traceback (most recent call last):
+    ValueError: Invalid image 'jdoe/Image', expected [registry/]namespace/image[:tag]
+    """
+    if len(image) > 255 or not IMAGE_NAME_RE.match(image):
+        expected = "[registry/]namespace/image[:tag]"
+        raise ValueError(f"Invalid image {image!r}, expected {expected}")
+    return image
+
+
 def _extract_associations(params: list[str]) -> dict[str, str]:
     """Extract 'associations'.
 
@@ -655,6 +679,8 @@ def _extract_associations(params: list[str]) -> dict[str, str]:
             f"Invalid positional arguments, should be {SUBMIT_ASSOC_ARGS_KWARGS}"
         )
     associations = _merge_assocs_args_d_kwargs(args_dict, kwargs)
+    if "image" in associations:
+        _check_image(associations["image"])
 
     return associations
 

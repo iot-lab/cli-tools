@@ -47,6 +47,10 @@ Resources configuration sets configuration for given nodes which includes:
 * firmware
 * profile
 * mobility
+* image: open Linux image of the user booted by the nodes, an OCI image
+  reference ([registry/]namespace/image[:tag], Docker Hub by default),
+  built FROM the IoT-LAB open Linux image of the node type. The site boots
+  its default image instead when the image is too large.
 * ... (maybe another one non documented here)
 
 Format:
@@ -55,6 +59,7 @@ Format:
 
     firmware=test.elf,profile=consumption
     mobility=JHall,profile=sniffer
+    image=docker.io/jdoe/orin-ros:1.0
 
 
 Firmware and profile can also be specified by position, empty means no value.
