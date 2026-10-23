@@ -111,3 +111,48 @@ class TestM3Profile(unittest.TestCase):
                 "radio": None,
             },
         )
+
+
+class TestProfileOutputs(unittest.TestCase):
+    def test_outputs_streaming_events(self):
+        m3_prof = profile.ProfileM3("name", "dc")
+        m3_prof.set_outputs(
+            ["oml", "jsonl", "streaming", "oml"],
+            stream_period=500,
+            streams=["consumption", "event"],
+        )
+        m3_prof.set_events(["gpio1", "gpio2"])
+        self.assertEqual(m3_prof.outputs, ["oml", "jsonl", "streaming"])
+        self.assertEqual(
+            m3_prof.streaming, {"period": 500, "streams": ["consumption", "event"]}
+        )
+        self.assertEqual(m3_prof.events, {"gpios": ["gpio1", "gpio2"]})
+
+        # streaming defaults: gateway ones
+        m3_prof = profile.ProfileM3("name", "dc")
+        m3_prof.set_outputs(["streaming"])
+        self.assertEqual(m3_prof.streaming, {})
+
+    def test_unset_outputs_not_serialized(self):
+        m3_prof = profile.ProfileM3("name", "dc")
+        m3_prof.set_outputs(None)
+        m3_prof.set_events(None)
+        for key in ("outputs", "streaming", "events"):
+            self.assertNotIn(key, m3_prof.__dict__)
+
+        # files only: no streaming configuration
+        m3_prof.set_outputs(["jsonl"])
+        self.assertEqual(m3_prof.outputs, ["jsonl"])
+        self.assertNotIn("streaming", m3_prof.__dict__)
+
+    def test_invalid_outputs(self):
+        m3_prof = profile.ProfileM3("name", "dc")
+        self.assertRaises(AssertionError, m3_prof.set_outputs, ["csv"])
+        self.assertRaises(AssertionError, m3_prof.set_outputs, None, 100)
+        self.assertRaises(AssertionError, m3_prof.set_outputs, ["oml"], None, ["radio"])
+        self.assertRaises(
+            AssertionError, m3_prof.set_outputs, ["streaming"], None, ["sniffer"]
+        )
+        self.assertRaises(AssertionError, m3_prof.set_outputs, ["streaming"], None, [])
+        self.assertRaises(AssertionError, m3_prof.set_outputs, ["streaming"], -1)
+        self.assertRaises(AssertionError, m3_prof.set_events, [])

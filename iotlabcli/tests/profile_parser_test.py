@@ -100,6 +100,23 @@ class TestMainProfileParser(MainMock):
         profilem3.set_radio.assert_called_with(
             mode="sniffer", channels=[11], period=None, num_per_channel=None
         )
+        profilem3.set_outputs.assert_called_with(
+            outputs=None, stream_period=None, streams=None
+        )
+        profilem3.set_events.assert_called_with(gpios=None)
+
+        # Outputs, streaming and events
+        args = ["addm3", "-n", "name", "-p", "dc"]
+        args += ["-outputs", "oml", "streaming", "-stream-period", "100"]
+        args += ["-streams", "consumption", "event", "-gpios", "gpio1", "gpio2"]
+        opts = parser.parse_args(args)
+        profile_parser._m3_profile(opts)  # pylint: disable=protected-access
+        profilem3.set_outputs.assert_called_with(
+            outputs=["oml", "streaming"],
+            stream_period=100,
+            streams=["consumption", "event"],
+        )
+        profilem3.set_events.assert_called_with(gpios=["gpio1", "gpio2"])
 
     def test__add_profile(self):
         ret = profile_parser._add_profile(  # pylint: disable=protected-access
