@@ -23,7 +23,7 @@
 
 from dataclasses import dataclass, field
 
-# pylint:disable=too-few-public-methods
+# pylint:disable=too-few-public-methods,too-many-instance-attributes
 
 
 @dataclass
@@ -41,6 +41,10 @@ class ProfileM3A8:
             "num_per_channel": range(0, 256),
             "period": range(1, 2**16),
         },
+        "outputs": ["oml", "jsonl", "streaming"],
+        "streams": ["consumption", "radio", "event"],
+        # streamed consumption downsampling period (ms)
+        "stream_period": range(0, 3600 * 1000 + 1),
     }
     arch = None
 
@@ -146,6 +150,53 @@ class ProfileM3A8:
         self.radio["channels"] = channels
         self.radio["period"] = None
         self.radio["num_per_channel"] = None
+
+    # outputs, streaming and events attributes are only set when configured:
+    # the JSON of the profiles without them is unchanged
+
+    def set_outputs(
+        self,
+        outputs: list[str] | None,
+        stream_period: int | None = None,
+        streams: list[str] | None = None,
+    ) -> None:
+        """Configure the measures outputs and their streaming"""
+        if outputs is None or "streaming" not in outputs:
+            _err = "Streaming options require the 'streaming' output"
+            assert stream_period is None and streams is None, _err
+        if outputs is None:
+            return
+        self.outputs = self._outputs(outputs)  # pylint: disable=W0201
+        if "streaming" in self.outputs:
+            self.streaming = self._streaming(stream_period, streams)  # pylint: disable=W0201
+
+    def _outputs(self, outputs: list[str]) -> list[str]:
+        for output in outputs:
+            assert output in self.choices["outputs"], f"Output {output}"
+        return list(dict.fromkeys(outputs))
+
+    def _streaming(self, stream_period: int | None, streams: list[str] | None) -> dict:
+        """Streaming configuration, only the given values"""
+        streaming: dict = {}
+        if stream_period is not None:
+            assert stream_period in self.choices["stream_period"], "Stream period"
+            streaming["period"] = stream_period
+        if streams is not None:
+            streaming["streams"] = self._streams(streams)
+        return streaming
+
+    def _streams(self, streams: list[str]) -> list[str]:
+        assert streams, "Streams"
+        for stream in streams:
+            assert stream in self.choices["streams"], f"Stream {stream}"
+        return list(dict.fromkeys(streams))
+
+    def set_events(self, gpios: list[str] | None) -> None:
+        """Configure the events of GPIO lines (names of the node lines)"""
+        if gpios is None:
+            return
+        assert gpios, "GPIO lines"
+        self.events = {"gpios": list(dict.fromkeys(gpios))}  # pylint: disable=W0201
 
 
 class ProfileM3(ProfileM3A8):

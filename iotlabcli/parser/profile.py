@@ -217,6 +217,45 @@ def add_m3_a8_parser(node_type: str, subparser: ArgumentParser) -> None:
         help="period measure",
     )
 
+    # Measures outputs
+    outputs = subparser.add_argument_group("Measures outputs")
+
+    outputs.add_argument(
+        "-outputs",
+        dest="outputs",
+        nargs="+",
+        choices=node_class.choices["outputs"],
+        help="files (oml, jsonl) and streaming of the measures (oml by default)",
+    )
+
+    outputs.add_argument(
+        "-stream-period",
+        dest="stream_period",
+        type=int,
+        choices=node_class.choices["stream_period"],
+        metavar="{0..3600000}",
+        help="streamed consumption mean period (ms, 0: no downsampling)",
+    )
+
+    outputs.add_argument(
+        "-streams",
+        dest="streams",
+        nargs="+",
+        choices=node_class.choices["streams"],
+        help="streamed measures (all by default)",
+    )
+
+    # GPIO events
+    events = subparser.add_argument_group("GPIO events")
+
+    events.add_argument(
+        "-gpios",
+        dest="gpios",
+        nargs="+",
+        metavar="NAME",
+        help="events of these GPIO lines of the nodes (node property gpio)",
+    )
+
 
 def _m3_a8_profile(opts: argparse.Namespace, node_class: type) -> Any:
     """Create a node_class profile from namespace object"""
@@ -234,6 +273,12 @@ def _m3_a8_profile(opts: argparse.Namespace, node_class: type) -> Any:
         period=opts.rperiod,
         num_per_channel=opts.num_per_channel,
     )
+    profile.set_outputs(
+        outputs=opts.outputs,
+        stream_period=opts.stream_period,
+        streams=opts.streams,
+    )
+    profile.set_events(gpios=opts.gpios)
     return profile
 
 
