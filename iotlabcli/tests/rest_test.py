@@ -27,6 +27,7 @@ import json
 import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError
+from urllib.parse import urljoin
 
 from iotlabcli import rest
 from iotlabcli.helpers import json_dumps
@@ -169,6 +170,41 @@ class TestRest(unittest.TestCase):
         assert self.api.get_ssh_keys() == test_ssh_keys_json
         assert self.api.set_ssh_keys(test_ssh_keys_json) is None
         patch.stopall()
+
+    def test_streaming_destinations(self):
+        """Streaming destinations requests"""
+        ret_val = RequestRet(200, content='{"ok": true, "error": null}')
+        with patch("requests.request", return_value=ret_val) as request:
+            self.api.get_streaming_destinations()
+            assert request.call_args[0][:2] == (
+                "get",
+                self._url + "user/streaming/destinations",
+            )
+            destination = {"name": "mylab", "url": "https://x", "auth": "none"}
+            self.api.add_streaming_destination(destination)
+            assert request.call_args[0][0] == "post"
+            assert request.call_args[1]["json"] == destination
+            self.api.update_streaming_destination(destination)
+            assert request.call_args[0] == (
+                "put",
+                self._url + "user/streaming/destinations/mylab",
+            )
+            self.api.del_streaming_destination("mylab")
+            assert request.call_args[0][0] == "delete"
+            # through the ingest proxy, next to the API
+            assert self.api.test_streaming_destination("mylab") == {
+                "ok": True,
+                "error": None,
+            }
+            assert request.call_args[0][1] == urljoin(
+                self._url, "../streaming/destinations/mylab/test"
+            )
+        with patch.dict("os.environ", {"IOTLAB_STREAMING_URL": "https://proxy/s"}):
+            with patch("requests.request", return_value=ret_val) as request:
+                self.api.test_streaming_destination("mylab")
+                assert (
+                    request.call_args[0][1] == "https://proxy/s/destinations/mylab/test"
+                )
 
     def test_method_raw(self):
         """Run as Raw mode"""

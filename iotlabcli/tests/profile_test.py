@@ -156,3 +156,21 @@ class TestProfileOutputs(unittest.TestCase):
         self.assertRaises(AssertionError, m3_prof.set_outputs, ["streaming"], None, [])
         self.assertRaises(AssertionError, m3_prof.set_outputs, ["streaming"], -1)
         self.assertRaises(AssertionError, m3_prof.set_events, [])
+        # destinations: streaming only, valid names
+        self.assertRaises(
+            AssertionError, m3_prof.set_outputs, ["oml"], None, None, ["iotlab"]
+        )
+        for destinations in ([], ["my lab"], ["a" * 33]):
+            self.assertRaises(
+                AssertionError,
+                m3_prof.set_outputs,
+                ["streaming"],
+                None,
+                None,
+                destinations,
+            )
+
+    def test_streaming_destinations(self):
+        m3_prof = profile.ProfileM3("name", "dc")
+        m3_prof.set_outputs(["streaming"], destinations=["iotlab", "my-lab", "iotlab"])
+        self.assertEqual(m3_prof.streaming, {"destinations": ["iotlab", "my-lab"]})

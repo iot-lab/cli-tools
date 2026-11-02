@@ -280,6 +280,35 @@ class Api:  # pylint:disable=too-many-public-methods
         ret = self.method(f"monitoring/{name}", "delete")
         return ret
 
+    # Streaming destinations methods
+
+    def get_streaming_destinations(self) -> Any:
+        """Destinations of the streamed measures of the user (no secrets)"""
+        return self.method("user/streaming/destinations")
+
+    def add_streaming_destination(self, destination: dict) -> Any:
+        """Add a destination: name, url, auth, secret"""
+        return self.method("user/streaming/destinations", "post", json=destination)
+
+    def update_streaming_destination(self, destination: dict) -> Any:
+        """Replace a destination; without secret, the stored one is kept"""
+        return self.method(
+            f"user/streaming/destinations/{destination['name']}",
+            "put",
+            json=destination,
+        )
+
+    def del_streaming_destination(self, name: str) -> Any:
+        """Delete a destination, refused while a profile uses it"""
+        return self.method(f"user/streaming/destinations/{name}", "delete")
+
+    def test_streaming_destination(self, name: str) -> Any:
+        """Send one test point to a destination, through the ingest proxy"""
+        return self.method(
+            urljoin(helpers.streaming_url(self.url), f"destinations/{name}/test"),
+            "post",
+        )
+
     def check_credential(self) -> bool:
         """Check that the credentials are valid"""
         try:
@@ -369,8 +398,8 @@ class Api:  # pylint:disable=too-many-public-methods
         :param files: send as 'post' multipart data
         :param raw: Should data be loaded as json or not
         """
-        assert method in ("get", "post", "delete")
-        assert (method == "post") or (files is None and json is None)
+        assert method in ("get", "post", "put", "delete")
+        assert (method in ("post", "put")) or (files is None and json is None)
 
         _url = urljoin(self.url, url)
 

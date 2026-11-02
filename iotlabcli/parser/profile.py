@@ -22,6 +22,7 @@
 """Profile parser"""
 
 import argparse
+import getpass
 import json
 import sys
 from argparse import ArgumentParser, RawTextHelpFormatter
@@ -115,7 +116,60 @@ def parse_options() -> ArgumentParser:
         help="profile JSON representation path file",
     )
 
+    add_destinations_parser(
+        subparsers.add_parser(
+            "destinations",
+            help="manage the destinations of the streamed measures",
+            description=DESTINATIONS_PARSER,
+            formatter_class=RawTextHelpFormatter,
+        )
+    )
+
     return parser
+
+
+DESTINATIONS_PARSER = """
+Destinations of the streamed measures: HTTPS endpoints of your own
+infrastructure receiving InfluxDB line protocol, e.g.
+  https://influx.example.org/api/v2/write?org=<org>&bucket=<bucket> (InfluxDB 2)
+  https://vm.example.org/influx/write (VictoriaMetrics)
+A profile streams to them with -destinations <name> ... (iotlab, the hosted
+database, by default). The secret is read from --secret-file, or asked.
+"""
+
+
+def add_destinations_parser(parser: ArgumentParser) -> None:
+    """Subcommands of the streaming destinations"""
+    subparsers = parser.add_subparsers(dest="destinations_command")
+    subparsers.required = True
+
+    for command, help_msg in (
+        ("add", "add a destination"),
+        ("update", "replace a destination (secret kept without --secret-file)"),
+    ):
+        sub = subparsers.add_parser(command, help=help_msg)
+        sub.add_argument("-n", "--name", required=True, help="destination name")
+        sub.add_argument("-u", "--url", required=True, help="write URL (https://...)")
+        sub.add_argument(
+            "-a",
+            "--auth",
+            default="token",
+            choices=["none", "token", "bearer", "basic"],
+            help="authentication: Authorization header Token, Bearer or Basic "
+            "(secret <user>:<password>), token by default",
+        )
+        sub.add_argument(
+            "--secret-file",
+            help="file of the secret, - for stdin (asked otherwise)",
+        )
+
+    subparsers.add_parser("list", help="list the destinations")
+    for command, help_msg in (
+        ("del", "delete a destination (refused while a profile uses it)"),
+        ("test", "send one test point to a destination"),
+    ):
+        sub = subparsers.add_parser(command, help=help_msg)
+        sub.add_argument("-n", "--name", required=True, help="destination name")
 
 
 def add_m3_a8_parser(node_type: str, subparser: ArgumentParser) -> None:
@@ -245,6 +299,15 @@ def add_m3_a8_parser(node_type: str, subparser: ArgumentParser) -> None:
         help="streamed measures (all by default)",
     )
 
+    outputs.add_argument(
+        "-destinations",
+        dest="destinations",
+        nargs="+",
+        metavar="NAME",
+        help="destinations of the streamed measures: iotlab (hosted database, "
+        "the default) and your destinations (iotlab-profile destinations)",
+    )
+
     # GPIO events
     events = subparser.add_argument_group("GPIO events")
 
@@ -277,6 +340,7 @@ def _m3_a8_profile(opts: argparse.Namespace, node_class: type) -> Any:
         outputs=opts.outputs,
         stream_period=opts.stream_period,
         streams=opts.streams,
+        destinations=opts.destinations,
     )
     profile.set_events(gpios=opts.gpios)
     return profile
@@ -365,6 +429,53 @@ def get_profile_parser(api: Any, opts: argparse.Namespace) -> Any:
     return profile_dict
 
 
+def _read_secret(secret_file: str) -> str:
+    """Secret from a file, - for stdin"""
+    if secret_file == "-":
+        return sys.stdin.readline()
+    return str(helpers.read_file(secret_file))
+
+
+def _secret(opts: argparse.Namespace, required: bool) -> str | None:
+    """Secret of a destination: --secret-file (- for stdin), or asked;
+    never a command-line argument (shell history, process list)"""
+    if opts.auth == "none" or (opts.secret_file is None and not required):
+        return None
+    if opts.secret_file is not None:
+        secret = _read_secret(opts.secret_file)
+    else:
+        secret = getpass.getpass(f"Secret of the destination {opts.name}: ")
+    secret = secret.rstrip("\r\n")
+    if not secret:
+        raise ValueError("Empty secret")
+    return secret
+
+
+def _destination(opts: argparse.Namespace, required_secret: bool) -> dict:
+    """Destination of the add and update commands"""
+    destination = {"name": opts.name, "url": opts.url, "auth": opts.auth}
+    secret = _secret(opts, required=required_secret)
+    if secret is not None:
+        destination["secret"] = secret
+    return destination
+
+
+def destinations_parser(api: Any, opts: argparse.Namespace) -> Any:
+    """Streaming destinations commands
+
+    :param api: API Rest api object
+    :param opts: command-line parser opts
+    """
+    commands = {
+        "list": api.get_streaming_destinations,
+        "del": lambda: api.del_streaming_destination(opts.name),
+        "test": lambda: api.test_streaming_destination(opts.name),
+        "add": lambda: api.add_streaming_destination(_destination(opts, True)),
+        "update": lambda: api.update_streaming_destination(_destination(opts, False)),
+    }
+    return commands[opts.destinations_command]()
+
+
 def profile_parse_and_run(opts: argparse.Namespace) -> Any:
     """Parse namespace 'opts' object and execute requested command"""
     user, passwd = auth.get_user_credentials(opts.username, opts.password)
@@ -377,6 +488,7 @@ def profile_parse_and_run(opts: argparse.Namespace) -> Any:
         "load": load_profile_parser,
         "get": get_profile_parser,
         "del": del_profile_parser,
+        "destinations": destinations_parser,
     }[opts.command]
 
     return fct_parser(api, opts)

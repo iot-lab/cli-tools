@@ -101,7 +101,7 @@ class TestMainProfileParser(MainMock):
             mode="sniffer", channels=[11], period=None, num_per_channel=None
         )
         profilem3.set_outputs.assert_called_with(
-            outputs=None, stream_period=None, streams=None
+            outputs=None, stream_period=None, streams=None, destinations=None
         )
         profilem3.set_events.assert_called_with(gpios=None)
 
@@ -109,12 +109,14 @@ class TestMainProfileParser(MainMock):
         args = ["addm3", "-n", "name", "-p", "dc"]
         args += ["-outputs", "oml", "streaming", "-stream-period", "100"]
         args += ["-streams", "consumption", "event", "-gpios", "gpio1", "gpio2"]
+        args += ["-destinations", "iotlab", "mylab"]
         opts = parser.parse_args(args)
         profile_parser._m3_profile(opts)  # pylint: disable=protected-access
         profilem3.set_outputs.assert_called_with(
             outputs=["oml", "streaming"],
             stream_period=100,
             streams=["consumption", "event"],
+            destinations=["iotlab", "mylab"],
         )
         profilem3.set_events.assert_called_with(gpios=["gpio1", "gpio2"])
 
@@ -150,6 +152,57 @@ class TestMainProfileParser(MainMock):
         self.assertRaises(
             SystemExit, profile_parser.main, ["load", "--file", "prof.json"]
         )
+
+    def test_main_destinations_parser(self):
+        url = "https://influx.example.org/api/v2/write?org=lab&bucket=b"
+        profile_parser.main(["destinations", "list"])
+        self.api.get_streaming_destinations.assert_called_with()
+        profile_parser.main(["destinations", "del", "-n", "mylab"])
+        self.api.del_streaming_destination.assert_called_with("mylab")
+        profile_parser.main(["destinations", "test", "-n", "mylab"])
+        self.api.test_streaming_destination.assert_called_with("mylab")
+
+        # secret asked
+        with patch("getpass.getpass", return_value="s3cret"):
+            profile_parser.main(["destinations", "add", "-n", "mylab", "-u", url])
+        self.api.add_streaming_destination.assert_called_with(
+            {"name": "mylab", "url": url, "auth": "token", "secret": "s3cret"}
+        )
+        # secret from a file, then from stdin
+        with patch("iotlabcli.helpers.read_file", return_value="user:pw\n"):
+            profile_parser.main(
+                ["destinations", "add", "-n", "lab", "-u", url, "-a", "basic"]
+                + ["--secret-file", "secret.txt"]
+            )
+        self.api.add_streaming_destination.assert_called_with(
+            {"name": "lab", "url": url, "auth": "basic", "secret": "user:pw"}
+        )
+        with patch("sys.stdin.readline", return_value="tok\n"):
+            profile_parser.main(
+                ["destinations", "add", "-n", "lab", "-u", url, "--secret-file", "-"]
+            )
+        self.api.add_streaming_destination.assert_called_with(
+            {"name": "lab", "url": url, "auth": "token", "secret": "tok"}
+        )
+        # no authentication: no secret
+        profile_parser.main(
+            ["destinations", "add", "-n", "open", "-u", url, "-a", "none"]
+        )
+        self.api.add_streaming_destination.assert_called_with(
+            {"name": "open", "url": url, "auth": "none"}
+        )
+        # update without a secret: the stored one is kept
+        profile_parser.main(["destinations", "update", "-n", "mylab", "-u", url])
+        self.api.update_streaming_destination.assert_called_with(
+            {"name": "mylab", "url": url, "auth": "token"}
+        )
+        # empty secret
+        with patch("getpass.getpass", return_value=""):
+            self.assertRaises(
+                SystemExit,
+                profile_parser.main,
+                ["destinations", "add", "-n", "mylab", "-u", url],
+            )
 
     def test_parser_error(self):
         """Test some parser errors directly"""

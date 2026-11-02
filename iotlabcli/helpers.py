@@ -29,6 +29,7 @@ import sys
 import warnings
 from collections.abc import Callable, Iterable
 from typing import Any, cast
+from urllib.parse import urljoin
 
 OAR_STATES = [
     "Waiting",
@@ -246,6 +247,17 @@ def read_custom_api_url() -> str | None:
     if api_url:
         sys.stderr.write(f"Using custom api_url: {api_url}\n")
     return api_url
+
+
+def streaming_url(api_url: str) -> str:
+    """URL of the ingest proxy of the streamed measures: environment
+    variable IOTLAB_STREAMING_URL, or /streaming/ next to the API
+
+    >>> streaming_url("https://www.iot-lab.info/api/")
+    'https://www.iot-lab.info/streaming/'
+    """
+    url = os.getenv("IOTLAB_STREAMING_URL") or urljoin(api_url, "../streaming/")
+    return url.rstrip("/") + "/"
 
 
 def read_file(file_path: str, opt: str = "") -> str | bytes:
