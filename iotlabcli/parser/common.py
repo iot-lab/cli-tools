@@ -24,6 +24,7 @@
 import argparse
 import contextlib
 import errno
+import os
 import sys
 from argparse import ArgumentParser
 from collections import OrderedDict
@@ -44,6 +45,16 @@ import iotlabcli
 from iotlabcli import helpers, rest
 
 DOMAIN_DNS = "iot-lab.info"
+
+
+def domain_dns() -> str:
+    """Domain of the sites and nodes: IOTLAB_DOMAIN environment variable
+    (another testbed, e.g. a local testbed), iot-lab.info by default
+
+    >>> domain_dns()
+    'iot-lab.info'
+    """
+    return os.getenv("IOTLAB_DOMAIN") or DOMAIN_DNS
 
 
 def base_parser(user_required: bool = False) -> ArgumentParser:
@@ -238,10 +249,10 @@ def check_site_with_server(
     raise argparse.ArgumentTypeError(f"Unknown site name {site_name!r}")
 
 
-def site_with_domain_checked(site: str, domain: str = DOMAIN_DNS) -> str:
+def site_with_domain_checked(site: str, domain: str | None = None) -> str:
     """Return site with domain and check site exists."""
     check_site_with_server(site)
-    return f"{site}.{domain}"
+    return f"{site}.{domain or domain_dns()}"
 
 
 def nodes_list_from_info(site: str, archi: str, nodes_str: str) -> list[str]:
@@ -264,7 +275,7 @@ def nodes_list_from_info(site: str, archi: str, nodes_str: str) -> list[str]:
     """
 
     nodes_list = nodes_id_list(archi, nodes_str)
-    fmt = f"%s.{site}.{DOMAIN_DNS}"
+    fmt = f"%s.{site}.{domain_dns()}"
     nodes_url_list = [fmt % node for node in nodes_list]
     return nodes_url_list
 

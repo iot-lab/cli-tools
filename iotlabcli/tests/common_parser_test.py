@@ -23,6 +23,7 @@
 # pylint: disable=too-many-public-methods
 
 import argparse
+import os
 import sys
 import unittest
 from io import StringIO
@@ -267,6 +268,18 @@ class TestSiteChecking(unittest.TestCase):
         # Override 'domain'
         ret = common.site_with_domain_checked("grenoble", domain="localhost")
         self.assertEqual(ret, "grenoble.localhost")
+
+    @patch.dict(os.environ, {"IOTLAB_DOMAIN": "iotlab.internal"})
+    def test_domain_from_environment(self):
+        """IOTLAB_DOMAIN replaces iot-lab.info in the sites and nodes"""
+        self.assertEqual(common.domain_dns(), "iotlab.internal")
+        self.assertEqual(
+            common.site_with_domain_checked("grenoble"), "grenoble.iotlab.internal"
+        )
+        self.assertEqual(
+            common.nodes_list_from_info("local", "custom", "1-2"),
+            ["custom-1.local.iotlab.internal", "custom-2.local.iotlab.internal"],
+        )
 
 
 class TestHelpAction(unittest.TestCase):
