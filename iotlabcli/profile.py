@@ -21,6 +21,7 @@
 
 """Class python for Profile serialization JSON"""
 
+import re
 from dataclasses import dataclass, field
 
 # pylint:disable=too-few-public-methods,too-many-instance-attributes
@@ -46,6 +47,9 @@ class ProfileM3A8:
         # streamed consumption downsampling period (ms)
         "stream_period": range(0, 3600 * 1000 + 1),
     }
+    # names of the streaming destinations of the user, iotlab: the hosted
+    # database
+    DESTINATION_PATTERN = r"^[0-9A-Za-z_-]{1,32}$"
     arch = None
 
     profilename: str
@@ -159,23 +163,32 @@ class ProfileM3A8:
         outputs: list[str] | None,
         stream_period: int | None = None,
         streams: list[str] | None = None,
+        destinations: list[str] | None = None,
     ) -> None:
         """Configure the measures outputs and their streaming"""
         if outputs is None or "streaming" not in outputs:
             _err = "Streaming options require the 'streaming' output"
             assert stream_period is None and streams is None, _err
+            assert destinations is None, _err
         if outputs is None:
             return
         self.outputs = self._outputs(outputs)  # pylint: disable=W0201
         if "streaming" in self.outputs:
-            self.streaming = self._streaming(stream_period, streams)  # pylint: disable=W0201
+            self.streaming = self._streaming(  # pylint: disable=W0201
+                stream_period, streams, destinations
+            )
 
     def _outputs(self, outputs: list[str]) -> list[str]:
         for output in outputs:
             assert output in self.choices["outputs"], f"Output {output}"
         return list(dict.fromkeys(outputs))
 
-    def _streaming(self, stream_period: int | None, streams: list[str] | None) -> dict:
+    def _streaming(
+        self,
+        stream_period: int | None,
+        streams: list[str] | None,
+        destinations: list[str] | None,
+    ) -> dict:
         """Streaming configuration, only the given values"""
         streaming: dict = {}
         if stream_period is not None:
@@ -183,7 +196,17 @@ class ProfileM3A8:
             streaming["period"] = stream_period
         if streams is not None:
             streaming["streams"] = self._streams(streams)
+        if destinations is not None:
+            streaming["destinations"] = self._destinations(destinations)
         return streaming
+
+    def _destinations(self, destinations: list[str]) -> list[str]:
+        assert destinations, "Streaming destinations"
+        for destination in destinations:
+            assert re.match(self.DESTINATION_PATTERN, destination), (
+                f"Streaming destination {destination}"
+            )
+        return list(dict.fromkeys(destinations))
 
     def _streams(self, streams: list[str]) -> list[str]:
         assert streams, "Streams"
