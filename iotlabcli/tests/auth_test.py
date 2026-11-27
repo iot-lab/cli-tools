@@ -24,6 +24,7 @@
 # pylint:disable=too-many-public-methods
 
 import os
+import stat
 import unittest
 from unittest.mock import mock_open, patch
 
@@ -60,6 +61,26 @@ class TestAuthModule(unittest.TestCase):
         """Test writing auth then reading it back"""
         # pylint: disable=protected-access
         auth.write_password_file("username", "password")
+        self.assertEqual(("username", "password"), auth.get_user_credentials())
+
+    def test_password_file_owner_only(self):
+        """The password file is readable by its owner only, whatever the
+        umask (a frontend is shared by many users)"""
+        umask = os.umask(0o022)
+        try:
+            auth.write_password_file("username", "password")
+        finally:
+            os.umask(umask)
+        self.assertEqual(0o600, stat.S_IMODE(os.stat(TEST_RC_FILE).st_mode))
+
+    def test_existing_password_file_restricted(self):
+        """An existing password file readable by others is restricted when
+        it is rewritten, and its old content replaced"""
+        with open(TEST_RC_FILE, "w", encoding="utf-8") as rc_file:
+            rc_file.write("someone:" + "x" * 64)
+        os.chmod(TEST_RC_FILE, 0o644)
+        auth.write_password_file("username", "password")
+        self.assertEqual(0o600, stat.S_IMODE(os.stat(TEST_RC_FILE).st_mode))
         self.assertEqual(("username", "password"), auth.get_user_credentials())
 
     def test_read_with_no_file(self):

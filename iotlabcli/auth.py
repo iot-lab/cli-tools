@@ -65,7 +65,12 @@ def write_password_file(username: str, password: str) -> None:
     :type password: string
     """
     assert (username is not None) and (password is not None)
-    with open(RC_FILE, "w") as pass_file:
+    # owner only: the password is only base64 encoded, and the frontends
+    # are shared by many users. os.open sets the mode of a new file; an
+    # existing one keeps its mode, so restrict it before writing
+    fd = os.open(RC_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.chmod(RC_FILE, 0o600)
+    with os.fdopen(fd, "w") as pass_file:
         # encode/decode for python3
         enc_password = b64encode(password.encode("utf-8")).decode("utf-8")
         pass_file.write(f"{username}:{enc_password}")
