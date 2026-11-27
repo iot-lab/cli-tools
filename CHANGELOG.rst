@@ -1,6 +1,18 @@
 Changelog
 =========
 
+3.4.0
+-----
+
+- iotlab-profile: outputs of the measures (-outputs oml, jsonl, streaming),
+  streamed measures (-streams, -stream-period), GPIO events (-gpios) and
+  streaming destinations (-destinations, iotlab-profile destinations
+  add/update/list/del/test); needs the REST API 2.0.0
+- iotlab-experiment submit: the image reference of the open Linux nodes
+  (image= in -l) is checked and documented in --help-list
+- IOTLAB_DOMAIN: domain of the sites and nodes, for another testbed
+- ~/.iotlabrc is readable by its owner only (mode 0600)
+
 3.2.1
 -----
 
